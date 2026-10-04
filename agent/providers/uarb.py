@@ -39,6 +39,8 @@ PORTAL_URL = "https://uarb.novascotia.ca/fmi/webd/UARB15"
 MATTER_RE = re.compile(r"M\d{5}")
 _TAB_COUNT_RE = re.compile(r"(Exhibits|Key Documents|Other Documents|Transcripts|Recordings)\s*-\s*(\d+)")
 _DATE_RE = re.compile(r"^\d{2}/\d{2}/\d{4}$")
+# Exhibit numbers seen live: H-1, H-4(C), H-4(C)-iii, H-5(c)-ii, H-5-iii. No spaces, short.
+_EXHIBIT_ID_RE = re.compile(r"[A-Za-z]{1,4}\d{0,2}-\d{1,4}[-()A-Za-z0-9.]{0,14}")
 
 # Header labels as the portal renders them. Some cells stack two labels ("Matter No / Status",
 # "Type / Category") over two stacked values, so values are matched to labels by geometry.
@@ -117,7 +119,11 @@ def parse_row(texts: list[str]) -> dict | None:
     """Turn the cell texts of one grid row into fields. Order-independent on purpose."""
     uniq = list(dict.fromkeys(t for t in texts if t not in {"Preview", "GO GET IT"}))
     ext = next((t for t in uniq if re.fullmatch(r"\.[A-Za-z0-9]{1,5}", t)), "")
-    file_id = next((t for t in uniq if re.fullmatch(r"\d{3,9}", t)), None)
+    # Most tabs identify files by a numeric id ("102674"); Exhibits use exhibit numbers
+    # ("H-1", "H-4(C)-i"). Either way it is also the name the portal serves the file under.
+    file_id = next((t for t in uniq if re.fullmatch(r"\d{3,9}", t)), None) or next(
+        (t for t in uniq if _EXHIBIT_ID_RE.fullmatch(t)), None
+    )
     filed = next((t for t in uniq if _DATE_RE.match(t)), None)
     access = next((t for t in uniq if t in {"Public", "Confidential", "Restricted"}), "Public")
     rest = [t for t in uniq if t not in {ext, file_id, filed, access}]
@@ -292,15 +298,20 @@ class UarbProvider:
     async def _collect_rows(self, page: Page, matter: str, doc_type: DocType, limit: int) -> list[DocumentRef]:
         refs: dict[str, DocumentRef] = {}
         stale_rounds = 0
-        while len(refs) < limit and stale_rounds < 3:
+        # Collect until `limit` *public* rows: confidential rows are listed (so the reply can say
+        # they exist) but never downloaded or sent.
+        def public() -> int:
+            return sum(1 for r in refs.values() if r.access == "Public")
+
+        while public() < limit and stale_rounds < 3:
             before = len(refs)
             for row in await page.evaluate(_ROWS_JS):
                 parsed = parse_row(row["texts"])
-                if parsed and parsed["external_id"] not in refs and len(refs) < limit:
+                if parsed and parsed["external_id"] not in refs and public() < limit:
                     refs[parsed["external_id"]] = DocumentRef(
                         provider=self.name, matter=matter, doc_type=doc_type, row_index=len(refs), **parsed
                     )
-            if len(refs) >= limit:
+            if public() >= limit:
                 break
             signature = await page.evaluate(_ROW_SIGNATURE_JS)
             if not await self._scroll_grid(page):
@@ -349,7 +360,7 @@ class UarbProvider:
     async def _row_for(self, page: Page, external_id: str):
         """Locate a row by file id, scrolling the virtualised grid if needed."""
         row = page.locator("tr.v-grid-row-has-data").filter(
-            has=page.locator(".text", has_text=re.compile(rf"^\s*{external_id}\s*$"))
+            has=page.locator(".text", has_text=re.compile(rf"^\s*{re.escape(external_id)}\s*$"))
         )
         if not await row.count():
             # rows are newest-first: scan from the top so we never scroll past the target
@@ -366,8 +377,29 @@ class UarbProvider:
             await page.wait_for_timeout(250)  # virtual scroll repaint; bounded by the loop
         raise ScrapeError(f"row {external_id} not found in grid")
 
+    async def _ensure_visible(self, page: Page, row) -> None:
+        """Rows can be rendered but outside the grid's own scroll viewport, where clicks fail.
+        Scroll the grid's scroller (not the window) until the row sits inside it."""
+        for _ in range(6):
+            delta = await row.evaluate(
+                """(tr) => {
+                    const body = tr.closest('.v-grid-tablewrapper') || tr.closest('.v-grid');
+                    const s = document.querySelector('.v-grid-scroller-vertical');
+                    if (!body || !s) return 0;
+                    const b = body.getBoundingClientRect(), r = tr.getBoundingClientRect();
+                    if (r.top >= b.top + 40 && r.bottom <= b.bottom - 4) return 0;
+                    const d = Math.round(r.top - (b.top + b.height / 2));
+                    s.scrollTop += d; s.dispatchEvent(new Event('scroll'));
+                    return d;
+                }"""
+            )
+            if delta == 0:
+                return
+            await page.wait_for_timeout(200)  # repaint; bounded by the loop
+
     async def _download_one(self, page: Page, ref: DocumentRef, dest_dir: str) -> DownloadedFile:
         row = await self._row_for(page, ref.external_id)
+        await self._ensure_visible(page, row)
         go =row.locator("button").filter(has_text=re.compile("go get it", re.IGNORECASE)).first
         dialog = page.locator(".v-window").filter(has_text="Download Files").last
         button = dialog.locator(".fm-download-button").first

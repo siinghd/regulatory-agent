@@ -192,7 +192,7 @@ async def cached_matter(provider: str, matter: str, max_age: timedelta) -> tuple
     return MatterInfo.model_validate(row["info"]), row["listings"] or {}
 
 
-async def save_matter(info: MatterInfo, doc_type: str | None = None, listing: list[str] | None = None) -> None:
+async def save_matter(info: MatterInfo, doc_type: str | None = None, listing: list[str] | int | None = None) -> None:
     await db.execute(
         """
         INSERT INTO matters (provider, matter, info, listings, fetched_at)

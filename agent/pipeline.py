@@ -9,6 +9,8 @@ and moves on. Retries are driven by the queue; this module decides retryable vs 
 """
 
 import asyncio
+import hashlib
+import itertools
 import tempfile
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -19,6 +21,7 @@ import structlog
 from agent import blobs, store
 from agent.citations.claims import summarize_with_citations
 from agent.citations.extract import extract_pages_async
+from agent.citations.ground import new_citation_id
 from agent.config import Settings
 from agent.db import pool
 from agent.delivery.choose import deliver
@@ -40,6 +43,7 @@ from agent.models import (
     MatterInfo,
     MatterNotFound,
     ParsedRequest,
+    ScrapeError,
 )
 from agent.providers.base import Provider, provider_for_matter
 
@@ -248,7 +252,7 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
     doc_type = DocType(row["doc_type"])
     await store.transition(rid, {"accepted", "fetching"}, "fetching")
 
-    info, files, failed = await _fetch(deps, rid, provider, parsed.matter, doc_type, parsed.max_docs)
+    info, files, failed, confidential = await _fetch(deps, rid, provider, parsed.matter, doc_type, parsed.max_docs)
     if not files:
         await store.transition(rid, {"fetching"}, "replying")
         total = info.counts.get(doc_type, 0)
@@ -289,7 +293,7 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
             download_expires=delivery.link.expires_at if delivery.link else None,
             download_size=delivery.size, attachment_path=delivery.path,
             track_url=_track_url(deps, row), extra_doc_types=parsed.extra_doc_types,
-            failed_titles=failed,
+            failed_titles=failed, newest_first=_newest_first(files), confidential=confidential,
         )
         await _send(row, email, draft)
     await store.transition(rid, {"replying"}, "done", result={
@@ -311,7 +315,7 @@ async def _matter_info(deps: Deps, provider_name: str, matter: str) -> MatterInf
 
 async def _fetch(
     deps: Deps, rid: UUID, provider: Provider, matter: str, doc_type: DocType, limit: int
-) -> tuple[MatterInfo, list[DownloadedFile], list[str]]:
+) -> tuple[MatterInfo, list[DownloadedFile], list[str], int]:
     """Listing + downloads, single-flighted per (provider, matter, tab) and served from cache
     when possible: ten people asking for M12205 at once cost one portal visit."""
     ttl = timedelta(seconds=deps.settings.matter_cache_ttl_s)
@@ -319,15 +323,25 @@ async def _fetch(
         await store.set_progress(rid, "Searching the UARB database")
         cached = await store.cached_matter(provider.name, matter, ttl)
         listing = (cached[1].get(doc_type.value) if cached else None)
+        confidential = int((cached[1].get(f"{doc_type.value}#confidential") if cached else 0) or 0)
         if cached and listing is not None and len(listing) >= min(limit, cached[0].counts.get(doc_type, 0)):
             info = cached[0]
             known = await store.documents_by_external_ids(provider.name, listing[:limit])
             refs = [_ref_from_row(known[x], i) for i, x in enumerate(listing[:limit]) if x in known]
         else:
-            info, refs = await provider.list_matter_and_documents(matter, doc_type, limit)
+            info, listed = await provider.list_matter_and_documents(matter, doc_type, limit)
+            if info.counts.get(doc_type, 0) > 0 and not listed:
+                # The portal says there are documents but we read none: a scraper problem, not
+                # an answer. Retry rather than tell the user there's nothing.
+                raise ScrapeError(f"{matter}/{doc_type.value}: count {info.counts[doc_type]} but empty listing")
+            refs = [r for r in listed if r.access == "Public"][:limit]
             await store.save_matter(info, doc_type.value, [r.external_id for r in refs])
             for r in refs:
                 await store.upsert_document(r)
+            confidential = sum(1 for r in listed if r.access != "Public")
+            if confidential:
+                await store.save_matter(info, f"{doc_type.value}#confidential", confidential)
+                await store.event(rid, "confidential_skipped", {"count": confidential})
         await store.set_progress(rid, "Downloading documents", done=0, total=len(refs))
 
         have = await store.documents_by_external_ids(provider.name, [r.external_id for r in refs])
@@ -351,9 +365,11 @@ async def _fetch(
                     await store.set_progress(rid, "Downloading documents", done=len(ready), total=len(refs))
     files = [ready[r.external_id] for r in refs if r.external_id in ready]
     failed = [r.title for r in refs if r.external_id not in ready]
+    if refs and len(files) < len(refs):
+        log.warning("fetch.partial", matter=matter, doc_type=doc_type.value, got=len(files), wanted=len(refs))
     if refs and not files:
         raise TransientError(f"no downloads succeeded for {matter}/{doc_type.value}")
-    return info, files, failed
+    return info, files, failed, confidential
 
 
 def _ref_from_row(row, index: int) -> DocumentRef:
@@ -364,37 +380,64 @@ def _ref_from_row(row, index: int) -> DocumentRef:
     )
 
 
+SUMMARY_VERSION = "v1"  # bump when the summary prompt or grounding rules change
+
+
 async def _summarise(deps: Deps, rid: UUID, info: MatterInfo, files: list[DownloadedFile]):
-    """Cited summary. Best effort: if the LLM is down, the documents still go out."""
-    docs = []
-    for f in files:
-        if not f.filename.lower().endswith(".pdf"):
-            continue
-        pages = await _pages(f.sha256, f.path)
-        if pages:
-            docs.append((f.ref, pages))
-    if not docs:
-        return None, []
-    try:
-        result = await summarize_with_citations(info, docs, max_claims=5)
-    except LLMUnavailable as e:
-        log.warning("summary.unavailable", request_id=str(rid), error=str(e)[:300])
-        return None, []
-    ids = await store.documents_by_external_ids(info.provider, [c.doc_external_id for c in result.claims])
+    """Cited summary. Best effort: if the LLM is down, the documents still go out.
+
+    Cached by the exact document versions (content hashes), so a repeat request for the same
+    filings costs no LLM call, and any new or changed filing produces a fresh summary.
+    """
+    key = hashlib.sha256(
+        (SUMMARY_VERSION + info.matter + "".join(sorted(f.sha256 for f in files))).encode()
+    ).hexdigest()
+    cached = await pool().fetchrow("SELECT summary, claims FROM summaries WHERE key = $1", key)
+    if cached:
+        summary, raw_claims = cached["summary"], cached["claims"]
+        await store.event(rid, "summary", {"cached": True, "claims": len(raw_claims)})
+    else:
+        docs = []
+        for f in files:
+            if not f.filename.lower().endswith(".pdf"):
+                continue
+            pages = await _pages(f.sha256, f.path)
+            if pages:
+                docs.append((f.ref, pages))
+        if not docs:
+            return None, []
+        try:
+            result = await summarize_with_citations(info, docs, max_claims=5)
+        except LLMUnavailable as e:
+            log.warning("summary.unavailable", request_id=str(rid), error=str(e)[:300])
+            return None, []
+        summary = result.summary or None
+        raw_claims = [
+            {"claim": c.claim, "doc_external_id": c.doc_external_id, "page": c.page,
+             "quote": c.quote, "char_start": c.char_start, "char_end": c.char_end}
+            for c in result.claims
+        ]
+        await pool().execute(
+            "INSERT INTO summaries (key, summary, claims) VALUES ($1, $2, $3) ON CONFLICT (key) DO NOTHING",
+            key, summary, raw_claims,
+        )
+        await store.event(rid, "summary", {"claims": len(raw_claims), "dropped": len(result.dropped), **result.llm})
+
+    ids = await store.documents_by_external_ids(info.provider, [c["doc_external_id"] for c in raw_claims])
     claims: list[outbound.ClaimLine] = []
     async with pool().acquire() as conn:
-        for c in result.claims:
-            doc = ids.get(c.doc_external_id)
+        for c in raw_claims:
+            doc = ids.get(c["doc_external_id"])
             if not doc:
                 continue
+            cid = new_citation_id()  # per request, so one requester's links never collide with another's
             await conn.execute(
                 """INSERT INTO citations (id, request_id, document_id, sha256, page, quote, char_start, char_end, claim)
-                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING""",
-                c.id, rid, doc["id"], doc["sha256"], c.page, c.quote, c.char_start, c.char_end, c.claim,
+                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)""",
+                cid, rid, doc["id"], doc["sha256"], c["page"], c["quote"], c["char_start"], c["char_end"], c["claim"],
             )
-            claims.append(outbound.ClaimLine(text=c.claim, url=f"{deps.settings.public_base_url}/c/{c.id}"))
-    await store.event(rid, "summary", {"claims": len(claims), "dropped": len(result.dropped), **result.llm})
-    return (result.summary or None), claims
+            claims.append(outbound.ClaimLine(text=c["claim"], url=f"{deps.settings.public_base_url}/c/{cid}"))
+    return summary, claims
 
 
 async def _pages(sha256: str, path: str) -> list[str]:
@@ -466,6 +509,12 @@ def _display_name(email: InboundEmail) -> str:
 
 def _track_url(deps: Deps, row) -> str:
     return f"{deps.settings.public_base_url}/r/{row['track_token']}"
+
+
+def _newest_first(files: list[DownloadedFile]) -> bool:
+    """Portal tabs differ (Other Documents newest first, Exhibits oldest first): say which."""
+    dates = [f.ref.filed_on for f in files if f.ref.filed_on]
+    return all(a >= b for a, b in itertools.pairwise(dates))
 
 
 def _counts(info: MatterInfo) -> dict[str, int]:

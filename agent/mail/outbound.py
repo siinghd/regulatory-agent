@@ -190,13 +190,19 @@ def documents_reply(
     track_url: str,
     extra_doc_types: Sequence[DocType] = (),
     failed_titles: Sequence[str] = (),
+    newest_first: bool = True,
+    confidential: int = 0,
 ) -> Draft:
     total = info.counts.get(doc_type, 0)
     got = len(docs)
     if got == total:
         fetched = f"I downloaded all {got} {doc_type.value}"
-    else:
+    elif confidential and got + confidential == total:
+        fetched = f"I downloaded all {got} public {doc_type.value} ({confidential} more are confidential)"
+    elif newest_first:
         fetched = f"I downloaded the {got} most recent of the {total} {doc_type.value}"
+    else:
+        fetched = f"I downloaded the first {got} of the {total} {doc_type.value}, in the order the portal lists them"
     where = "attached them as a ZIP" if attachment_path else "packaged them as a ZIP"
     size_mb = f"{download_size / 1_000_000:.1f} MB"
 
@@ -205,6 +211,8 @@ def documents_reply(
         t += ["", f"Download (encrypted link, expires {_fmt_date(download_expires)}): {download_url}"]
     if failed_titles:
         t += ["", "I couldn't download: " + "; ".join(failed_titles) + ". The rest are complete."]
+    if confidential and got + confidential != total:
+        t += ["", f"{confidential} of the {doc_type.value} listed are marked confidential, so I didn't include them."]
     if summary:
         t += ["", "Summary", summary]
     if claims:
@@ -227,6 +235,9 @@ def documents_reply(
         )
     if failed_titles:
         h.append(f"<p>I couldn't download: {html.escape('; '.join(failed_titles))}. The rest are complete.</p>")
+    if confidential and got + confidential != total:
+        h.append(f"<p>{confidential} of the {html.escape(doc_type.value)} listed are marked confidential, "
+                 "so I didn't include them.</p>")
     if summary:
         h.append(f'<h3 style="font-size:15px;margin:22px 0 6px">Summary</h3><p>{html.escape(summary)}</p>')
     if claims:
