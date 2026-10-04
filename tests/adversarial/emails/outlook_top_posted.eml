@@ -1,0 +1,60 @@
+Return-Path: <bob.tremblay@contoso-energy.ca>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2LdAAbWb6Rw
+	(envelope-from <bob.tremblay@contoso-energy.ca>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from EUR05-AM6-obe.outbound.protection.outlook.com (mail-am6eur05on2091.outbound.protection.outlook.com [40.107.22.91])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2Ld5Kp8z9sTw
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+From: Bob Tremblay <bob.tremblay@contoso-energy.ca>
+To: Regulatory Agent <agent@hsingh.app>
+Subject: RE: Documents for M99999
+Thread-Topic: Documents for M99999
+Thread-Index: AQHbFh1o2Yy7a3m9wkSkUeQ0n1h0Ww==
+Date: Sat, 4 Oct 2026 14:01:40 +0000
+Message-ID: <YT3PR01MB8743A1B2C3D4E5F6@YT3PR01MB8743.CANPRD01.PROD.OUTLOOK.COM>
+References: <req-01J9X0A1B2@hsingh.app>
+In-Reply-To: <req-01J9X0A1B2@hsingh.app>
+Accept-Language: en-CA, en-US
+Content-Language: en-CA
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: multipart/alternative;
+	boundary="_000_YT3PR01MB8743A1B2C3D4E5F6YT3PR01MB8743CANP_"
+MIME-Version: 1.0
+
+--_000_YT3PR01MB8743A1B2C3D4E5F6YT3PR01MB8743CANP_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+Please also send the Exhibits for M12205.
+
+Regards,
+Bob Tremblay
+Regulatory Affairs | Contoso Energy
+
+________________________________
+From: Regulatory Agent <agent@hsingh.app>
+Sent: Friday, October 3, 2026 4:15 PM
+To: Bob Tremblay <bob.tremblay@contoso-energy.ca>
+Subject: Re: Documents for M99999
+
+Here are the Other Documents for M99999.
+
+--_000_YT3PR01MB8743A1B2C3D4E5F6YT3PR01MB8743CANP_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html><body><div>Hi,<br><br>Please also send the Exhibits for M12205.</div>=
+<hr><div id=3D"divRplyFwdMsg"><b>From:</b> Regulatory Agent<br><b>Sent:</b>=
+ Friday<br></div><div>Here are the Other Documents for M99999.</div></body>=
+</html>
+
+--_000_YT3PR01MB8743A1B2C3D4E5F6YT3PR01MB8743CANP_--

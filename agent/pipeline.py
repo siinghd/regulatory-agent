@@ -95,14 +95,15 @@ async def _gate(deps: Deps, row, email: InboundEmail) -> ParsedRequest | None:
     s, rid = deps.settings, row["id"]
     await store.set_progress(rid, "Checking your email")
 
+    raw = blobs.read_raw(row["raw_sha256"])
     reason = loops.classify_automation(
-        email, own_address=s.agent_mail_address, return_path=email.headers.get("return-path")
+        email, own_address=s.agent_mail_address, return_path=mime.envelope_sender(mime.parse_headers(raw))
     )
     if reason:
         await store.transition(rid, {"received"}, "rejected", reject_reason=f"automated:{reason}")
         return None
 
-    auth = await mail_auth.verify_sender(blobs.read_raw(row["raw_sha256"]), email, trusted_mta=s.trusted_mta_hostname)
+    auth = await mail_auth.verify_sender(raw, email, trusted_mta=s.trusted_mta_hostname)
     auth_json = auth.model_dump(mode="json")
     if mail_auth.is_temperror(auth):
         raise TransientError(f"sender verification DNS temperror: {auth.reason}")
@@ -126,16 +127,20 @@ async def _gate(deps: Deps, row, email: InboundEmail) -> ParsedRequest | None:
         return None
     if parsed.intent is Intent.INJECTION:
         await _reply_and_close(rid, row, email, "rejected", reject_reason="injection_attempt", common=common, paragraphs=[
-            "I can only fetch public UARB documents and send them back to the address that asked. "
-            "Please send a plain request, for example: \"Can you send me the Other Documents for M12205?\"",
+            (
+                "I can only fetch public UARB documents and send them back to the address that asked. "
+                "Please send a plain request, for example: \"Can you send me the Other Documents for M12205?\""
+            ),
         ])
         return None
     if parsed.intent is Intent.UNRELATED:
         if await deps.limits.once(f"help:{email.from_addr}", 24 * 3600):
             await _reply_and_close(rid, row, email, "rejected", reject_reason="unrelated", common=common, paragraphs=[
-                "I'm an automated assistant that fetches documents from the Nova Scotia Utility and Review "
-                "Board's public database. Send me a matter number and a document type, for example: "
-                "\"Can you send me the Other Documents for M12205?\"",
+                (
+                    "I'm an automated assistant that fetches documents from the Nova Scotia Utility and Review "
+                    "Board's public database. Send me a matter number and a document type, for example: "
+                    "\"Can you send me the Other Documents for M12205?\""
+                ),
                 f"Document types: {', '.join(t.value for t in DocType)}.",
             ])
         else:
@@ -179,15 +184,15 @@ async def _within_limits(deps: Deps, row, email: InboundEmail) -> bool:
         ("global", s.rate_global_hour),
     ]
     for key, limit in checks:
-        ok, n = await deps.limits.hit(key, limit=limit, window_s=3600)
+        ok, _ = await deps.limits.hit(key, limit=limit, window_s=3600)
         if not ok:
             await store.transition(rid, {"received"}, "rejected", reject_reason=f"rate_limited:{key.split(':')[0]}")
             # one notice per sender per hour, so a flood can't turn into a flood of replies
             if key != "global" and await deps.limits.once(f"rl-notice:{email.from_addr}", 3600):
                 await _send(row, email, outbound.simple_reply(
                     name=_display_name(email), subject=email.subject,
-                    paragraphs=["You've sent a lot of requests in the last hour, so I'm pausing for a while. "
-                                "Please try again later."],
+                    paragraphs=[("You've sent a lot of requests in the last hour, so I'm pausing for a while. "
+                                 "Please try again later.")],
                 ))
             return False
     if await store.thread_size(row["thread_root"]) > s.max_requests_per_thread:
@@ -258,15 +263,17 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
 
     await store.transition(rid, {"fetching", "packaging"}, "packaging")
     with tempfile.TemporaryDirectory(prefix=f"req-{rid}-") as tmp:
-        await store.set_progress(rid, "Packaging the ZIP")
-        zip_result = await asyncio.to_thread(
-            build_zip, files, f"{tmp}/{parsed.matter}_{doc_type.value.replace(' ', '_')}.zip",
-            readme_text=_readme(info, doc_type, files),
-        )
-        await store.set_progress(rid, "Reading the documents and writing a cited summary")
-        summary, claims = await _summarise(deps, rid, info, files)
-        await store.set_progress(rid, "Uploading the encrypted download")
-        delivery = await deliver(zip_result, files, drop=deps.drop)
+        await store.set_progress(rid, "Packaging the ZIP and writing a cited summary")
+
+        async def package_and_deliver():
+            zip_result = await asyncio.to_thread(
+                build_zip, files, f"{tmp}/{parsed.matter}_{doc_type.value.replace(' ', '_')}.zip",
+                readme_text=_readme(info, doc_type, files),
+            )
+            return await deliver(zip_result, files, drop=deps.drop)
+
+        # Independent work: the LLM summary (~20s) overlaps packaging and the encrypted upload.
+        delivery, (summary, claims) = await asyncio.gather(package_and_deliver(), _summarise(deps, rid, info, files))
 
         await store.transition(rid, {"packaging", "replying"}, "replying")
         await store.set_progress(rid, "Sending your documents")
@@ -315,7 +322,7 @@ async def _fetch(
         if cached and listing is not None and len(listing) >= min(limit, cached[0].counts.get(doc_type, 0)):
             info = cached[0]
             known = await store.documents_by_external_ids(provider.name, listing[:limit])
-            refs = [_ref_from_row(known[i], i) for i, x in enumerate(listing[:limit]) if x in known]
+            refs = [_ref_from_row(known[x], i) for i, x in enumerate(listing[:limit]) if x in known]
         else:
             info, refs = await provider.list_matter_and_documents(matter, doc_type, limit)
             await store.save_matter(info, doc_type.value, [r.external_id for r in refs])
@@ -381,9 +388,9 @@ async def _summarise(deps: Deps, rid: UUID, info: MatterInfo, files: list[Downlo
             if not doc:
                 continue
             await conn.execute(
-                """INSERT INTO citations (id, request_id, document_id, page, quote, char_start, char_end, claim)
-                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (id) DO NOTHING""",
-                c.id, rid, doc["id"], c.page, c.quote, c.char_start, c.char_end, c.claim,
+                """INSERT INTO citations (id, request_id, document_id, sha256, page, quote, char_start, char_end, claim)
+                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT (id) DO NOTHING""",
+                c.id, rid, doc["id"], doc["sha256"], c.page, c.quote, c.char_start, c.char_end, c.claim,
             )
             claims.append(outbound.ClaimLine(text=c.claim, url=f"{deps.settings.public_base_url}/c/{c.id}"))
     await store.event(rid, "summary", {"claims": len(claims), "dropped": len(result.dropped), **result.llm})

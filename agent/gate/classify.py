@@ -73,6 +73,7 @@ async def classify(subject: str, body: str, *, max_docs: int = 10) -> ParsedRequ
             user=llm.untrusted_block("EMAIL", f"Subject: {subject}\n\n{body}"),
             schema=_LLMParse,
             max_tokens=1500,
+            timeout_s=15,  # a slow model shouldn't hold up the ack: fail over to the next one
         )
     except llm.LLMUnavailable as e:
         log.warning("gate.llm_unavailable", error=str(e)[:300], rule_reason=rule.reason)

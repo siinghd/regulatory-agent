@@ -46,7 +46,7 @@ class Settings(BaseSettings):
             "qwen/qwen3.8-27b",
         ]
     )
-    llm_timeout_s: float = 30.0
+    llm_timeout_s: float = 90.0  # summaries over ~60k chars take 20-70s
 
     # --- providers / egress
     # Per-provider egress proxy. UARB blocks non-North-American IPs, so its traffic leaves via

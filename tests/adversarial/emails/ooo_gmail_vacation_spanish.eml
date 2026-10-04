@@ -1,0 +1,32 @@
+Return-Path: <ana.garcia@gmail.com>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2LqAAbWb6Rw
+	(envelope-from <ana.garcia@gmail.com>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2Lq6Aa2z9sT6
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1791122531; x=1791727331; darn=hsingh.app;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+        b=Qm9ndXNTaWduYXR1cmVGb3JUZXN0c09ubHlOb3RWZXJpZmlhYmxlQm9ndXNTaWdu
+         YXR1cmVGb3JUZXN0c09ubHlOb3RWZXJpZmlhYmxlQm9ndXNTaWduYXR1cmVGb3JUZXN0
+         c09ubHk=
+MIME-Version: 1.0
+From: Ana Garcia <ana.garcia@gmail.com>
+Date: Sat, 4 Oct 2026 10:02:40 -0400
+Message-ID: <CAvacation7Xk2@mail.gmail.com>
+Subject: =?UTF-8?Q?Respuesta_autom=C3=A1tica=3A_Documents_for_M12205?=
+To: agent@hsingh.app
+In-Reply-To: <req-01J9ZW3V6W@hsingh.app>
+Auto-Submitted: auto-replied
+Content-Type: text/plain; charset="UTF-8"
+
+Estoy de vacaciones hasta el 15 de octubre.

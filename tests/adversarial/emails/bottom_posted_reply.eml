@@ -1,0 +1,29 @@
+Return-Path: <oldschool@example.net>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2M7AAbWb6Rw
+	(envelope-from <oldschool@example.net>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from mail.example.net (mail.example.net [198.51.100.66])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2M73Rr3z9sTP
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+From: Old School <oldschool@example.net>
+To: agent@hsingh.app
+Subject: Re: Documents for M99999
+Date: Sat, 4 Oct 2026 14:13:00 +0000
+Message-ID: <bottom-post-1@example.net>
+In-Reply-To: <req-01J9ZY5X8Y@hsingh.app>
+User-Agent: Mutt/2.2.12 (2023-09-09)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+
+On Fri, Oct 03, 2026 at 04:15:00PM +0000, Regulatory Agent wrote:
+> Here are the Other Documents for M99999.
+>
+> Regards
+
+Thanks. Now the Recordings for M12205, please.

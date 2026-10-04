@@ -1,0 +1,45 @@
+Return-Path: <jane.doe@gmail.com>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2LbAAbWb6Rw
+	(envelope-from <jane.doe@gmail.com>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2Lb3Wq5z9sTt
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1791122531; x=1791727331; darn=hsingh.app;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;
+        b=Qm9ndXNTaWduYXR1cmVGb3JUZXN0c09ubHlOb3RWZXJpZmlhYmxlQm9ndXNTaWdu
+         YXR1cmVGb3JUZXN0c09ubHlOb3RWZXJpZmlhYmxlQm9ndXNTaWduYXR1cmVGb3JUZXN0
+         c09ubHk=
+MIME-Version: 1.0
+From: Jane Doe <jane.doe@gmail.com>
+Date: Sat, 4 Oct 2026 10:01:58 -0400
+Message-ID: <CAJx9Lq3pQ7Zx0kVnU1WgM5bHr2tYx8sA@mail.gmail.com>
+Subject: Documents for M12205
+To: agent@hsingh.app
+Content-Type: multipart/alternative; boundary="000000000000a1b2c3d4e5f60718"
+
+--000000000000a1b2c3d4e5f60718
+Content-Type: text/plain; charset="UTF-8"
+
+Hi,
+
+Could you send me the Other Documents for M12205?
+
+Thanks,
+Jane
+
+--000000000000a1b2c3d4e5f60718
+Content-Type: text/html; charset="UTF-8"
+
+<div dir="ltr">Hi,<div><br></div><div>Could you send me the Other Documents for M12205?</div><div><br></div><div>Thanks,</div><div>Jane</div></div>
+
+--000000000000a1b2c3d4e5f60718--

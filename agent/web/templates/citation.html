@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ c.matter }} · {{ c.doc_title }} · page {{ c.page }}{% endblock %}
+{% block head %}
+<script defer src="{{ cdn.markjs.url }}" integrity="{{ cdn.markjs.sri }}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="module" src="{{ cdn.pdfjs.url }}" integrity="{{ cdn.pdfjs.sri }}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="module" src="{{ static_url('viewer.js') }}"></script>
+{% endblock %}
+{% block main %}
+<p class="eyebrow">
+  <a href="/m/{{ c.provider|urlencode }}/{{ c.matter|urlencode }}">{{ c.matter }}</a>
+  · {{ c.doc_type }}{% if c.filed_on %} · filed {{ c.filed_on|human_date }}{% endif %}
+</p>
+<h1>{{ c.matter_title or c.doc_title }}</h1>
+
+<section class="card">
+  <h2 class="label">Claim</h2>
+  <p class="claim-text">{{ c.claim }}</p>
+  <h2 class="label">Source: {{ c.doc_title }}, page {{ c.page }}{% if c.page_count %} of {{ c.page_count }}{% endif %}</h2>
+  <blockquote class="quote">{{ c.quote }}</blockquote>
+  <nav class="actions" aria-label="Document links">
+    <a class="button primary" href="/files/{{ c.document_id }}.pdf#page={{ c.page }}">Open full PDF</a>
+    <a class="button" href="/files/{{ c.document_id }}.pdf" download="{{ download_name }}">Download PDF</a>
+    {% if portal_url %}<a class="button" href="{{ portal_url }}" rel="noopener noreferrer" target="_blank">UARB portal</a>{% endif %}
+  </nav>
+</section>
+
+<section id="viewer" class="viewer"
+  data-pdf-url="/files/{{ c.document_id }}.pdf"
+  data-page="{{ c.page }}"
+  data-quote="{{ c.quote }}"
+  data-worker-src="{{ cdn.pdfjs_worker.url }}"
+  data-worker-sri="{{ cdn.pdfjs_worker.sri }}">
+  <p id="viewer-status" class="status" role="status">Loading page {{ c.page }}…</p>
+  <noscript><p class="status">Turn on JavaScript to see the page with the passage highlighted, or open the PDF above.</p></noscript>
+  <div class="page-wrap"><div id="pdf-page" class="pdf-page"></div></div>
+</section>
+{% endblock %}

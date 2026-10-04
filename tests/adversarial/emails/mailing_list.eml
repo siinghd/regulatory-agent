@@ -1,0 +1,28 @@
+Return-Path: <energy-reg-bounces+agent=hsingh.app@lists.example.org>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2LsAAbWb6Rw
+	(envelope-from <energy-reg-bounces+agent=hsingh.app@lists.example.org>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from lists.example.org (lists.example.org [198.51.100.80])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2Ls8Cc8z9sT8
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+From: Dana Wu <dana.wu@example.net>
+To: energy-reg@lists.example.org
+Subject: [energy-reg] Anyone have the M12205 exhibits?
+Date: Sat, 4 Oct 2026 13:55:00 +0000
+Message-ID: <5f8e7d6c-b5a4-4321-9f8e-7d6c5b4a3210@example.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Precedence: list
+List-Id: Energy regulation discussion <energy-reg.lists.example.org>
+List-Unsubscribe: <https://lists.example.org/mailman/options/energy-reg>,
+ <mailto:energy-reg-request@lists.example.org?subject=unsubscribe>
+List-Post: <mailto:energy-reg@lists.example.org>
+Sender: "energy-reg" <energy-reg-bounces+agent=hsingh.app@lists.example.org>
+
+Does anyone have the Exhibits for M12205? Please send them over.

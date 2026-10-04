@@ -9,7 +9,6 @@ Rules every caller gets for free:
 
 import json
 import time
-from typing import TypeVar
 
 import httpx
 import structlog
@@ -18,7 +17,6 @@ from pydantic import BaseModel, ValidationError
 from agent.config import get_settings
 
 log = structlog.get_logger()
-T = TypeVar("T", bound=BaseModel)
 
 _client: httpx.AsyncClient | None = None
 
@@ -77,7 +75,7 @@ def _strict_schema(model: type[BaseModel]) -> dict:
     return schema
 
 
-async def structured(
+async def structured[T: BaseModel](
     *,
     system: str,
     user: str,
@@ -85,6 +83,7 @@ async def structured(
     models: list[str] | None = None,
     max_tokens: int = 1500,
     temperature: float = 0.0,
+    timeout_s: float | None = None,
 ) -> tuple[T, dict]:
     """Return (parsed, meta). meta = {model, latency_ms, cost, attempts}. Raises LLMUnavailable."""
     s = get_settings()
@@ -106,7 +105,10 @@ async def structured(
     for attempt, model in enumerate(models or s.llm_models, start=1):
         t0 = time.perf_counter()
         try:
-            r = await _http().post("/chat/completions", json={**payload_base, "model": model})
+            r = await _http().post(
+                "/chat/completions", json={**payload_base, "model": model},
+                timeout=httpx.Timeout(timeout_s or s.llm_timeout_s, connect=10),
+            )
             if r.status_code >= 400:
                 raise LLMUnavailable(f"{model}: HTTP {r.status_code} {r.text[:200]}")
             body = r.json()

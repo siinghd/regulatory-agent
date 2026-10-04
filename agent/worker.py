@@ -1,6 +1,7 @@
 """arq worker: runs the pipeline for each request with retries, plus a sweeper for stuck work."""
 
 from datetime import timedelta
+from typing import ClassVar
 from uuid import UUID
 
 import structlog
@@ -82,8 +83,8 @@ async def sweep(ctx: dict) -> None:
 
 
 class WorkerSettings:
-    functions = [process_request]
-    cron_jobs = [cron(sweep, minute=set(range(0, 60, 5)), run_at_startup=True)]
+    functions: ClassVar = [process_request]
+    cron_jobs: ClassVar = [cron(sweep, minute=set(range(0, 60, 5)), run_at_startup=True)]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)

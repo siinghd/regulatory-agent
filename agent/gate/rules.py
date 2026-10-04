@@ -15,33 +15,33 @@ _MATTER_RE = re.compile(r"(?<![A-Za-z0-9])[Mm][-\s]?(\d{5})(?!\d)")
 _MATTER_WORD_RE = re.compile(r"\bmatter\s*(?:no\.?|number|#)?\s*:?\s*(\d{5})(?!\d)", re.IGNORECASE)
 
 _DOC_TYPE_PATTERNS: dict[DocType, re.Pattern[str]] = {
-    DocType.KEY_DOCUMENTS: re.compile(r"\bkey\s+(?:documents?|docs?|files?|filings?)\b", re.I),
-    DocType.OTHER_DOCUMENTS: re.compile(r"\bother\s+(?:documents?|docs?|files?|filings?)\b", re.I),
-    DocType.EXHIBITS: re.compile(r"\bexhibits?\b", re.I),
-    DocType.TRANSCRIPTS: re.compile(r"\b(?:hearing\s+)?transcripts?\b", re.I),
-    DocType.RECORDINGS: re.compile(r"\b(?:recordings?|audio|video)\b", re.I),
+    DocType.KEY_DOCUMENTS: re.compile(r"\bkey\s+(?:documents?|docs?|files?|filings?)\b", re.IGNORECASE),
+    DocType.OTHER_DOCUMENTS: re.compile(r"\bother\s+(?:documents?|docs?|files?|filings?)\b", re.IGNORECASE),
+    DocType.EXHIBITS: re.compile(r"\bexhibits?\b", re.IGNORECASE),
+    DocType.TRANSCRIPTS: re.compile(r"\b(?:hearing\s+)?transcripts?\b", re.IGNORECASE),
+    DocType.RECORDINGS: re.compile(r"\b(?:recordings?|audio|video)\b", re.IGNORECASE),
 }
 
 _COUNT_RE = re.compile(
     r"\b(?:first|latest|last|top|up\s+to|only|just)?\s*(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten)\s+"
     r"(?:of\s+the\s+)?(?:most\s+recent\s+|latest\s+|newest\s+)?(?:key\s+|other\s+)?"
     r"(?:documents?|docs?|files?|exhibits?|transcripts?|recordings?)\b",
-    re.I,
+    re.IGNORECASE,
 )
-_WORDS = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten".split())}
+_WORDS = {w: i for i, w in enumerate(["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"])}
 
 # Phrases that need judgement (negation, conditions, comparisons): defer to the LLM.
 _AMBIGUITY_RE = re.compile(
     r"\b(?:not|don't|dont|do\s+not|except|instead|rather\s+than|unless|either|or\s+the|"
     r"compare|difference|which\s+one|what\s+is|what's|why|how\s+many|summar)",
-    re.I,
+    re.IGNORECASE,
 )
 # Request phrasing: an email that names a matter and a tab but never asks for anything is
 # probably a forward or a signature block, not a request.
 _ASK_RE = re.compile(
     r"\b(?:send|give|get|fetch|share|forward|provide|email|need|want|pull|download|grab|"
     r"can\s+you|could\s+you|would\s+you|please|request|looking\s+for)\b",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -51,7 +51,7 @@ _SUSPICIOUS_RE = re.compile(
     r"[\w.+-]+@[\w-]+\.[\w.-]+|\bignore\b.{0,40}\binstructions?\b|system\s+prompt|"
     r"\b(?:admin|developer|debug)\s+mode\b|\bact\s+as\b|\byou\s+are\s+now\b|\bjailbreak|"
     r"\b(?:bcc|cc)\b|https?://",
-    re.I,
+    re.IGNORECASE,
 )
 
 

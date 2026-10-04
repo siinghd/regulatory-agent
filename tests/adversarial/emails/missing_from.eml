@@ -1,0 +1,20 @@
+Return-Path: <nobody@example.com>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2LxAAbWb6Rw
+	(envelope-from <nobody@example.com>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from 198-51-100-99.example.net (unknown [198.51.100.99])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2Lx8Hh3z9sTD
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+To: agent@hsingh.app
+Subject: M12205
+Date: Sat, 4 Oct 2026 10:05:00 -0400
+Message-ID: <no-from@example.com>
+Content-Type: text/plain
+
+Other Documents for M12205 please.

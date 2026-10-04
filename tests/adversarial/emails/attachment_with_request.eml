@@ -1,0 +1,41 @@
+Return-Path: <bob.tremblay@contoso-energy.ca>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2M5AAbWb6Rw
+	(envelope-from <bob.tremblay@contoso-energy.ca>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from EUR05-AM6-obe.outbound.protection.outlook.com (mail-am6eur05on2091.outbound.protection.outlook.com [40.107.22.91])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2M51Pp7z9sTM
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+From: Bob Tremblay <bob.tremblay@contoso-energy.ca>
+To: agent@hsingh.app
+Subject: Exhibits for M12205
+Date: Sat, 4 Oct 2026 14:11:00 +0000
+Message-ID: <YT3PR01MB8743ATT0001@YT3PR01MB8743.CANPRD01.PROD.OUTLOOK.COM>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="_004_attach_"
+
+--_004_attach_
+Content-Type: text/plain; charset="us-ascii"
+
+Please send the Exhibits for M12205. Our cover letter is attached.
+
+--_004_attach_
+Content-Type: text/plain; name="notes.txt"
+Content-Disposition: attachment; filename="notes.txt"
+
+Internal notes: also ask about M99999.
+
+--_004_attach_
+Content-Type: application/pdf; name="cover-letter.pdf"
+Content-Disposition: attachment; filename="cover-letter.pdf"
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKJcfsj6IKMSAwIG9iago8PC9UeXBlL0NhdGFsb2c+PgplbmRvYmoKdHJhaWxlcgo8
+PC9Sb290IDEgMCBSPj4KJSVFT0YK
+
+--_004_attach_--

@@ -1,0 +1,57 @@
+Return-Path: <>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2LrAAbWb6Rw
+	(envelope-from <>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from mail.example.org (mail.example.org [203.0.113.5])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2Lr2Bb5z9sT7
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+From: MAILER-DAEMON@mail.example.org (Mail Delivery System)
+Subject: Undelivered Mail Returned to Sender
+To: agent@hsingh.app
+Auto-Submitted: auto-replied
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="7F2A41C0123.1791122600/mail.example.org"
+Message-Id: <20261004140320.7F2A41C0123@mail.example.org>
+Date: Sat,  4 Oct 2026 14:03:20 +0000 (UTC)
+
+This is a MIME-encapsulated message.
+
+--7F2A41C0123.1791122600/mail.example.org
+Content-Description: Notification
+Content-Type: text/plain; charset=us-ascii
+
+This is the mail system at host mail.example.org.
+
+I'm sorry to have to inform you that your message could not
+be delivered to one or more recipients.
+
+<nobody@example.org>: host mail.example.org said: 550 5.1.1 User unknown
+
+--7F2A41C0123.1791122600/mail.example.org
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; mail.example.org
+Arrival-Date: Sat,  4 Oct 2026 14:03:19 +0000 (UTC)
+
+Final-Recipient: rfc822; nobody@example.org
+Action: failed
+Status: 5.1.1
+
+--7F2A41C0123.1791122600/mail.example.org
+Content-Description: Undelivered Message Headers
+Content-Type: text/rfc822-headers
+
+From: Regulatory Agent <agent@hsingh.app>
+To: nobody@example.org
+Subject: Re: Documents for M12205
+X-Regulatory-Agent: 1
+
+--7F2A41C0123.1791122600/mail.example.org--

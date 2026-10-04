@@ -60,7 +60,9 @@ def build_message(
     msg["From"] = formataddr((AGENT_NAME, s.agent_mail_address))
     msg["To"] = to_addr
     msg["Subject"] = draft.subject
-    msg["Message-ID"] = message_id(request_id, draft.kind) if draft.kind in {"ack", "reply"} else make_msgid()
+    domain = s.agent_mail_address.split("@", 1)[1]
+    # Our domain in every Message-ID lets loop detection recognise replies to any of our mail.
+    msg["Message-ID"] = message_id(request_id, draft.kind) if draft.kind in {"ack", "reply"} else make_msgid(domain=domain)
     msg["Date"] = format_datetime(datetime.now().astimezone())
     msg["In-Reply-To"] = in_reply_to
     msg["References"] = " ".join([*references[-10:], in_reply_to]) if in_reply_to not in references else " ".join(references[-10:])

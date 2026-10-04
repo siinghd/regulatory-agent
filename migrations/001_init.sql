@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS citations (
     id              text PRIMARY KEY,                -- short unguessable id used in links
     request_id      uuid REFERENCES requests(id) ON DELETE CASCADE,
     document_id     uuid NOT NULL REFERENCES documents(id),
+    sha256          text,                            -- the file version the offsets refer to
     page            int NOT NULL,
     quote           text NOT NULL,                   -- verbatim span from pages.text
     char_start      int NOT NULL,

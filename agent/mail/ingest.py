@@ -98,8 +98,8 @@ class Ingestor:
         finally:
             try:
                 await client.logout()
-            except Exception:  # noqa: BLE001 - best-effort logout on a possibly dead socket
-                pass
+            except (OSError, TimeoutError, aioimaplib.Abort, aioimaplib.CommandTimeout) as e:
+                log.debug("ingest.logout_failed", error=str(e))  # socket likely already dead
 
     async def _sweep(self, client: aioimaplib.IMAP4_SSL) -> None:
         res = _ok(await client.uid_search("UNSEEN"), "search")

@@ -10,12 +10,12 @@ from email.message import EmailMessage
 from email.utils import make_msgid
 from email import policy
 
-env = dict(l.strip().split("=", 1) for l in open(".env") if "=" in l and not l.startswith("#"))
+env = dict(l.strip().split("=", 1) for l in open(__import__("pathlib").Path(__file__).resolve().parent.parent / ".env") if "=" in l and not l.startswith("#"))
 U, P, AGENT = env["TEST_SENDER_ADDRESS"], env["TEST_SENDER_PASSWORD"], env["AGENT_MAIL_ADDRESS"]
 ctx = ssl.create_default_context()
 
 def send(subject: str, body: str, extra: dict | None = None) -> str:
-    m = EmailMessage(); mid = make_msgid(domain="hsingh.app")
+    m = EmailMessage(); mid = (extra or {}).pop("Message-ID", None) or make_msgid(domain="hsingh.app")
     m["From"] = f"Test Requester <{U}>"; m["To"] = AGENT; m["Subject"] = subject; m["Message-ID"] = mid
     for k, v in (extra or {}).items(): m[k] = v
     m.set_content(body)

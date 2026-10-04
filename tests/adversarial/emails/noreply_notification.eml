@@ -1,0 +1,22 @@
+Return-Path: <bounces+123456@portal.example.org>
+Delivered-To: agent@hsingh.app
+Received: from mail.hsingh.app
+	by ubuntu-16gb-hel1-1 with LMTP
+	id kOBnHk9V/WZ4XQ2M3AAbWb6Rw
+	(envelope-from <bounces+123456@portal.example.org>)
+	for <agent@hsingh.app>; Sat, 4 Oct 2026 14:02:11 +0000
+Received: from o1.portal.example.org (o1.portal.example.org [198.51.100.200])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mail.hsingh.app (Postfix) with ESMTPS id 4XQ2M39Nn1z9sTK
+	for <agent@hsingh.app>; Sat,  4 Oct 2026 14:02:11 +0000 (UTC)
+From: Filing Portal <notifications@portal.example.org>
+To: agent@hsingh.app
+Subject: New filing in M12205
+Date: Sat, 4 Oct 2026 14:09:00 +0000
+Message-ID: <notif-77812@portal.example.org>
+MIME-Version: 1.0
+Content-Type: text/html; charset=utf-8
+
+<p>A new document was filed in <b>M12205</b>.</p>

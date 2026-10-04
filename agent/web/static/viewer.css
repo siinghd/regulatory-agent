@@ -1,0 +1,210 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f5f5f2;
+  --surface: #ffffff;
+  --text: #1c1e21;
+  --muted: #5a626e;
+  --border: #dcdfe3;
+  --accent: #0a6870;
+  --accent-text: #ffffff;
+  --error: #b42318;
+  --quote-bar: #c88a00;
+  --quote-bg: #fbf5e6;
+  --hl: rgb(255 193 7 / 0.40);
+  --hl-ring: #c27c00;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 14px rgb(0 0 0 / 0.06);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111315;
+    --surface: #1a1d20;
+    --text: #e6e8eb;
+    --muted: #9aa3ae;
+    --border: #2e333a;
+    --accent: #5fc3cb;
+    --accent-text: #0b1315;
+    --error: #ff8a80;
+    --quote-bar: #e0a526;
+    --quote-bg: #241f14;
+    --hl: rgb(255 193 7 / 0.45);
+    --hl-ring: #f0b429;
+    --shadow: none;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+
+.wrap { max-width: 920px; margin: 0 auto; padding: 0 16px; }
+a { color: var(--accent); }
+
+header.site { background: var(--surface); border-bottom: 1px solid var(--border); }
+header.site .wrap { display: flex; align-items: baseline; gap: 0.5rem; padding-block: 0.7rem; }
+.brand { font-weight: 650; letter-spacing: 0.01em; }
+.tagline { color: var(--muted); font-size: 0.9rem; }
+
+main { padding-block: 1.25rem 2.5rem; }
+footer.site { color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+footer.site .wrap { padding-block: 1rem 2rem; }
+
+h1 {
+  font-size: clamp(1.2rem, 1rem + 1.1vw, 1.6rem);
+  line-height: 1.3;
+  margin: 0.25rem 0 1rem;
+  overflow-wrap: anywhere;
+}
+.eyebrow { margin: 0; color: var(--muted); font-size: 0.875rem; }
+.muted { color: var(--muted); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+.label {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.claim-text { margin: 0 0 1rem; font-size: 1.1rem; }
+
+blockquote.quote {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  border-left: 4px solid var(--quote-bar);
+  border-radius: 0 6px 6px 0;
+  background: var(--quote-bg);
+  font-family: Georgia, "Times New Roman", serif;
+  overflow-wrap: anywhere;
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* touch target */
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+.button.primary { background: var(--accent); border-color: transparent; color: var(--accent-text); }
+.button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ------------------------------------------------------------ PDF page */
+
+.status { margin: 0.25rem 0 0.75rem; color: var(--muted); font-size: 0.9rem; }
+.status[data-kind="error"] { color: var(--error); }
+.page-wrap { overflow-x: auto; padding-bottom: 4px; }
+.pdf-page {
+  position: relative;
+  margin: 0 auto;
+  background: #ffffff; /* paper stays white in dark mode */
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.pdf-page:empty { display: none; }
+.pdf-page canvas { display: block; }
+
+/* Text layer rules from PDF.js 4.10.38 web/pdf_viewer.css: transparent, selectable text laid
+   over the canvas. The viewer sets --scale-factor on .pdf-page. */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  opacity: 1;
+  line-height: 1;
+  text-align: initial;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  caret-color: CanvasText;
+  z-index: 0;
+}
+.textLayer :is(span, br) {
+  position: absolute;
+  color: transparent;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.textLayer > :not(.markedContent), .textLayer .markedContent span:not(.markedContent) { z-index: 1; }
+.textLayer span.markedContent { top: 0; height: 0; }
+.textLayer ::selection { background: rgb(0 0 255 / 0.25); }
+.textLayer br::selection { background: transparent; }
+
+/* The cited passage: soft fill on each run, one rounded box around the whole passage. */
+mark.cite-hl {
+  position: static;
+  padding: 0;
+  border-radius: 3px;
+  background: var(--hl);
+  color: transparent;
+}
+.passage-box {
+  position: absolute;
+  z-index: 2;
+  border-radius: 6px;
+  outline: 2px solid var(--hl-ring);
+  outline-offset: 0;
+  background: rgb(255 193 7 / 0.08);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ matter page */
+
+.meta { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; margin: 0 0 1rem; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; overflow-wrap: anywhere; }
+.counts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.counts li { padding: 0.2rem 0.7rem; border: 1px solid var(--border); border-radius: 999px; font-size: 0.9rem; }
+.doc-list { margin: 0; padding: 0; list-style: none; }
+.doc-list li { padding: 0.7rem 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+.doc-list li:first-child { border-top: 0; }
+.doc-meta { color: var(--muted); font-size: 0.85rem; }
+
+@media (max-width: 520px) {
+  .meta { grid-template-columns: 1fr; gap: 0; }
+  .meta dd { margin-bottom: 0.4rem; }
+  .card { padding: 0.9rem; }
+}
+
+/* ---------------------------------------------------------------- progress page */
+.progress h1 { margin: 0.2rem 0 0.6rem; }
+.progress .eyebrow { color: var(--muted); font-size: 0.85rem; margin: 0; }
+.progress .status-line { font-size: 1.05rem; margin: 0 0 1rem; }
+.progress .bar { height: 8px; border-radius: 999px; background: var(--border); overflow: hidden; margin-bottom: 1.4rem; }
+.progress .bar span { display: block; height: 100%; width: var(--pct, 0%); background: var(--accent); transition: width 0.4s ease; }
+.progress .steps { list-style: none; padding: 0; margin: 0 0 1.6rem; display: grid; gap: 0.5rem; }
+.progress .steps li { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); }
+.progress .steps li.done, .progress .steps li.active { color: var(--text); }
+.progress .steps .dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; border: 2px solid var(--border); flex: none; }
+.progress .steps li.done .dot { background: var(--accent); border-color: var(--accent); }
+.progress .steps li.active .dot { border-color: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+.progress h2 { font-size: 1rem; margin: 0 0 0.4rem; }
+.progress .timeline { list-style: none; padding: 0; margin: 0 0 1rem; font-size: 0.92rem; }
+.progress .timeline li { padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
+.progress .timeline time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 0.5rem; }
+.progress .fine { color: var(--muted); font-size: 0.85rem; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 4px rgb(10 104 112 / 0.18); } }
+@media (prefers-reduced-motion: reduce) { .progress .steps li.active .dot { animation: none; } .progress .bar span { transition: none; } }

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Request status{% if v.matter %}: {{ v.matter }}{% endif %}{% endblock %}
+{% block head %}<script src="{{ static_url('progress.js') }}" defer></script>{% endblock %}
+{% block main %}
+<section class="progress" data-token="{{ token }}" data-terminal="{{ 'true' if v.terminal else 'false' }}">
+  <p class="eyebrow">Request from {{ v.from }}</p>
+  <h1>
+    {% if v.matter and v.doc_type %}{{ v.doc_type }} for {{ v.matter }}
+    {% elif v.matter %}{{ v.matter }}
+    {% else %}Your request{% endif %}
+  </h1>
+
+  <p class="status-line" id="status-line">
+    {% if v.outcome %}{{ v.outcome }}{% elif v.step %}{{ v.step }}{% if v.total %} ({{ v.done or 0 }} of {{ v.total }}){% endif %}…{% else %}Working on it…{% endif %}
+  </p>
+
+  {% if v.total %}
+  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="{{ v.total }}" aria-valuenow="{{ v.done or 0 }}">
+    <span id="bar-fill" data-pct="{{ ((v.done or 0) / v.total * 100) | round(0) | int }}"></span>
+  </div>
+  {% endif %}
+
+  {% if v.steps %}
+  <ol class="steps" id="steps">
+    {% for s in v.steps %}
+    <li class="{{ s.status }}"><span class="dot" aria-hidden="true"></span>{{ s.label }}</li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+
+  <h2>Timeline</h2>
+  <ul class="timeline" id="timeline">
+    {% for e in v.timeline %}
+    <li><time datetime="{{ e.at }}">{{ e.at[11:19] }} UTC</time> {{ e.label }}</li>
+    {% endfor %}
+  </ul>
+  <p class="fine">This page updates on its own. The documents and summary arrive by email.</p>
+</section>
+{% endblock %}
