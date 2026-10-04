@@ -1,0 +1,51 @@
+[project]
+name = "regulatory-agent"
+version = "0.1.0"
+description = "Email agent that fetches regulatory filings (Nova Scotia UARB first), packages them, and replies with cited summaries."
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "asyncpg>=0.29",
+  "arq>=0.26",
+  "redis>=5.0",
+  "httpx[socks]>=0.27",
+  "pydantic>=2.8",
+  "pydantic-settings>=2.4",
+  "playwright>=1.47",
+  "pymupdf>=1.24",
+  "dkimpy>=1.1",
+  "pyspf>=2.0.14",
+  "dnspython>=2.6",
+  "cryptography>=43",
+  "rapidfuzz>=3.9",
+  "aioimaplib>=1.1",
+  "aiosmtplib>=3.0",
+  "structlog>=24.4",
+  "jinja2>=3.1",
+  "beautifulsoup4>=4.12",
+  "selectolax>=0.3",
+  "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "respx>=0.21", "ruff>=0.6"]
+
+[project.scripts]
+ragent = "agent.cli:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["live: hits the real UARB portal (needs egress proxy)", "integration: needs postgres+redis"]
+addopts = "-m 'not live and not integration'"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["agent*"]
