@@ -112,8 +112,9 @@ def _greeting(name: str) -> str:
 
 
 def _counts_line(info: MatterInfo) -> str:
-    present = [f"{n} {t.value}" for t, n in info.counts.items() if n]
-    absent = [t.value for t, n in info.counts.items() if not n]
+    counts = [(t, info.counts.get(t, 0)) for t in DocType]  # portal order, whatever the source dict order
+    present = [f"{n} {t.value}" for t, n in counts if n]
+    absent = [t.value for t, n in counts if not n]
     parts = ", ".join(present) if present else "no documents"
     if absent:
         parts += f", and no {' or '.join(absent) if len(absent) <= 2 else ', '.join(absent[:-1]) + ' or ' + absent[-1]}"

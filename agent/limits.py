@@ -14,6 +14,10 @@ if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) 
 # Sliding-window counter: one sorted set per key, members are unique hits scored by time.
 _HIT = """
 redis.call('zremrangebyscore', KEYS[1], 0, ARGV[1] - ARGV[2])
+if redis.call('zscore', KEYS[1], ARGV[4]) then
+  -- already counted (retry of the same request): report the current position, don't add
+  return redis.call('zcount', KEYS[1], 0, redis.call('zscore', KEYS[1], ARGV[4]))
+end
 local n = redis.call('zcard', KEYS[1])
 if n >= tonumber(ARGV[3]) then return n + 1 end
 redis.call('zadd', KEYS[1], ARGV[1], ARGV[4])
@@ -32,10 +36,14 @@ class Limits:
         self._hit = redis.register_script(_HIT)
         self._release = redis.register_script(_RELEASE)
 
-    async def hit(self, key: str, *, limit: int, window_s: int) -> tuple[bool, int]:
-        """Record one hit. Returns (allowed, count including this hit)."""
+    async def hit(self, key: str, *, limit: int, window_s: int, member: str | None = None) -> tuple[bool, int]:
+        """Record one hit. Returns (allowed, count including this hit).
+
+        Pass a stable `member` (e.g. the request id) so a retried job doesn't count twice.
+        """
         now_ms = int(time.time() * 1000)
-        n = int(await self._hit(keys=[f"rl:{key}"], args=[now_ms, window_s * 1000, limit, f"{now_ms}:{secrets.token_hex(4)}"]))
+        member = member or f"{now_ms}:{secrets.token_hex(4)}"
+        n = int(await self._hit(keys=[f"rl:{key}"], args=[now_ms, window_s * 1000, limit, member]))
         return n <= limit, n
 
     @asynccontextmanager

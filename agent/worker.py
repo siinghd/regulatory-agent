@@ -11,7 +11,7 @@ from arq.connections import RedisSettings
 from agent import db, store
 from agent.config import get_settings
 from agent.delivery.drop import DropClient
-from agent.limits import Limits
+from agent.limits import Limits, LockTimeout
 from agent.logs import configure_logging
 from agent.mail.ingest import enqueue
 from agent.models import AgentError
@@ -58,10 +58,16 @@ async def shutdown(ctx: dict) -> None:
 async def process_request(ctx: dict, request_id: str) -> None:
     rid = UUID(request_id)
     attempt = ctx["job_try"]
-    await store.bump_attempts(rid)
     structlog.contextvars.bind_contextvars(request_id=request_id, attempt=attempt)
     try:
-        await process(ctx["deps"], rid, final_attempt=attempt >= MAX_TRIES)
+        # One job per request at a time. arq's job id stops duplicate *queued* jobs, but a
+        # sweeper re-enqueue can still overlap a slow running job; the lock closes that gap.
+        async with ctx["deps"].limits.lock(f"request:{rid}", ttl_s=WorkerSettings.job_timeout + 60, wait_s=2):
+            await store.bump_attempts(rid)
+            await process(ctx["deps"], rid, final_attempt=attempt >= MAX_TRIES)
+    except LockTimeout:
+        log.info("request.busy", defer_s=30)
+        raise Retry(defer=30) from None
     except AgentError as e:
         if not e.retryable or attempt >= MAX_TRIES:
             raise

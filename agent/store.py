@@ -147,21 +147,28 @@ async def mark_sent(request_id: UUID, kind: str) -> None:
 # ------------------------------------------------------------------ threads & limits
 
 
-async def previous_in_thread(thread_root: str, exclude_id: UUID) -> asyncpg.Record | None:
-    """Most recent earlier request in the same thread that resolved a matter (for follow-ups)."""
+async def previous_in_thread(thread_root: str, exclude_id: UUID, from_addr: str) -> asyncpg.Record | None:
+    """Most recent earlier request *by the same sender* in this thread that resolved a matter.
+
+    Scoped to the sender: Message-IDs are not secrets, and a stranger replying into someone
+    else's thread must not inherit (or exhaust) that conversation's context.
+    """
     return await db.fetchrow(
         """
         SELECT matter, doc_type, provider FROM requests
-        WHERE thread_root = $1 AND id <> $2 AND matter IS NOT NULL
+        WHERE thread_root = $1 AND id <> $2 AND from_addr = $3 AND matter IS NOT NULL
         ORDER BY received_at DESC LIMIT 1
         """,
         thread_root,
         exclude_id,
+        from_addr,
     )
 
 
-async def thread_size(thread_root: str) -> int:
-    row = await db.fetchrow("SELECT count(*) AS n FROM requests WHERE thread_root = $1", thread_root)
+async def thread_size(thread_root: str, from_addr: str) -> int:
+    row = await db.fetchrow(
+        "SELECT count(*) AS n FROM requests WHERE thread_root = $1 AND from_addr = $2", thread_root, from_addr
+    )
     return row["n"]
 
 
@@ -169,7 +176,7 @@ async def stuck_requests(older_than: timedelta) -> list[UUID]:
     rows = await db.fetch(
         """
         SELECT id FROM requests
-        WHERE state NOT IN ('rejected', 'done', 'failed') AND updated_at < now() - $1::interval
+        WHERE state NOT IN ('rejected', 'done', 'failed', 'clarify') AND updated_at < now() - $1::interval
         ORDER BY updated_at LIMIT 100
         """,
         older_than,

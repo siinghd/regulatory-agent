@@ -1,0 +1,15 @@
+[Unit]
+Description=SOCKS egress tunnel to Canada (azuretest) for the UARB portal
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=deploy
+ExecStart=/usr/bin/ssh -N -D 127.0.0.1:1080 \
+  -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 \
+  -o BatchMode=yes -o ConnectTimeout=10 azuretest
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

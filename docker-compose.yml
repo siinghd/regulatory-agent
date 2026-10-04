@@ -25,6 +25,43 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       retries: 10
+
+  # The app runs with host networking: the browser must reach the egress SOCKS tunnel on the
+  # host's loopback, and Postgres/Redis are published on loopback only. Nothing listens publicly;
+  # Caddy proxies uarb.hsingh.app to the web process on 127.0.0.1:8710.
+  ingest:
+    build: .
+    image: regulatory-agent:latest
+    command: ["ingest"]
+    restart: unless-stopped
+    network_mode: host
+    user: "1000:1000"  # matches the host owner of ./data
+    env_file: .env
+    environment: {DATA_DIR: /data, HOME: /tmp}
+    volumes: ["./data:/data"]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+  worker:
+    image: regulatory-agent:latest
+    command: ["worker"]
+    restart: unless-stopped
+    network_mode: host
+    user: "1000:1000"  # matches the host owner of ./data
+    env_file: .env
+    environment: {DATA_DIR: /data, HOME: /tmp}
+    volumes: ["./data:/data"]
+    shm_size: "1gb"  # Chromium uses /dev/shm for rendering
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+  web:
+    image: regulatory-agent:latest
+    command: ["web"]
+    restart: unless-stopped
+    network_mode: host
+    user: "1000:1000"  # matches the host owner of ./data
+    env_file: .env
+    environment: {DATA_DIR: /data, HOME: /tmp}
+    volumes: ["./data:/data:ro"]
+    depends_on: {postgres: {condition: service_healthy}}
+
 volumes:
   pgdata:
   redisdata:

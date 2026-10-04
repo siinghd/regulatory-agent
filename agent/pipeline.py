@@ -72,8 +72,13 @@ async def process(deps: Deps, request_id: UUID, *, final_attempt: bool) -> None:
     log.info("request.start", request_id=str(request_id), state=row["state"], attempt=row["attempts"])
     email = mime.parse_raw(blobs.read_raw(row["raw_sha256"]), row["received_at"])
     try:
+        pending = (row["result"] or {}).get("pending_reply") if row["state"] == "replying" else None
+        if pending:
+            # a short reply was decided but not confirmed sent: resend the same message
+            await _deliver_pending_reply(row, email, pending)
+            return
         if row["state"] == "received":
-            parsed = await _gate(deps, row, email)
+            parsed = await _gate(deps, row, email, final_attempt=final_attempt)
             if parsed is None:
                 return
             row = await store.get(request_id)
@@ -94,7 +99,7 @@ async def process(deps: Deps, request_id: UUID, *, final_attempt: bool) -> None:
 # ======================================================================== gate
 
 
-async def _gate(deps: Deps, row, email: InboundEmail) -> ParsedRequest | None:
+async def _gate(deps: Deps, row, email: InboundEmail, *, final_attempt: bool) -> ParsedRequest | None:
     """Decide whether and how to answer. Returns the parsed request if we'll fetch documents."""
     s, rid = deps.settings, row["id"]
     await store.set_progress(rid, "Checking your email")
@@ -110,6 +115,12 @@ async def _gate(deps: Deps, row, email: InboundEmail) -> ParsedRequest | None:
     auth = await mail_auth.verify_sender(raw, email, trusted_mta=s.trusted_mta_hostname)
     auth_json = auth.model_dump(mode="json")
     if mail_auth.is_temperror(auth):
+        if final_attempt:
+            # Still unverifiable after every retry: drop silently. Writing back to an
+            # unverified From is exactly what a spoofer wants.
+            await store.transition(rid, {"received"}, "rejected", reject_reason=f"unauthenticated:{auth.reason}",
+                                   auth=auth_json)
+            return None
         raise TransientError(f"sender verification DNS temperror: {auth.reason}")
     if s.sender_auth_mode != "off" and auth.verdict is not AuthVerdict.PASS:
         # No reply at all: answering an unverifiable From is how agents become spam reflectors.
@@ -166,12 +177,17 @@ async def _gate(deps: Deps, row, email: InboundEmail) -> ParsedRequest | None:
         rid, {"received"}, "accepted",
         provider=provider_name, matter=parsed.matter, doc_type=parsed.doc_type.value, **common,
     )
-    if accepted:
-        await _send(row, email, outbound.ack(
-            name=_display_name(email), subject=email.subject, matter=parsed.matter,
-            doc_type=parsed.doc_type, track_url=_track_url(deps, row),
-        ))
+    if not accepted:
+        return None  # another job already took this request past the gate
+    await _send(row, email, _ack_draft(deps, row, email, parsed))
     return parsed
+
+
+def _ack_draft(deps: Deps, row, email: InboundEmail, parsed: ParsedRequest) -> outbound.Draft:
+    return outbound.ack(
+        name=_display_name(email), subject=email.subject, matter=parsed.matter,
+        doc_type=parsed.doc_type, track_url=_track_url(deps, row),
+    )
 
 
 def _allowlisted(addr: str, allowlist: list[str]) -> bool:
@@ -188,7 +204,7 @@ async def _within_limits(deps: Deps, row, email: InboundEmail) -> bool:
         ("global", s.rate_global_hour),
     ]
     for key, limit in checks:
-        ok, _ = await deps.limits.hit(key, limit=limit, window_s=3600)
+        ok, _ = await deps.limits.hit(key, limit=limit, window_s=3600, member=str(rid))
         if not ok:
             await store.transition(rid, {"received"}, "rejected", reject_reason=f"rate_limited:{key.split(':')[0]}")
             # one notice per sender per hour, so a flood can't turn into a flood of replies
@@ -199,7 +215,7 @@ async def _within_limits(deps: Deps, row, email: InboundEmail) -> bool:
                                  "Please try again later.")],
                 ))
             return False
-    if await store.thread_size(row["thread_root"]) > s.max_requests_per_thread:
+    if await store.thread_size(row["thread_root"], email.from_addr) > s.max_requests_per_thread:
         await store.transition(rid, {"received"}, "rejected", reject_reason="thread_cap")
         return False
     return True
@@ -209,7 +225,7 @@ async def _inherit_from_thread(row, parsed: ParsedRequest) -> ParsedRequest:
     """A follow-up like "Exhibits please" in an existing thread reuses that thread's matter."""
     if parsed.intent is not Intent.DOCUMENT_REQUEST or parsed.matter:
         return parsed
-    prev = await store.previous_in_thread(row["thread_root"], row["id"])
+    prev = await store.previous_in_thread(row["thread_root"], row["id"], row["from_addr"])
     if not prev:
         return parsed
     update: dict = {"matter": prev["matter"]}
@@ -250,6 +266,8 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
     parsed = ParsedRequest.model_validate(row["parsed"])
     provider = deps.providers[row["provider"]]
     doc_type = DocType(row["doc_type"])
+    if row["ack_message_id"] and row["ack_sent_at"] is None:
+        await _send(row, email, _ack_draft(deps, row, email, parsed))  # same Message-ID as reserved
     await store.transition(rid, {"accepted", "fetching"}, "fetching")
 
     info, files, failed, confidential = await _fetch(deps, rid, provider, parsed.matter, doc_type, parsed.max_docs)
@@ -423,6 +441,10 @@ async def _summarise(deps: Deps, rid: UUID, info: MatterInfo, files: list[Downlo
         )
         await store.event(rid, "summary", {"claims": len(raw_claims), "dropped": len(result.dropped), **result.llm})
 
+    existing = await pool().fetch("SELECT id, claim FROM citations WHERE request_id = $1 ORDER BY created_at, id", rid)
+    if existing:  # a retry of this request: reuse its links rather than minting new ones
+        return summary, [outbound.ClaimLine(text=r["claim"], url=f"{deps.settings.public_base_url}/c/{r['id']}")
+                         for r in existing]
     ids = await store.documents_by_external_ids(info.provider, [c["doc_external_id"] for c in raw_claims])
     claims: list[outbound.ClaimLine] = []
     async with pool().acquire() as conn:
@@ -478,9 +500,18 @@ async def _reply_and_close(rid, row, email, state: str, *, paragraphs, common: d
     fields = {k: v for k, v in common.items() if v is not None}
     if reject_reason:
         fields["reject_reason"] = reject_reason
-    await store.transition(rid, {"received"}, "replying", **fields)
-    await _send(row, email, outbound.simple_reply(name=_display_name(email), subject=email.subject, paragraphs=paragraphs))
-    await store.transition(rid, {"replying"}, state)
+    pending = {"paragraphs": list(paragraphs), "final_state": state}
+    # Persist what we're about to say before saying it, so a crash or SMTP failure resumes by
+    # resending exactly this message (same Message-ID) instead of re-deciding.
+    await store.transition(rid, {"received"}, "replying", result={"pending_reply": pending}, **fields)
+    await _deliver_pending_reply(row, email, pending)
+
+
+async def _deliver_pending_reply(row, email: InboundEmail, pending: dict) -> None:
+    await _send(row, email, outbound.simple_reply(
+        name=_display_name(email), subject=email.subject, paragraphs=pending["paragraphs"]
+    ))
+    await store.transition(row["id"], {"replying"}, pending["final_state"])
 
 
 async def _finish_with_error(row, email: InboundEmail, e: BaseException) -> None:
@@ -493,10 +524,13 @@ async def _finish_with_error(row, email: InboundEmail, e: BaseException) -> None
                     "Please send the request again in a little while.")
     final_state = "done" if isinstance(e, MatterNotFound) else "failed"
     current = (await store.get(rid))["state"]
-    await store.transition(rid, {current}, "replying", error=f"{type(e).__name__}: {str(e)[:500]}")
+    pending = {"paragraphs": [user_msg], "final_state": final_state}
+    await store.transition(rid, {current}, "replying", error=f"{type(e).__name__}: {str(e)[:500]}",
+                           result={"pending_reply": pending})
     try:
         await _send(row, email, outbound.simple_reply(name=_display_name(email), subject=email.subject, paragraphs=[user_msg]))
     finally:
+        # Even if this last email fails, the request must not loop forever: close it.
         await store.transition(rid, {"replying"}, final_state)
 
 
