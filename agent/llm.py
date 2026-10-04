@@ -83,7 +83,7 @@ async def structured(
     user: str,
     schema: type[T],
     models: list[str] | None = None,
-    max_tokens: int = 800,
+    max_tokens: int = 1500,
     temperature: float = 0.0,
 ) -> tuple[T, dict]:
     """Return (parsed, meta). meta = {model, latency_ms, cost, attempts}. Raises LLMUnavailable."""
@@ -98,6 +98,9 @@ async def structured(
             "json_schema": {"name": schema.__name__, "strict": True, "schema": _strict_schema(schema)},
         },
         "provider": {"require_parameters": True},
+        # Extraction needs no chain of thought; reasoning models otherwise burn the budget
+        # thinking, or leak the thinking into `content` instead of the JSON.
+        "reasoning": {"enabled": False},
         "usage": {"include": True},
     }
     for attempt, model in enumerate(models or s.llm_models, start=1):
@@ -107,7 +110,10 @@ async def structured(
             if r.status_code >= 400:
                 raise LLMUnavailable(f"{model}: HTTP {r.status_code} {r.text[:200]}")
             body = r.json()
-            content = body["choices"][0]["message"]["content"] or ""
+            choice = body["choices"][0]
+            content = choice["message"].get("content") or ""
+            if not content.strip():
+                raise LLMUnavailable(f"{model}: empty content (finish_reason={choice.get('finish_reason')})")
             parsed = schema.model_validate(json.loads(_strip_fences(content)))
             meta = {
                 "model": body.get("model", model),

@@ -76,7 +76,8 @@ class ParsedRequest(Frozen):
     source: str = "rules"  # rules | llm
     confidence: float = 1.0
     needs_clarification: str | None = None  # user-facing question when ambiguous
-    extra_matters: tuple[str, ...] = ()  # additional matters mentioned (handled one per reply)
+    extra_matters: tuple[str, ...] = ()  # additional matters mentioned (offered, not fetched)
+    extra_doc_types: tuple["DocType", ...] = ()  # additional tabs mentioned (offered as a follow-up)
 
 
 # ---------------------------------------------------------------- provider data

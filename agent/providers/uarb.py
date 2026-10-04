@@ -13,7 +13,7 @@ import asyncio
 import hashlib
 import os
 import re
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import AbstractAsyncContextManager
 from datetime import UTC, date, datetime
 
@@ -150,7 +150,7 @@ class UarbProvider:
         pool: BrowserPool,
         *,
         sessions_per_matter: int = 3,
-        download_lock: AbstractAsyncContextManager | None = None,
+        download_lock: Callable[[], AbstractAsyncContextManager] | None = None,
     ):
         self._pool = pool
         self._sessions_per_matter = sessions_per_matter
@@ -159,7 +159,8 @@ class UarbProvider:
         # the files sessions B and C had just requested. Navigation stays parallel; the short
         # click -> download section is serialised. In production this is a Redis lock so it
         # also holds across worker processes (see agent.limits.redis_lock).
-        self._download_lock = download_lock or asyncio.Lock()
+        local = asyncio.Lock()
+        self._download_lock = download_lock or (lambda: local)
 
     # ------------------------------------------------------------------ navigation
 
@@ -370,7 +371,7 @@ class UarbProvider:
         go =row.locator("button").filter(has_text=re.compile("go get it", re.IGNORECASE)).first
         dialog = page.locator(".v-window").filter(has_text="Download Files").last
         button = dialog.locator(".fm-download-button").first
-        async with self._download_lock:
+        async with self._download_lock():
             return await self._click_and_save(page, ref, go, button, dest_dir)
 
     async def _click_and_save(self, page: Page, ref: DocumentRef, go, button, dest_dir: str) -> DownloadedFile:
