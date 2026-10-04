@@ -5,7 +5,7 @@ import pytest
 from agent.delivery.choose import Delivery, DeliveryDeferred, deliver
 from agent.delivery.drop import DropClient, DropLink, DropRejected, DropUnavailable
 from agent.delivery.package import ZipResult
-from agent.models import DocType, DocumentRef, DownloadedFile
+from agent.models import DocumentRef, DownloadedFile
 
 LINK = DropLink(
     url="https://drop.example/d/abc123DEF_-9#key",
@@ -39,7 +39,7 @@ def _files(n: int = 2) -> list[DownloadedFile]:
     ref = DocumentRef(
         provider="uarb",
         matter="M12205",
-        doc_type=DocType.OTHER_DOCUMENTS,
+        doc_type="Other Documents",
         external_id="1",
         title="t",
         filed_on=date(2024, 5, 1),

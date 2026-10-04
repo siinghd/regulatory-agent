@@ -52,14 +52,6 @@ class InboundEmail(Frozen):
 # ---------------------------------------------------------------- request parsing
 
 
-class DocType(StrEnum):
-    EXHIBITS = "Exhibits"
-    KEY_DOCUMENTS = "Key Documents"
-    OTHER_DOCUMENTS = "Other Documents"
-    TRANSCRIPTS = "Transcripts"
-    RECORDINGS = "Recordings"
-
-
 class Intent(StrEnum):
     DOCUMENT_REQUEST = "document_request"
     QUESTION = "question"  # about a matter, no download wanted
@@ -70,14 +62,14 @@ class Intent(StrEnum):
 
 class ParsedRequest(Frozen):
     intent: Intent
-    matter: str | None = None  # normalised "M12205"
-    doc_type: DocType | None = None
+    matter: str | None = None  # canonical form of its provider, e.g. "M12205", "EB-2024-0111"
+    doc_type: str | None = None  # a category name of the matter's provider
     max_docs: int = 10
     source: str = "rules"  # rules | llm
     confidence: float = 1.0
     needs_clarification: str | None = None  # user-facing question when ambiguous
     extra_matters: tuple[str, ...] = ()  # additional matters mentioned (offered, not fetched)
-    extra_doc_types: tuple["DocType", ...] = ()  # additional tabs mentioned (offered as a follow-up)
+    extra_doc_types: tuple[str, ...] = ()  # additional categories mentioned (offered as a follow-up)
 
 
 # ---------------------------------------------------------------- provider data
@@ -86,8 +78,8 @@ class ParsedRequest(Frozen):
 class DocumentRef(Frozen):
     provider: str
     matter: str
-    doc_type: DocType
-    external_id: str  # UARB file id, e.g. "102674"
+    doc_type: str  # category name
+    external_id: str  # the portal's id for the file, e.g. UARB "102674", OEB "D25-18072"
     title: str
     filed_on: date | None = None
     access: str = "Public"
@@ -105,7 +97,7 @@ class MatterInfo(Frozen):
     date_received: date | None = None
     decision_date: date | None = None
     outcome: str | None = None
-    counts: dict[DocType, int]
+    counts: dict[str, int]  # per category name, in the provider's order (lost by a JSONB round trip)
     portal_url: str
     fetched_at: datetime
 
@@ -144,9 +136,7 @@ class MatterNotFound(AgentError):
 
     def __init__(self, matter: str):
         super().__init__(matter)
-        self.user_message = (
-            f"I couldn't find matter {matter} in the public database. Matter numbers look like M12205."
-        )
+        self.user_message = f"I couldn't find matter {matter} in the regulator's public database."
 
 
 class PortalUnavailable(AgentError):

@@ -148,7 +148,7 @@ def _manifest_csv(files: Sequence[DownloadedFile], arcnames: Sequence[str]) -> b
                 _csv_cell(arcname),
                 _csv_cell(ref.external_id),
                 _csv_cell(ref.matter),
-                _csv_cell(ref.doc_type.value),
+                _csv_cell(ref.doc_type),
                 _csv_cell(ref.title),
                 ref.filed_on.isoformat() if ref.filed_on else "",
                 f.size,

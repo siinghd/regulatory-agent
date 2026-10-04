@@ -17,7 +17,7 @@ from agent.delivery.package import (
     member_names,
     safe_filename,
 )
-from agent.models import DocType, DocumentRef, DownloadedFile
+from agent.models import DocumentRef, DownloadedFile
 
 HOSTILE_NAMES = [
     "../../etc/passwd",
@@ -44,7 +44,7 @@ def _doc(
     fields: dict[str, object] = {
         "provider": "uarb",
         "matter": "M12205",
-        "doc_type": DocType.OTHER_DOCUMENTS,
+        "doc_type": "Other Documents",
         "external_id": external_id,
         "title": filename,
         "filed_on": date(2024, 5, 1),

@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     uarb_fallback_proxy: SecretStr | None = None
     uarb_sessions_per_matter: int = 3
     uarb_max_concurrent_sessions: int = 4  # politeness cap across all workers
+    # The OEB's document server is reachable directly; set a proxy only if that changes.
+    oeb_proxy: str | None = None
+    oeb_max_concurrency: int = 4  # concurrent HTTP requests per worker
     browser_nav_timeout_ms: int = 60_000
 
     # --- delivery

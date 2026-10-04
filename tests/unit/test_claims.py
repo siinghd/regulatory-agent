@@ -15,7 +15,7 @@ from agent.citations.claims import (
 )
 from agent.citations.extract import extract_pages
 from agent.citations.ground import DropReason
-from agent.models import DocType, DocumentRef, MatterInfo
+from agent.models import DocumentRef, MatterInfo
 
 ORDER_PAGES = extract_pages(str(Path(__file__).resolve().parents[1] / "fixtures" / "uarb_102674.pdf"))
 
@@ -28,7 +28,7 @@ MATTER = MatterInfo(
     category="Water",
     date_received=date(2025, 4, 7),
     decision_date=date(2025, 10, 23),
-    counts={DocType.OTHER_DOCUMENTS: 43},
+    counts={"Other Documents": 43},
     portal_url="https://uarb.novascotia.ca/fmi/webd/UARB15",
     fetched_at=datetime(2026, 10, 4, tzinfo=UTC),
 )
@@ -38,7 +38,7 @@ def _ref(external_id: str, title: str, filed_on: date | None = None) -> Document
     return DocumentRef(
         provider="uarb",
         matter="M12205",
-        doc_type=DocType.OTHER_DOCUMENTS,
+        doc_type="Other Documents",
         external_id=external_id,
         title=title,
         filed_on=filed_on,

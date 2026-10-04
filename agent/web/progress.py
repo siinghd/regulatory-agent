@@ -18,7 +18,7 @@ Token = Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{12,32}$")]
 STEPS = [
     ("received", "Email received"),
     ("accepted", "Sender verified and request understood"),
-    ("fetching", "Fetching from the UARB database"),
+    ("fetching", "Fetching from the regulator's database"),
     ("packaging", "Packaging and writing a cited summary"),
     ("replying", "Sending your reply"),
     ("done", "Done"),

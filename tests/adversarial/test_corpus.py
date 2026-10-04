@@ -71,7 +71,7 @@ CORPUS = {
     "dsn_bounce.eml": Expected("mailer-daemon@mail.example.org", automated=True),
     "mailing_list.eml": Expected("dana.wu@example.net", automated=True),
     # Parses like any request; sender authentication is what stops it (see AUTH below).
-    "spoofed_ceo.eml": Expected("ceo@senpilot.com", contains=("M12205",)),
+    "spoofed_ceo.eml": Expected("ceo@bigutility.example", contains=("M12205",)),
     "reply_to_elsewhere.eml": Expected("jane.doe@gmail.com", contains=("Other Documents for M12205",)),
     "two_from_addresses.eml": Expected(None),
     "two_from_headers.eml": Expected(None),
@@ -155,14 +155,14 @@ SPF_WORLD = {
     ("209.85.208.45", "gmail.com"): "pass",
     ("40.107.22.91", "contoso-energy.ca"): "pass",
     ("203.0.113.5", "mail.example.org"): "pass",
-    ("185.220.101.47", "senpilot.com"): "fail",
+    ("185.220.101.47", "bigutility.example"): "fail",
     # Only reachable if the forged lower Received header in spoofed_ceo.eml were trusted.
-    ("209.85.220.41", "senpilot.com"): "pass",
+    ("209.85.220.41", "bigutility.example"): "pass",
 }
 DMARC_WORLD = {
     "_dmarc.gmail.com": ["v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com"],
     "_dmarc.contoso-energy.ca": ["v=DMARC1; p=quarantine"],
-    "_dmarc.senpilot.com": ["v=DMARC1; p=reject"],
+    "_dmarc.bigutility.example": ["v=DMARC1; p=reject"],
 }
 AUTH = {
     "gmail_plain_request.eml": (AuthVerdict.PASS, "209.85.208.45"),

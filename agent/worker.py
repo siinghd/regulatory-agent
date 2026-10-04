@@ -16,8 +16,9 @@ from agent.logs import configure_logging
 from agent.mail.ingest import enqueue
 from agent.models import AgentError
 from agent.pipeline import Deps, process
-from agent.providers.base import register
+from agent.providers.base import Provider, register
 from agent.providers.browser import BrowserPool
+from agent.providers.oeb import OebProvider, make_client
 from agent.providers.uarb import UarbProvider
 
 log = structlog.get_logger()
@@ -42,14 +43,19 @@ async def startup(ctx: dict) -> None:
         # the portal's shared download state is per client IP, so the lock is global to the egress
         download_lock=lambda: limits.lock("uarb:download", ttl_s=180, wait_s=600, poll_s=0.1),
     )
-    register("uarb", lambda: uarb)
+    ctx["oeb_client"] = make_client(s.oeb_proxy)
+    oeb_provider = OebProvider(ctx["oeb_client"], max_concurrency=s.oeb_max_concurrency)
+    providers: dict[str, Provider] = {"uarb": uarb, "oeb": oeb_provider}
+    for name, provider in providers.items():
+        register(name, lambda p=provider: p)
     ctx["browsers"] = browsers
-    ctx["deps"] = Deps(settings=s, providers={"uarb": uarb}, limits=limits, drop=DropClient.from_settings(s))
+    ctx["deps"] = Deps(settings=s, providers=providers, limits=limits, drop=DropClient.from_settings(s))
     log.info("worker.ready")
 
 
 async def shutdown(ctx: dict) -> None:
     await ctx["browsers"].close()
+    await ctx["oeb_client"].aclose()
     if ctx["deps"].drop:
         await ctx["deps"].drop.aclose()
     await db.close_pool()

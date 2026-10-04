@@ -38,7 +38,6 @@ from agent.llm import LLMUnavailable
 from agent.mail.ingest import ingest_raw
 from agent.models import (
     AuthVerdict,
-    DocType,
     DocumentRef,
     DownloadedFile,
     InboundEmail,
@@ -48,25 +47,22 @@ from agent.models import (
     SenderAuth,
 )
 from agent.pipeline import Deps
+from agent.providers import base as providers_base
+from agent.providers.base import Category
+from agent.providers.uarb import CATEGORIES as UARB_CATEGORIES
+from agent.providers.uarb import MENTION_RE as UARB_MENTION_RE
+from agent.providers.uarb import UarbProvider
 
 AGENT_ADDRESS = "agent@hsingh.app"
 AGENT_DOMAIN = "hsingh.app"
 PUBLIC_BASE_URL = "https://uarb.test"
 MATTER = "M12205"
-TAB_CODES = {
-    DocType.EXHIBITS: "EX",
-    DocType.KEY_DOCUMENTS: "KD",
-    DocType.OTHER_DOCUMENTS: "OD",
-    DocType.TRANSCRIPTS: "TR",
-    DocType.RECORDINGS: "RC",
-}
-# Insertion order is the order the counts sentence lists the tabs in.
 DEFAULT_COUNTS = {
-    DocType.EXHIBITS: 2,
-    DocType.KEY_DOCUMENTS: 0,
-    DocType.OTHER_DOCUMENTS: 3,
-    DocType.TRANSCRIPTS: 0,
-    DocType.RECORDINGS: 0,
+    "Exhibits": 2,
+    "Key Documents": 0,
+    "Other Documents": 3,
+    "Transcripts": 0,
+    "Recordings": 0,
 }
 COUNTS_SENTENCE = "I found 2 Exhibits, 3 Other Documents, and no Key Documents, Transcripts or Recordings."
 SUMMARY_TEXT = "The Board approved the projects described in these filings."
@@ -75,8 +71,8 @@ SUMMARY_TEXT = "The Board approved the projects described in these filings."
 # ---------------------------------------------------------------- documents
 
 
-def doc_id(matter: str, doc_type: DocType, n: int) -> str:
-    return f"{matter}-{TAB_CODES[doc_type]}-{n}"
+def doc_id(matter: str, doc_type: str, n: int) -> str:
+    return f"{matter}-{doc_type.replace(' ', '')}-{n}"
 
 
 def pdf_lines(external_id: str) -> list[str]:
@@ -102,16 +98,14 @@ def make_pdf(external_id: str) -> bytes:
 # ---------------------------------------------------------------- portal
 
 
-class FakeProvider:
-    """Implements the Provider protocol (plus list_matter_and_documents, which the pipeline uses)."""
+class _FakePortal:
+    """The Provider protocol over in-memory matters; subclasses supply the regulator's identity."""
 
-    name = "uarb"
-    display_name = "Nova Scotia Utility and Review Board (fake)"
-    matter_pattern = re.compile(r"M\d{5}")
-    doc_types = tuple(DocType)
+    name: str
+    portal_url: str
 
     def __init__(self) -> None:
-        self.matters: dict[str, tuple[MatterInfo, dict[DocType, list[DocumentRef]]]] = {}
+        self.matters: dict[str, tuple[MatterInfo, dict[str, list[DocumentRef]]]] = {}
         self.calls: Counter[str] = Counter()  # portal visits by method ("list", "fetch_matter", "download")
         self.list_limits: list[int] = []
         self.downloaded: list[str] = []  # one external id per file actually served
@@ -122,7 +116,7 @@ class FakeProvider:
         self.download_fail: set[str] = set()  # external ids whose download fails
         self._pdfs: dict[str, bytes] = {}
 
-    def add_matter(self, matter: str, counts: Mapping[DocType, int], *, title: str | None = None) -> None:
+    def add_matter(self, matter: str, counts: Mapping[str, int], *, title: str | None = None) -> None:
         info = MatterInfo(
             provider=self.name,
             matter=matter,
@@ -132,7 +126,7 @@ class FakeProvider:
             category="Water",
             date_received=date(2025, 4, 7),
             counts=dict(counts),
-            portal_url="https://uarb.example/fmi/webd/UARB15",
+            portal_url=self.portal_url,
             fetched_at=datetime.now(UTC),
         )
         docs = {
@@ -142,7 +136,7 @@ class FakeProvider:
                     matter=matter,
                     doc_type=t,
                     external_id=doc_id(matter, t, i),
-                    title=f"{t.value} {i} for {matter}",
+                    title=f"{t} {i} for {matter}",
                     filed_on=date(2026, 9, 30) - timedelta(days=7 * i),
                     row_index=i - 1,
                 )
@@ -155,7 +149,7 @@ class FakeProvider:
     def info(self, matter: str = MATTER) -> MatterInfo:
         return self.matters[matter][0]
 
-    def refs(self, doc_type: DocType, matter: str = MATTER) -> list[DocumentRef]:
+    def refs(self, doc_type: str, matter: str = MATTER) -> list[DocumentRef]:
         return self.matters[matter][1][doc_type]
 
     def pdf(self, external_id: str) -> bytes:
@@ -166,7 +160,7 @@ class FakeProvider:
     def visits(self) -> int:
         return sum(self.calls.values())
 
-    async def _visit(self, what: str, matter: str) -> tuple[MatterInfo, dict[DocType, list[DocumentRef]]]:
+    async def _visit(self, what: str, matter: str) -> tuple[MatterInfo, dict[str, list[DocumentRef]]]:
         self.calls[what] += 1
         if self.hang_next:
             self.hang_next -= 1
@@ -186,12 +180,12 @@ class FakeProvider:
         info, _ = await self._visit("fetch_matter", matter)
         return info
 
-    async def list_documents(self, matter: str, doc_type: DocType, limit: int) -> list[DocumentRef]:
+    async def list_documents(self, matter: str, doc_type: str, limit: int) -> list[DocumentRef]:
         _, docs = await self._visit("list_documents", matter)
         return docs.get(doc_type, [])[:limit]
 
     async def list_matter_and_documents(
-        self, matter: str, doc_type: DocType, limit: int
+        self, matter: str, doc_type: str, limit: int
     ) -> tuple[MatterInfo, list[DocumentRef]]:
         self.list_limits.append(limit)
         info, docs = await self._visit("list", matter)
@@ -214,6 +208,34 @@ class FakeProvider:
             yield DownloadedFile(ref=ref, path=path, sha256=sha, size=len(data), filename=f"{ref.external_id}.pdf")
         if failed and len(failed) == len(refs):  # like UarbProvider: partial failures are only logged
             raise PortalUnavailable(f"every download failed: {failed}")
+
+
+class FakeProvider(_FakePortal):
+    """The UARB as the gate and the pipeline see it: its matter format and its tabs."""
+
+    name = "uarb"
+    display_name = "Nova Scotia Utility and Review Board (fake)"
+    portal_url = "https://uarb.example/fmi/webd/UARB15"
+    matter_pattern = UarbProvider.matter_pattern
+    mention_pattern = UARB_MENTION_RE
+    matter_example = UarbProvider.matter_example
+    categories = UARB_CATEGORIES
+    normalise = staticmethod(UarbProvider.normalise)
+
+
+class SecondFakeProvider(_FakePortal):
+    """Another regulator: different matter format and categories, and the default normaliser."""
+
+    name = "fakereg"
+    display_name = "Fake Energy Regulator"
+    portal_url = "https://regulator.example/documents"
+    matter_pattern = re.compile(r"FK-\d{4}")
+    mention_pattern = re.compile(r"(?<![A-Za-z0-9])FK-\d{4}(?!\d)", re.IGNORECASE)
+    matter_example = "FK-1234"
+    categories = (
+        Category("Rulings", aliases=("rulings", "ruling"), description="Decisions of the regulator"),
+        Category("Filings", aliases=("filings", "filing"), description="Everything parties filed"),
+    )
 
 
 # ---------------------------------------------------------------- LLM, sender auth, SMTP, drop
@@ -415,7 +437,7 @@ def outbound_id(rid: UUID, kind: str) -> str:
 def assert_threaded(msg: EmailMessage, *, to: str, in_reply_to: str, references: str) -> None:
     """Headers every message we send must carry."""
     assert msg["To"] == to
-    assert msg["From"] == f"UARB Document Agent <{AGENT_ADDRESS}>"
+    assert msg["From"] == f"Regulatory Document Agent <{AGENT_ADDRESS}>"
     assert msg["In-Reply-To"] == in_reply_to
     assert msg["References"] == references
     assert msg["Auto-Submitted"] == "auto-replied"
@@ -441,6 +463,7 @@ class Harness:
     ) -> None:
         self.redis = redis
         self.provider = provider
+        self.providers: dict[str, _FakePortal] = {provider.name: provider}
         self.llm = llm
         self.auth = auth
         self.smtp = smtp
@@ -454,9 +477,14 @@ class Harness:
             self._mp.setenv(key.upper(), value if isinstance(value, str) else json.dumps(value))
         get_settings.cache_clear()
 
+    def add_provider(self, provider: _FakePortal) -> None:
+        """Serve another regulator next to the fake UARB, in the registry and in the pipeline."""
+        self.providers[provider.name] = provider
+        self._mp.setattr(providers_base, "_REGISTRY", {n: (lambda p=p: p) for n, p in self.providers.items()})
+
     @property
     def deps(self) -> Deps:
-        return Deps(settings=get_settings(), providers={"uarb": self.provider}, limits=self.limits, drop=self.drop)
+        return Deps(settings=get_settings(), providers=dict(self.providers), limits=self.limits, drop=self.drop)
 
     def ctx(self, job_try: int = 1) -> dict[str, Any]:
         return {"redis": self.redis, "deps": self.deps, "job_try": job_try}

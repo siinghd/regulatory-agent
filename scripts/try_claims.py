@@ -14,7 +14,7 @@ from pathlib import Path
 
 from agent.citations.claims import summarize_with_citations
 from agent.citations.extract import extract_pages
-from agent.models import DocType, DocumentRef, MatterInfo
+from agent.models import DocumentRef, MatterInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,11 +34,11 @@ MATTER = MatterInfo(
     date_received=date(2025, 4, 7),
     decision_date=date(2025, 10, 23),
     counts={
-        DocType.EXHIBITS: 13,
-        DocType.KEY_DOCUMENTS: 6,
-        DocType.OTHER_DOCUMENTS: 43,
-        DocType.TRANSCRIPTS: 0,
-        DocType.RECORDINGS: 0,
+        "Exhibits": 13,
+        "Key Documents": 6,
+        "Other Documents": 43,
+        "Transcripts": 0,
+        "Recordings": 0,
     },
     portal_url="https://uarb.novascotia.ca/fmi/webd/UARB15",
     fetched_at=datetime.now(UTC),
@@ -46,7 +46,7 @@ MATTER = MatterInfo(
 ORDER = DocumentRef(
     provider="uarb",
     matter="M12205",
-    doc_type=DocType.OTHER_DOCUMENTS,
+    doc_type="Other Documents",
     external_id="102674",
     title="Board Order",
     filed_on=date(2026, 7, 8),

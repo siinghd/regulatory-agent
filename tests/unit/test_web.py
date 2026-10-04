@@ -8,7 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from agent.config import Settings, get_settings
-from agent.models import DocType, MatterInfo
+from agent.models import MatterInfo
 from agent.web import app as web
 
 ORDER_PDF = Path(__file__).resolve().parents[1] / "fixtures" / "uarb_102674.pdf"
@@ -46,7 +46,7 @@ MATTER = MatterInfo(
     category="Water",
     date_received=date(2025, 4, 7),
     decision_date=date(2025, 10, 23),
-    counts={DocType.EXHIBITS: 13, DocType.KEY_DOCUMENTS: 6, DocType.OTHER_DOCUMENTS: 43},
+    counts={"Exhibits": 13, "Key Documents": 6, "Other Documents": 43},
     portal_url="https://uarb.novascotia.ca/fmi/webd/UARB15",
     fetched_at=datetime(2026, 10, 4, tzinfo=UTC),
 )

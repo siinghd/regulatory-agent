@@ -99,7 +99,7 @@ async def _upload(drop: DropClient | None, path: str, filename: str) -> DropLink
 
 def _display_name(files: Sequence[DownloadedFile]) -> str:
     """Name the package after what was asked for, e.g. "M12205 Other Documents.zip"."""
-    scopes = {(f.ref.matter, f.ref.doc_type.value) for f in files}
+    scopes = {(f.ref.matter, f.ref.doc_type) for f in files}
     if len(scopes) == 1:
         matter, doc_type = scopes.pop()
         return safe_filename(f"{matter} {doc_type}", ext=".zip")

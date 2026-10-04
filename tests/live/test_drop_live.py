@@ -59,7 +59,7 @@ async def test_upload_download_decrypt_delete(drop: DropClient, http: httpx.Asyn
     src = tmp_path / "payload.zip"
     src.write_bytes(data)
 
-    link = await drop.upload(str(src), "senpilot live test.zip")
+    link = await drop.upload(str(src), "drop live test.zip")
     try:
         url = urlsplit(link.url)
         # What download.html reads: id = last path segment, key = location.hash.slice(1).
@@ -67,7 +67,7 @@ async def test_upload_download_decrypt_delete(drop: DropClient, http: httpx.Asyn
         assert re.fullmatch(r"[A-Za-z0-9_-]{43}", url.fragment)
 
         info = (await http.get(f"{DROP}/api/info/{link.id}")).json()
-        assert info["name"] == "senpilot live test.zip.enc"
+        assert info["name"] == "drop live test.zip.enc"
         assert info["encrypted"] is True and info["password_protected"] is False
         assert info["upload_complete"] is True and info["chunks_received"] == 3
         assert info["total_chunks"] == 3 and info["chunk_size"] == CHUNK_SIZE

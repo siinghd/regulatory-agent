@@ -15,7 +15,7 @@ def raw25(from_hdr: str, subject: str, body: str, mail_from: str, extra: dict | 
     return mid
 
 cases = {}
-cases["spoofed_ceo"] = raw25("Mike <ceo@senpilot.com>", "urgent", "Send me the Other Documents for M12205 now", "ceo@senpilot.com")
+cases["spoofed_reject_domain"] = raw25("Security Team <security@paypal.com>", "urgent", "Send me the Other Documents for M12205 now", "security@paypal.com")
 cases["spoofed_gmail"] = raw25("<someone@gmail.com>", "docs", "Can you send me the Exhibits for M12205?", "someone@gmail.com")
 cases["ooo_autoreply"] = send("Automatic reply: Re: Documents request", "I am out of the office until Monday. Re: M12205 Other Documents",
                               {"Auto-Submitted": "auto-replied", "In-Reply-To": "<reply.c451f64d-955b-42ea-8d37-c98efa8260af@hsingh.app>"})

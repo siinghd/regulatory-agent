@@ -10,7 +10,6 @@ PortalUnavailable (retry), never as MatterNotFound (which we tell the user).
 """
 
 import asyncio
-import hashlib
 import os
 import re
 from collections.abc import AsyncIterator, Callable
@@ -23,7 +22,6 @@ from playwright.async_api import Page
 from playwright.async_api import TimeoutError as PlaywrightTimeout
 
 from agent.models import (
-    DocType,
     DocumentRef,
     DownloadedFile,
     MatterInfo,
@@ -31,13 +29,56 @@ from agent.models import (
     PortalUnavailable,
     ScrapeError,
 )
+from agent.providers.base import Category
 from agent.providers.browser import BrowserPool
+from agent.providers.files import finalise_download
 
 log = structlog.get_logger()
 
 PORTAL_URL = "https://uarb.novascotia.ca/fmi/webd/UARB15"
 MATTER_RE = re.compile(r"M\d{5}")
-_TAB_COUNT_RE = re.compile(r"(Exhibits|Key Documents|Other Documents|Transcripts|Recordings)\s*-\s*(\d+)")
+# "M12205", "m12205", "M-12205", "M 12205" (not inside longer tokens like "AM123456"), and
+# "matter 12205", "matter no. 12205", "matter #12205"
+MENTION_RE = re.compile(
+    r"(?:(?<![A-Za-z0-9])M[-\s]?|\bmatter\s*(?:no\.?|number|#)?\s*:?\s*)(\d{5})(?!\d)", re.IGNORECASE
+)
+
+# The portal's tabs, in the order it shows them.
+CATEGORIES = (
+    Category(
+        "Exhibits",
+        aliases=("exhibits", "exhibit"),
+        description="Evidence entered into the hearing record, numbered like H-1",
+    ),
+    Category(
+        "Key Documents",
+        aliases=(
+            "key documents", "key document", "key docs", "key doc",
+            "key files", "key file", "key filings", "key filing",
+        ),
+        description="The application, the Board's decisions and orders, and other principal filings",
+    ),
+    Category(
+        "Other Documents",
+        aliases=(
+            "other documents", "other document", "other docs", "other doc",
+            "other files", "other file", "other filings", "other filing",
+        ),
+        description="Correspondence, information requests, submissions and all other filings",
+    ),
+    Category(
+        "Transcripts",
+        aliases=("transcripts", "transcript", "hearing transcripts", "hearing transcript"),
+        description="Hearing transcripts",
+    ),
+    Category(
+        "Recordings",
+        aliases=("recordings", "recording", "audio", "video"),
+        description="Audio or video recordings of hearings",
+    ),
+)
+
+_TAB_COUNT_RE = re.compile(rf"({'|'.join(re.escape(c.name) for c in CATEGORIES)})\s*-\s*(\d+)")
 _DATE_RE = re.compile(r"^\d{2}/\d{2}/\d{4}$")
 # Exhibit numbers seen live: H-1, H-4(C), H-4(C)-iii, H-5(c)-ii, H-5-iii. No spaces, short.
 _EXHIBIT_ID_RE = re.compile(r"[A-Za-z]{1,4}\d{0,2}-\d{1,4}[-()A-Za-z0-9.]{0,14}")
@@ -138,18 +179,26 @@ def parse_row(texts: list[str]) -> dict | None:
     }
 
 
-def parse_counts(body_text: str) -> dict[DocType, int]:
-    found = {DocType(name): int(n) for name, n in _TAB_COUNT_RE.findall(body_text)}
-    if len(found) != len(DocType):
-        raise ScrapeError(f"expected 5 tab counts, found {sorted(found)}")
-    return found
+def parse_counts(body_text: str) -> dict[str, int]:
+    found = {name: int(n) for name, n in _TAB_COUNT_RE.findall(body_text)}
+    if len(found) != len(CATEGORIES):
+        raise ScrapeError(f"expected {len(CATEGORIES)} tab counts, found {sorted(found)}")
+    return {c.name: found[c.name] for c in CATEGORIES}
 
 
 class UarbProvider:
     name = "uarb"
     display_name = "Nova Scotia Utility and Review Board"
+    portal_url = PORTAL_URL
     matter_pattern = MATTER_RE
-    doc_types = tuple(DocType)
+    mention_pattern = MENTION_RE
+    matter_example = "M12205"
+    categories = CATEGORIES
+
+    @staticmethod
+    def normalise(raw: str) -> str | None:
+        m = MENTION_RE.fullmatch(raw)
+        return f"M{m.group(1)}" if m else None
 
     def __init__(
         self,
@@ -274,8 +323,8 @@ class UarbProvider:
 
     # ------------------------------------------------------------------ documents
 
-    async def _open_tab(self, page: Page, doc_type: DocType) -> None:
-        tab = page.locator("button").filter(has_text=re.compile(rf"^\s*{re.escape(doc_type.value)}\s*-\s*\d+\s*$"))
+    async def _open_tab(self, page: Page, doc_type: str) -> None:
+        tab = page.locator("button").filter(has_text=re.compile(rf"^\s*{re.escape(doc_type)}\s*-\s*\d+\s*$"))
         await tab.first.click(force=True)
         try:
             await page.locator("tr.v-grid-row-has-data").first.wait_for(state="attached")
@@ -295,7 +344,7 @@ class UarbProvider:
             }"""
         )
 
-    async def _collect_rows(self, page: Page, matter: str, doc_type: DocType, limit: int) -> list[DocumentRef]:
+    async def _collect_rows(self, page: Page, matter: str, doc_type: str, limit: int) -> list[DocumentRef]:
         refs: dict[str, DocumentRef] = {}
         stale_rounds = 0
         # Collect until `limit` *public* rows: confidential rows are listed (so the reply can say
@@ -324,7 +373,7 @@ class UarbProvider:
             stale_rounds = stale_rounds + 1 if len(refs) == before else 0
         return list(refs.values())
 
-    async def list_documents(self, matter: str, doc_type: DocType, limit: int) -> list[DocumentRef]:
+    async def list_documents(self, matter: str, doc_type: str, limit: int) -> list[DocumentRef]:
         async with self._pool.session() as page:
             await self._open_matter(page, matter)
             info = await self._read_matter(page, matter)
@@ -334,7 +383,7 @@ class UarbProvider:
             return await self._collect_rows(page, matter, doc_type, min(limit, info.counts[doc_type]))
 
     async def list_matter_and_documents(
-        self, matter: str, doc_type: DocType, limit: int
+        self, matter: str, doc_type: str, limit: int
     ) -> tuple[MatterInfo, list[DocumentRef]]:
         """One session for both: the common path for a request (saves a full portal round)."""
         try:
@@ -346,7 +395,7 @@ class UarbProvider:
             return await self._list_once(matter, doc_type, limit)
 
     async def _list_once(
-        self, matter: str, doc_type: DocType, limit: int
+        self, matter: str, doc_type: str, limit: int
     ) -> tuple[MatterInfo, list[DocumentRef]]:
         async with self._pool.session() as page:
             await self._open_matter(page, matter)
@@ -437,7 +486,7 @@ class UarbProvider:
             await download.save_as(tmp)
         finally:
             await self._dismiss_modals(page)
-        return _finalise_file(tmp, ref, download.suggested_filename, dest_dir)
+        return finalise_download(tmp, ref, download.suggested_filename, dest_dir)
 
     async def _download_worker(
         self, matter: str, refs: list[DocumentRef], dest_dir: str, out: asyncio.Queue
@@ -512,29 +561,3 @@ class UarbProvider:
             if remaining == len(refs):  # nothing at all came through
                 raise errors[0] if isinstance(errors[0], Exception) else ScrapeError(str(errors[0]))
 
-
-_MAGIC = {".pdf": b"%PDF-"}
-
-
-def _finalise_file(tmp: str, ref: DocumentRef, suggested: str, dest_dir: str) -> DownloadedFile:
-    size = os.path.getsize(tmp)
-    if size == 0:
-        os.remove(tmp)
-        raise PortalUnavailable(f"empty download for {ref.external_id}")
-    h = hashlib.sha256()
-    with open(tmp, "rb") as f:
-        head = f.read(8)
-        h.update(head)
-        for chunk in iter(lambda: f.read(1 << 20), b""):
-            h.update(chunk)
-    ext = os.path.splitext(suggested)[1].lower() or ref.file_ext
-    magic = _MAGIC.get(ext)
-    if magic and not head.startswith(magic):
-        os.remove(tmp)
-        raise ScrapeError(f"{ref.external_id}: expected {ext} but got {head!r}")
-    sha = h.hexdigest()
-    final = os.path.join(dest_dir, f"{sha}{ext}")
-    os.replace(tmp, final)
-    return DownloadedFile(
-        ref=ref, path=final, sha256=sha, size=size, filename=f"{ref.external_id}{ext}"
-    )

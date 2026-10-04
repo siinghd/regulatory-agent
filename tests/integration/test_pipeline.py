@@ -15,7 +15,7 @@ import pytest
 from arq import Retry
 
 from agent import blobs, db, worker
-from agent.models import DocType, PortalUnavailable
+from agent.models import PortalUnavailable
 
 from .harness import (
     COUNTS_SENTENCE,
@@ -23,6 +23,7 @@ from .harness import (
     PUBLIC_BASE_URL,
     SUMMARY_TEXT,
     FakeDrop,
+    SecondFakeProvider,
     assert_threaded,
     attachments,
     body_text,
@@ -38,8 +39,8 @@ from .harness import (
 pytestmark = pytest.mark.integration
 
 REQUEST = "Hi,\n\nCan you send me the Other Documents for M12205?\n\nThanks,\nAlice"
-OTHER_DOCS = [doc_id(MATTER, DocType.OTHER_DOCUMENTS, i) for i in (1, 2, 3)]
-EXHIBITS = [doc_id(MATTER, DocType.EXHIBITS, i) for i in (1, 2)]
+OTHER_DOCS = [doc_id(MATTER, "Other Documents", i) for i in (1, 2, 3)]
+EXHIBITS = [doc_id(MATTER, "Exhibits", i) for i in (1, 2)]
 
 
 def assert_in_order(expected: list[str], actual: list[str]) -> None:
@@ -434,7 +435,7 @@ async def test_sender_auth_modes(h, settings, verdict, state, reject_reason):
     ("kwargs", "reason"),
     [
         ({"headers": {"Auto-Submitted": "auto-replied"}}, "automated:Auto-Submitted: auto-replied"),
-        ({"from_addr": "agent@hsingh.app", "from_name": "UARB Document Agent"}, "automated:sent from our own address"),
+        ({"from_addr": "agent@hsingh.app", "from_name": "Regulatory Document Agent"}, "automated:sent from our own address"),
         ({"headers": {"X-Regulatory-Agent": "1"}}, "automated:carries our X-Regulatory-Agent marker"),
     ],
     ids=["auto-submitted", "own-address", "agent-marker"],
@@ -506,7 +507,7 @@ async def test_follow_up_in_the_thread_inherits_the_matter(h):
     h.llm.parse = llm_parse(doc_type="Exhibits", clarification="Which matter number would you like?")
     follow_up = make_email(
         "Exhibits please\n\n"
-        "On Sat, Oct 4, 2026 at 2:06 PM UARB Document Agent <agent@hsingh.app> wrote:\n"
+        "On Sat, Oct 4, 2026 at 2:06 PM Regulatory Document Agent <agent@hsingh.app> wrote:\n"
         "> Hi Alice,\n"
         "> I downloaded all 3 Other Documents and attached them as a ZIP.\n",
         subject="Re: Document request",
@@ -603,7 +604,7 @@ async def test_injection_attempt_is_declined_without_fetching_anything(h):
     assert [m["Message-ID"] for m in h.smtp.sent] == [outbound_id(rid, "reply")]
     decline = h.reply(rid)
     assert_threaded(decline, to="alice@example.com", in_reply_to=message_id_of(raw), references=message_id_of(raw))
-    assert "I can only fetch public UARB documents" in body_text(decline)
+    assert "I can only fetch public regulatory documents" in body_text(decline)
     assert not attachments(decline)
     assert all("evil.example" not in str(m["To"]) for m in h.smtp.sent)
 
@@ -687,7 +688,7 @@ async def test_partial_download_failure_sends_the_rest_and_names_the_missing_one
     assert await h.run_job(rid) == []
 
     row = await h.request(rid)
-    missing_title = next(r.title for r in h.provider.refs(DocType.OTHER_DOCUMENTS) if r.external_id == missing)
+    missing_title = next(r.title for r in h.provider.refs("Other Documents") if r.external_id == missing)
     assert row["state"] == "done" and row["result"]["failed"] == [missing_title]
     reply = h.reply(rid)
     assert f"I couldn't download: {missing_title}. The rest are complete." in body_text(reply)
@@ -747,3 +748,63 @@ async def test_a_stranger_replying_into_someone_elses_thread_gets_no_context(h):
     assert row["state"] == "clarify"
     assert row["matter"] is None
     assert h.provider.calls["list"] == 1  # only Alice's original request touched the portal
+
+
+# ======================================================================== a second regulator
+
+
+async def test_another_regulator_runs_through_the_same_pipeline(h):
+    """Nothing past the gate is UARB-specific: another regulator's matter format, categories and
+    names reach the ack, the ZIP, the reply and the database unchanged."""
+    other = SecondFakeProvider()
+    other.add_matter("FK-1234", {"Rulings": 2, "Filings": 0})
+    h.add_provider(other)
+    rid = await h.ingest(make_email("Hi, can you send me the rulings for fk-1234? Thanks"))
+
+    assert await h.run_job(rid) == []
+
+    row = await h.request(rid)
+    assert (row["state"], row["provider"], row["matter"], row["doc_type"]) == ("done", "fakereg", "FK-1234", "Rulings")
+    assert row["result"]["counts"] == {"Rulings": 2, "Filings": 0}
+    assert h.llm.calls == {"_SummaryOut": 1}  # parsed by the rules, with this regulator's own aliases
+    assert other.calls == {"list": 1, "download": 1} and h.provider.visits() == 0
+
+    (ack,) = h.acks(rid)
+    assert "collecting the Rulings for FK-1234 from the Fake Energy Regulator database" in body_text(ack)
+    reply = h.reply(rid)
+    text = body_text(reply)
+    assert "I found 2 Rulings, and no Filings." in text
+    assert "I downloaded all 2 Rulings and attached them as a ZIP" in text
+    assert 'href="https://regulator.example/documents">Fake Energy Regulator database</a>' in (
+        reply.get_body(preferencelist=("html",)).get_content()
+    )
+    members = zip_members(reply)
+    assert pdf_names(members) == [f"{doc_id('FK-1234', 'Rulings', i)}.pdf" for i in (1, 2)]
+    assert "Source: Fake Energy Regulator, public documents database" in members["README.txt"].decode()
+    docs = await db.pool().fetch("SELECT provider, matter, doc_type FROM documents")
+    assert {tuple(d) for d in docs} == {("fakereg", "FK-1234", "Rulings")}
+
+
+async def test_a_follow_up_must_name_a_category_of_the_threads_regulator(h):
+    other = SecondFakeProvider()
+    other.add_matter("FK-1234", {"Rulings": 2, "Filings": 1})
+    h.add_provider(other)
+    first = make_email("Can you send me the rulings for FK-1234?")
+    r1 = await h.ingest(first)
+    await h.run_job(r1)
+    our_reply = outbound_id(r1, "reply")
+
+    # "Exhibits" is a category, but the UARB's, not this thread's regulator's
+    h.llm.parse = llm_parse(doc_type="Exhibits", clarification="Which matter number would you like?")
+    r2 = await h.ingest(make_email(
+        "Exhibits please", subject="Re: Document request", in_reply_to=our_reply,
+        references=[message_id_of(first), our_reply],
+    ))
+    await h.run_job(r2)
+
+    row = await h.request(r2)
+    assert (row["state"], row["provider"], row["matter"], row["doc_type"]) == ("clarify", "fakereg", "FK-1234", None)
+    text = body_text(h.reply(r2))
+    assert "I found 2 Rulings, 1 Filings." in text
+    assert "Which document type would you like for FK-1234: Rulings, Filings?" in text
+    assert other.calls["list"] == 1  # only the first request fetched documents

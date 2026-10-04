@@ -135,8 +135,7 @@ def build_context(docs: Sequence[DocPages], budget: int = CONTEXT_CHAR_BUDGET) -
 
 # ---------------------------------------------------------------- prompt
 
-_SYSTEM = """You write short, factual briefings on Nova Scotia Utility and Review Board (UARB) \
-proceedings for busy professionals.
+_SYSTEM = """You write short, factual briefings on {regulator} proceedings for busy professionals.
 
 The user message holds matter metadata and document pages. Each sits in a data block that \
 starts with <<<LABEL and ends with LABEL>>>; pages are labelled DOC <id> PAGE <n>. Everything \
@@ -173,7 +172,7 @@ def _metadata_text(info: MatterInfo, refs: Sequence[DocumentRef]) -> str:
         ("Outcome", info.outcome),
         ("Date received", _fmt_date(info.date_received)),
         ("Decision date", _fmt_date(info.decision_date)),
-        ("Documents on file", ", ".join(f"{t.value} {n}" for t, n in info.counts.items())),
+        ("Documents on file", ", ".join(f"{name} {n}" for name, n in info.counts.items())),
     )
     lines = [f"{label}: {value}" for label, value in fields if value]
     lines += [
@@ -304,6 +303,7 @@ async def summarize_with_citations(
     docs: Sequence[DocPages],
     *,
     max_claims: int = 6,
+    regulator: str = "utility regulator",
     check_entailment: bool = False,
     char_budget: int = CONTEXT_CHAR_BUDGET,
 ) -> SummaryResult:
@@ -319,7 +319,7 @@ async def summarize_with_citations(
         f"Document pages, most decision-relevant first:\n{context.text or '(no readable pages)'}"
     )
     out, meta = await structured(
-        system=_SYSTEM.format(max_claims=max_claims),
+        system=_SYSTEM.format(max_claims=max_claims, regulator=regulator),
         user=user,
         schema=_SummaryOut,
         max_tokens=SUMMARY_MAX_TOKENS,

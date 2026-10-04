@@ -1,33 +1,20 @@
 """Deterministic request parsing: the fast path that needs no LLM.
 
 Returns a ParsedRequest only when the email is unambiguous (exactly one matter, exactly one
-document type). Anything else returns `None` with a reason and goes to the LLM classifier.
+document category of that matter's regulator). Anything else returns `None` with a reason and
+goes to the LLM classifier.
 """
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 
-from agent.models import DocType, Intent, ParsedRequest
+from agent.models import Intent, ParsedRequest
+from agent.providers.base import Category, all_providers, normalise_with, provider_for_matter
 
-# "M12205", "m12205", "M-12205", "M 12205"; not inside longer tokens like "AM123456"
-_MATTER_RE = re.compile(r"(?<![A-Za-z0-9])[Mm][-\s]?(\d{5})(?!\d)")
-# "matter 12205", "matter no. 12205", "matter #12205"
-_MATTER_WORD_RE = re.compile(r"\bmatter\s*(?:no\.?|number|#)?\s*:?\s*(\d{5})(?!\d)", re.IGNORECASE)
-
-_DOC_TYPE_PATTERNS: dict[DocType, re.Pattern[str]] = {
-    DocType.KEY_DOCUMENTS: re.compile(r"\bkey\s+(?:documents?|docs?|files?|filings?)\b", re.IGNORECASE),
-    DocType.OTHER_DOCUMENTS: re.compile(r"\bother\s+(?:documents?|docs?|files?|filings?)\b", re.IGNORECASE),
-    DocType.EXHIBITS: re.compile(r"\bexhibits?\b", re.IGNORECASE),
-    DocType.TRANSCRIPTS: re.compile(r"\b(?:hearing\s+)?transcripts?\b", re.IGNORECASE),
-    DocType.RECORDINGS: re.compile(r"\b(?:recordings?|audio|video)\b", re.IGNORECASE),
-}
-
-_COUNT_RE = re.compile(
-    r"\b(?:first|latest|last|top|up\s+to|only|just)?\s*(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten)\s+"
-    r"(?:of\s+the\s+)?(?:most\s+recent\s+|latest\s+|newest\s+)?(?:key\s+|other\s+)?"
-    r"(?:documents?|docs?|files?|exhibits?|transcripts?|recordings?)\b",
-    re.IGNORECASE,
-)
+_NUMBER = r"(\d{1,2}|one|two|three|four|five|six|seven|eight|nine|ten)"
+_GENERIC_NOUNS = ("documents", "document", "docs", "doc", "files", "file", "filings", "filing")
 _WORDS = {w: i for i, w in enumerate(["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"])}
 
 # Phrases that need judgement (negation, conditions, comparisons): defer to the LLM.
@@ -36,7 +23,7 @@ _AMBIGUITY_RE = re.compile(
     r"compare|difference|which\s+one|what\s+is|what's|why|how\s+many|summar)",
     re.IGNORECASE,
 )
-# Request phrasing: an email that names a matter and a tab but never asks for anything is
+# Request phrasing: an email that names a matter and a category but never asks for anything is
 # probably a forward or a signature block, not a request.
 _ASK_RE = re.compile(
     r"\b(?:send|give|get|fetch|share|forward|provide|email|need|want|pull|download|grab|"
@@ -60,28 +47,67 @@ class RuleResult:
     parsed: ParsedRequest | None
     reason: str
     matters: tuple[str, ...]
-    doc_types: tuple[DocType, ...]
+    doc_types: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class _Vocabulary:
+    """Regexes for one set of categories. Group i of `mention` is alias i, naming `names[i]`."""
+
+    mention: re.Pattern[str]
+    names: tuple[str, ...]
+    count: re.Pattern[str]
+
+
+def _phrase(alias: str) -> str:
+    return r"\s+".join(map(re.escape, alias.split()))
+
+
+@lru_cache(maxsize=16)
+def _vocabulary(categories: tuple[Category, ...]) -> _Vocabulary:
+    # Longest first: alternation takes the first branch that matches, so "key documents" is read
+    # as one phrase rather than leaving "documents" for a shorter alias.
+    pairs = sorted(((a, c.name) for c in categories for a in c.aliases), key=lambda p: -len(p[0]))
+    mention = re.compile(r"\b(?:" + "|".join(f"({_phrase(a)})" for a, _ in pairs) + r")\b", re.IGNORECASE)
+    nouns = sorted({a for a, _ in pairs} | set(_GENERIC_NOUNS), key=len, reverse=True)
+    count = re.compile(
+        rf"\b(?:first|latest|last|top|up\s+to|only|just)?\s*{_NUMBER}\s+"
+        r"(?:of\s+the\s+)?(?:most\s+recent\s+|latest\s+|newest\s+)?"
+        rf"(?:{'|'.join(map(_phrase, nouns))})\b",
+        re.IGNORECASE,
+    )
+    return _Vocabulary(mention, tuple(name for _, name in pairs), count)
 
 
 def find_matters(text: str) -> tuple[str, ...]:
-    found = [f"M{m}" for m in _MATTER_RE.findall(text)]
-    found += [f"M{m}" for m in _MATTER_WORD_RE.findall(text)]
-    return tuple(dict.fromkeys(found))  # dedupe, keep first-mention order
+    """Canonical matter numbers of every registered regulator, in first-mention order."""
+    hits: list[tuple[int, str]] = []
+    for provider in all_providers():
+        for m in provider.mention_pattern.finditer(text):
+            matter = normalise_with(provider, m.group(0))
+            if matter:
+                hits.append((m.start(), matter))
+    return tuple(dict.fromkeys(matter for _, matter in sorted(hits)))  # dedupe, keep first-mention order
 
 
-def find_doc_types(text: str) -> tuple[DocType, ...]:
-    hits: list[tuple[int, DocType]] = []
-    for doc_type, pat in _DOC_TYPE_PATTERNS.items():
-        m = pat.search(text)
-        if m:
-            hits.append((m.start(), doc_type))
-    # "key documents"/"other documents" also contain the generic word "documents"; that's fine
-    # because only the qualified forms are patterns.
-    return tuple(dt for _, dt in sorted(hits))
+def categories_for(matter: str | None) -> tuple[Category, ...]:
+    """What a request about `matter` can ask for. Without a matter (a follow-up that inherits it
+    from the thread later) any regulator's category counts; the pipeline re-checks it."""
+    provider = provider_for_matter(matter) if matter else None
+    if provider is not None:
+        return provider.categories
+    return tuple(c for p in all_providers() for c in p.categories)
 
 
-def find_count(text: str, cap: int) -> int:
-    m = _COUNT_RE.search(text)
+def find_doc_types(text: str, categories: Sequence[Category]) -> tuple[str, ...]:
+    """Names of the categories mentioned in `text`, in first-mention order."""
+    vocab = _vocabulary(tuple(categories))
+    names = (vocab.names[m.lastindex - 1] for m in vocab.mention.finditer(text) if m.lastindex)
+    return tuple(dict.fromkeys(names))
+
+
+def find_count(text: str, cap: int, categories: Sequence[Category]) -> int:
+    m = _vocabulary(tuple(categories)).count.search(text)
     if not m:
         return cap
     raw = m.group(1).lower()
@@ -92,7 +118,9 @@ def find_count(text: str, cap: int) -> int:
 def parse(subject: str, body: str, *, max_docs: int = 10) -> RuleResult:
     text = f"{subject}\n{body}"
     matters = find_matters(text)
-    doc_types = find_doc_types(text)
+    # With several matters only the first is handled, so its regulator's categories apply.
+    categories = categories_for(matters[0] if matters else None)
+    doc_types = find_doc_types(text, categories)
 
     def miss(reason: str) -> RuleResult:
         return RuleResult(None, reason, matters, doc_types)
@@ -114,7 +142,7 @@ def parse(subject: str, body: str, *, max_docs: int = 10) -> RuleResult:
             intent=Intent.DOCUMENT_REQUEST,
             matter=matters[0],
             doc_type=doc_types[0],
-            max_docs=find_count(text, max_docs),
+            max_docs=find_count(text, max_docs, categories),
             source="rules",
             confidence=1.0,
         ),

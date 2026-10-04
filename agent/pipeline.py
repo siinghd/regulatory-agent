@@ -27,7 +27,7 @@ from agent.db import pool
 from agent.delivery.choose import deliver
 from agent.delivery.drop import DropClient
 from agent.delivery.package import build_zip
-from agent.gate.classify import classify
+from agent.gate.classify import clarification_for, classify, matter_examples
 from agent.limits import Limits
 from agent.llm import LLMUnavailable
 from agent.mail import auth as mail_auth
@@ -35,7 +35,6 @@ from agent.mail import loops, mime, outbound
 from agent.models import (
     AgentError,
     AuthVerdict,
-    DocType,
     DocumentRef,
     DownloadedFile,
     InboundEmail,
@@ -45,7 +44,7 @@ from agent.models import (
     ParsedRequest,
     ScrapeError,
 )
-from agent.providers.base import Provider, provider_for_matter
+from agent.providers.base import Provider, all_providers, find_category, provider_for_matter
 
 log = structlog.get_logger()
 
@@ -143,8 +142,8 @@ async def _gate(deps: Deps, row, email: InboundEmail, *, final_attempt: bool) ->
     if parsed.intent is Intent.INJECTION:
         await _reply_and_close(rid, row, email, "rejected", reject_reason="injection_attempt", common=common, paragraphs=[
             (
-                "I can only fetch public UARB documents and send them back to the address that asked. "
-                "Please send a plain request, for example: \"Can you send me the Other Documents for M12205?\""
+                "I can only fetch public regulatory documents and send them back to the address that asked. "
+                f"Please send a plain request, for example: {_example_requests()}"
             ),
         ])
         return None
@@ -152,41 +151,62 @@ async def _gate(deps: Deps, row, email: InboundEmail, *, final_attempt: bool) ->
         if await deps.limits.once(f"help:{email.from_addr}", 24 * 3600):
             await _reply_and_close(rid, row, email, "rejected", reject_reason="unrelated", common=common, paragraphs=[
                 (
-                    "I'm an automated assistant that fetches documents from the Nova Scotia Utility and Review "
-                    "Board's public database. Send me a matter number and a document type, for example: "
-                    "\"Can you send me the Other Documents for M12205?\""
+                    "I'm an automated assistant that fetches documents from utility regulators' public "
+                    "databases. Send me a matter number and a document type, for example: "
+                    f"{_example_requests()}"
                 ),
-                f"Document types: {', '.join(t.value for t in DocType)}.",
+                *(
+                    f"{p.display_name} (matter numbers like {p.matter_example}): {_category_list(p)}."
+                    for p in all_providers()
+                ),
             ])
         else:
             await store.transition(rid, {"received"}, "rejected", reject_reason="unrelated_repeat", **common)
         return None
 
-    provider_name = provider_for_matter(parsed.matter) if parsed.matter else None
-    if parsed.matter and provider_name is None:
+    provider = provider_for_matter(parsed.matter) if parsed.matter else None
+    if parsed.matter and provider is None:
+        examples = matter_examples()
         await _reply_and_close(rid, row, email, "clarify", common=common, paragraphs=[
-            f"{parsed.matter} doesn't look like a UARB matter number. They look like M12205 (M followed by 5 digits).",
+            f"{parsed.matter} isn't a matter number I can look up. Matter numbers look like {examples}.",
         ])
         return None
 
-    if parsed.intent is Intent.QUESTION or parsed.needs_clarification or not parsed.doc_type or not parsed.matter:
-        await _answer_without_documents(deps, row, email, parsed, provider_name, common)
+    if (
+        provider is None
+        or parsed.intent is Intent.QUESTION
+        or parsed.needs_clarification
+        or not parsed.doc_type
+    ):
+        await _answer_without_documents(deps, row, email, parsed, provider, common)
         return None
 
     accepted = await store.transition(
         rid, {"received"}, "accepted",
-        provider=provider_name, matter=parsed.matter, doc_type=parsed.doc_type.value, **common,
+        provider=provider.name, matter=parsed.matter, doc_type=parsed.doc_type, **common,
     )
     if not accepted:
         return None  # another job already took this request past the gate
-    await _send(row, email, _ack_draft(deps, row, email, parsed))
+    await _send(row, email, _ack_draft(deps, row, email, parsed, provider))
     return parsed
 
 
-def _ack_draft(deps: Deps, row, email: InboundEmail, parsed: ParsedRequest) -> outbound.Draft:
+def _ack_draft(
+    deps: Deps, row, email: InboundEmail, parsed: ParsedRequest, provider: Provider
+) -> outbound.Draft:
     return outbound.ack(
         name=_display_name(email), subject=email.subject, matter=parsed.matter,
-        doc_type=parsed.doc_type, track_url=_track_url(deps, row),
+        doc_type=parsed.doc_type, provider=provider, track_url=_track_url(deps, row),
+    )
+
+
+def _category_list(provider: Provider) -> str:
+    return ", ".join(c.name for c in provider.categories)
+
+
+def _example_requests() -> str:
+    return " or ".join(
+        f'"Can you send me the {p.categories[0].name} for {p.matter_example}?"' for p in all_providers()
     )
 
 
@@ -222,38 +242,52 @@ async def _within_limits(deps: Deps, row, email: InboundEmail) -> bool:
 
 
 async def _inherit_from_thread(row, parsed: ParsedRequest) -> ParsedRequest:
-    """A follow-up like "Exhibits please" in an existing thread reuses that thread's matter."""
+    """A follow-up like "Exhibits please" in an existing thread reuses that thread's matter.
+
+    The classifier could only check the category against every regulator's; it must also be
+    one of the inherited matter's.
+    """
     if parsed.intent is not Intent.DOCUMENT_REQUEST or parsed.matter:
         return parsed
     prev = await store.previous_in_thread(row["thread_root"], row["id"], row["from_addr"])
     if not prev:
         return parsed
-    update: dict = {"matter": prev["matter"]}
-    if parsed.doc_type:
-        update["needs_clarification"] = None
-    return parsed.model_copy(update=update)
+    matter = prev["matter"]
+    provider = provider_for_matter(matter)
+    categories = provider.categories if provider else ()
+    category = find_category(categories, parsed.doc_type) if parsed.doc_type else None
+    extra = (find_category(categories, t) for t in parsed.extra_doc_types)
+    return parsed.model_copy(update={
+        "matter": matter,
+        "doc_type": category.name if category else None,
+        "extra_doc_types": tuple(c.name for c in extra if c and c != category),
+        "needs_clarification": None if category else clarification_for(matter, None),
+    })
 
 
-async def _answer_without_documents(deps: Deps, row, email, parsed: ParsedRequest, provider_name, common) -> None:
+async def _answer_without_documents(
+    deps: Deps, row, email, parsed: ParsedRequest, provider: Provider | None, common
+) -> None:
     """Questions and incomplete requests: answer with what we know, ask for what's missing."""
     rid = row["id"]
     paragraphs: list[str] = []
-    info = None
-    if parsed.matter and provider_name:
+    if provider is not None:
         await store.set_progress(rid, "Looking up the matter")
         try:
-            info = await _matter_info(deps, provider_name, parsed.matter)
+            info = await _matter_info(deps, provider.name, parsed.matter)
         except MatterNotFound as e:
             await _reply_and_close(rid, row, email, "done", common=common, paragraphs=[e.user_message])
             return
-        paragraphs.append(outbound.matter_sentence(info))
-    if parsed.needs_clarification or not parsed.doc_type or not parsed.matter:
-        paragraphs.append(parsed.needs_clarification or "Which matter and document type would you like?")
+        paragraphs.append(outbound.matter_sentence(info, provider))
+    if parsed.needs_clarification or not parsed.doc_type or provider is None:
+        paragraphs.append(parsed.needs_clarification or clarification_for(parsed.matter, parsed.doc_type))
         state = "clarify"
     else:
-        paragraphs.append(f"If you'd like the documents, reply with the type you want "
-                          f"({', '.join(t.value for t in DocType)}).")
+        paragraphs.append(
+            f"If you'd like the documents, reply with the type you want ({_category_list(provider)})."
+        )
         state = "done"
+    provider_name = provider.name if provider else None
     await _reply_and_close(rid, row, email, state, common={**common, "matter": parsed.matter, "provider": provider_name},
                            paragraphs=paragraphs)
 
@@ -265,20 +299,20 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
     rid = row["id"]
     parsed = ParsedRequest.model_validate(row["parsed"])
     provider = deps.providers[row["provider"]]
-    doc_type = DocType(row["doc_type"])
+    doc_type: str = row["doc_type"]
     if row["ack_message_id"] and row["ack_sent_at"] is None:
-        await _send(row, email, _ack_draft(deps, row, email, parsed))  # same Message-ID as reserved
+        await _send(row, email, _ack_draft(deps, row, email, parsed, provider))  # same Message-ID as reserved
     await store.transition(rid, {"accepted", "fetching"}, "fetching")
 
     info, files, failed, confidential = await _fetch(deps, rid, provider, parsed.matter, doc_type, parsed.max_docs)
     if not files:
         await store.transition(rid, {"fetching"}, "replying")
         total = info.counts.get(doc_type, 0)
-        msg = (f"{parsed.matter} has no {doc_type.value}." if total == 0
-               else f"I couldn't download any of the {total} {doc_type.value} right now.")
+        msg = (f"{parsed.matter} has no {doc_type}." if total == 0
+               else f"I couldn't download any of the {total} {doc_type} right now.")
         await _send(row, email, outbound.simple_reply(
             name=_display_name(email), subject=email.subject, track_url=_track_url(deps, row),
-            paragraphs=[outbound.matter_sentence(info), msg],
+            paragraphs=[outbound.matter_sentence(info, provider), msg], provider=provider,
         ))
         await store.transition(rid, {"replying"}, "done", result={"files": 0, "counts": _counts(info)})
         return
@@ -289,28 +323,33 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
 
         async def package_and_deliver():
             zip_result = await asyncio.to_thread(
-                build_zip, files, f"{tmp}/{parsed.matter}_{doc_type.value.replace(' ', '_')}.zip",
-                readme_text=_readme(info, doc_type, files),
+                build_zip, files, f"{tmp}/{parsed.matter}_{doc_type.replace(' ', '_')}.zip",
+                readme_text=_readme(info, provider, doc_type, files),
             )
             return await deliver(zip_result, files, drop=deps.drop)
 
         # Independent work: the LLM summary (~20s) overlaps packaging and the encrypted upload.
-        delivery, (summary, claims) = await asyncio.gather(package_and_deliver(), _summarise(deps, rid, info, files))
+        delivery, (summary, claims) = await asyncio.gather(
+            package_and_deliver(), _summarise(deps, rid, info, provider, files)
+        )
 
         await store.transition(rid, {"packaging", "replying"}, "replying")
         await store.set_progress(rid, "Sending your documents")
         doc_ids = await store.documents_by_external_ids(provider.name, [f.ref.external_id for f in files])
         draft = outbound.documents_reply(
-            name=_display_name(email), subject=email.subject, info=info, doc_type=doc_type,
+            name=_display_name(email), subject=email.subject, info=info, provider=provider, doc_type=doc_type,
             docs=[outbound.DocLine(
                 title=f.ref.title, filed=f.ref.filed_on.isoformat() if f.ref.filed_on else "undated",
-                url=f"{deps.settings.public_base_url}/files/{doc_ids[f.ref.external_id]['id']}.pdf" if f.ref.external_id in doc_ids else None,
+                # the viewer serves PDFs only; spreadsheets and Word files are in the ZIP
+                url=f"{deps.settings.public_base_url}/files/{doc_ids[f.ref.external_id]['id']}.pdf"
+                if f.ref.external_id in doc_ids and f.filename.lower().endswith(".pdf") else None,
             ) for f in files],
             requested=parsed.max_docs, summary=summary, claims=claims,
             download_url=delivery.link.url if delivery.link else None,
             download_expires=delivery.link.expires_at if delivery.link else None,
             download_size=delivery.size, attachment_path=delivery.path,
             track_url=_track_url(deps, row), extra_doc_types=parsed.extra_doc_types,
+            extra_matters=parsed.extra_matters,
             failed_titles=failed, newest_first=_newest_first(files), confidential=confidential,
         )
         await _send(row, email, draft)
@@ -332,16 +371,16 @@ async def _matter_info(deps: Deps, provider_name: str, matter: str) -> MatterInf
 
 
 async def _fetch(
-    deps: Deps, rid: UUID, provider: Provider, matter: str, doc_type: DocType, limit: int
+    deps: Deps, rid: UUID, provider: Provider, matter: str, doc_type: str, limit: int
 ) -> tuple[MatterInfo, list[DownloadedFile], list[str], int]:
-    """Listing + downloads, single-flighted per (provider, matter, tab) and served from cache
+    """Listing + downloads, single-flighted per (provider, matter, category) and served from cache
     when possible: ten people asking for M12205 at once cost one portal visit."""
     ttl = timedelta(seconds=deps.settings.matter_cache_ttl_s)
-    async with deps.limits.lock(f"sf:{provider.name}:{matter}:{doc_type.value}", ttl_s=900, wait_s=900):
-        await store.set_progress(rid, "Searching the UARB database")
+    async with deps.limits.lock(f"sf:{provider.name}:{matter}:{doc_type}", ttl_s=900, wait_s=900):
+        await store.set_progress(rid, f"Searching the {provider.display_name} database")
         cached = await store.cached_matter(provider.name, matter, ttl)
-        listing = (cached[1].get(doc_type.value) if cached else None)
-        confidential = int((cached[1].get(f"{doc_type.value}#confidential") if cached else 0) or 0)
+        listing = (cached[1].get(doc_type) if cached else None)
+        confidential = int((cached[1].get(f"{doc_type}#confidential") if cached else 0) or 0)
         if cached and listing is not None and len(listing) >= min(limit, cached[0].counts.get(doc_type, 0)):
             info = cached[0]
             known = await store.documents_by_external_ids(provider.name, listing[:limit])
@@ -351,14 +390,14 @@ async def _fetch(
             if info.counts.get(doc_type, 0) > 0 and not listed:
                 # The portal says there are documents but we read none: a scraper problem, not
                 # an answer. Retry rather than tell the user there's nothing.
-                raise ScrapeError(f"{matter}/{doc_type.value}: count {info.counts[doc_type]} but empty listing")
+                raise ScrapeError(f"{matter}/{doc_type}: count {info.counts[doc_type]} but empty listing")
             refs = [r for r in listed if r.access == "Public"][:limit]
-            await store.save_matter(info, doc_type.value, [r.external_id for r in refs])
+            await store.save_matter(info, doc_type, [r.external_id for r in refs])
             for r in refs:
                 await store.upsert_document(r)
             confidential = sum(1 for r in listed if r.access != "Public")
             if confidential:
-                await store.save_matter(info, f"{doc_type.value}#confidential", confidential)
+                await store.save_matter(info, f"{doc_type}#confidential", confidential)
                 await store.event(rid, "confidential_skipped", {"count": confidential})
         await store.set_progress(rid, "Downloading documents", done=0, total=len(refs))
 
@@ -384,24 +423,26 @@ async def _fetch(
     files = [ready[r.external_id] for r in refs if r.external_id in ready]
     failed = [r.title for r in refs if r.external_id not in ready]
     if refs and len(files) < len(refs):
-        log.warning("fetch.partial", matter=matter, doc_type=doc_type.value, got=len(files), wanted=len(refs))
+        log.warning("fetch.partial", matter=matter, doc_type=doc_type, got=len(files), wanted=len(refs))
     if refs and not files:
-        raise TransientError(f"no downloads succeeded for {matter}/{doc_type.value}")
+        raise TransientError(f"no downloads succeeded for {matter}/{doc_type}")
     return info, files, failed, confidential
 
 
 def _ref_from_row(row, index: int) -> DocumentRef:
     return DocumentRef(
-        provider=row["provider"], matter=row["matter"], doc_type=DocType(row["doc_type"]),
+        provider=row["provider"], matter=row["matter"], doc_type=row["doc_type"],
         external_id=row["external_id"], title=row["title"], filed_on=row["filed_on"],
         file_ext="." + (row["filename"] or ".pdf").rsplit(".", 1)[-1], row_index=index,
     )
 
 
-SUMMARY_VERSION = "v1"  # bump when the summary prompt or grounding rules change
+SUMMARY_VERSION = "v2"  # bump when the summary prompt or grounding rules change
 
 
-async def _summarise(deps: Deps, rid: UUID, info: MatterInfo, files: list[DownloadedFile]):
+async def _summarise(
+    deps: Deps, rid: UUID, info: MatterInfo, provider: Provider, files: list[DownloadedFile]
+):
     """Cited summary. Best effort: if the LLM is down, the documents still go out.
 
     Cached by the exact document versions (content hashes), so a repeat request for the same
@@ -425,7 +466,7 @@ async def _summarise(deps: Deps, rid: UUID, info: MatterInfo, files: list[Downlo
         if not docs:
             return None, []
         try:
-            result = await summarize_with_citations(info, docs, max_claims=5)
+            result = await summarize_with_citations(info, docs, max_claims=5, regulator=provider.display_name)
         except LLMUnavailable as e:
             log.warning("summary.unavailable", request_id=str(rid), error=str(e)[:300])
             return None, []
@@ -552,15 +593,15 @@ def _newest_first(files: list[DownloadedFile]) -> bool:
 
 
 def _counts(info: MatterInfo) -> dict[str, int]:
-    return {t.value: n for t, n in info.counts.items()}
+    return dict(info.counts)
 
 
-def _readme(info: MatterInfo, doc_type: DocType, files: list[DownloadedFile]) -> str:
+def _readme(info: MatterInfo, provider: Provider, doc_type: str, files: list[DownloadedFile]) -> str:
     return (
         f"{info.matter}: {info.title}\n"
-        f"Source: Nova Scotia Utility and Review Board, Public Documents Database\n"
+        f"Source: {provider.display_name}, public documents database\n"
         f"{info.portal_url}\n\n"
-        f"Tab: {doc_type.value} ({len(files)} of {info.counts.get(doc_type, 0)} documents, newest first)\n"
+        f"Category: {doc_type} ({len(files)} of {info.counts.get(doc_type, 0)} documents, newest first)\n"
         f"Retrieved: {datetime.now(UTC):%Y-%m-%d %H:%M} UTC\n"
         f"MANIFEST.csv lists each file's portal id, title, filing date and SHA-256.\n"
     )

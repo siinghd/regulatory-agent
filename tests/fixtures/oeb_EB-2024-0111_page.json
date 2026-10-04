@@ -1,0 +1,1814 @@
+{
+ "Results": [
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2026-09-24T20:19:25.0000000Z",
+    "StringValue": "2026-09-24 at 4:19 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 128690
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D26-12668"
+   },
+   "RecordTitle": {
+    "Value": "EGI_LTR_2029 Rebasing_Stakeholder Session_20260924"
+   },
+   "TrimType": "Record",
+   "Uri": 956928,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Correspondence"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2026-09-24T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-07-29T21:04:20.0000000Z",
+    "StringValue": "2025-07-29 at 5:04 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 273483
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-18072"
+   },
+   "RecordTitle": {
+    "Value": "dec_order_cost awards_EGI Rebasing Phase 2_20250729_eSigned"
+   },
+   "TrimType": "Record",
+   "Uri": 906557,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Decision and Order on Cost Awards"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-07-29T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-07-21T13:06:53.0000000Z",
+    "StringValue": "2025-07-21 at 9:06 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 2774944
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-17329"
+   },
+   "RecordTitle": {
+    "Value": "VECC_Rev Cost Claim_EGI Rebasing Ph 2_20250721"
+   },
+   "TrimType": "Record",
+   "Uri": 905369,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Cost Claim"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-07-21T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-06-27T21:08:02.0000000Z",
+    "StringValue": "2025-06-27 at 5:08 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 275264
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-16262"
+   },
+   "RecordTitle": {
+    "Value": "FRPO_RESP EGI OBJ_COST CLAIM OBJ_Rebasing Ph 2_20250627_Redacted"
+   },
+   "TrimType": "Record",
+   "Uri": 903442,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Cost Claim Objection Reply"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-06-27T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-06-26T18:39:56.0000000Z",
+    "StringValue": "2025-06-26 at 2:39 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 134284
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-15905"
+   },
+   "RecordTitle": {
+    "Value": "EGI_ltr_IGUA Cost Claim_Rebasing Ph 2_20250626"
+   },
+   "TrimType": "Record",
+   "Uri": 902966,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Correspondence"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-06-26T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-06-23T18:50:39.0000000Z",
+    "StringValue": "2025-06-23 at 2:50 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 201816
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-15613"
+   },
+   "RecordTitle": {
+    "Value": "OEB ltr_IGUA_Ext_Req_cost claim_EGI Phase II_20250623_eSigned"
+   },
+   "TrimType": "Record",
+   "Uri": 902483,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Correspondence"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-06-23T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-05-29T20:06:48.0000000Z",
+    "StringValue": "2025-05-29 at 4:06 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 395570
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-14480"
+   },
+   "RecordTitle": {
+    "Value": "dec_order_EGI Rates_Ph 2_20250529_esigned"
+   },
+   "TrimType": "Record",
+   "Uri": 899924,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Decision and Order"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-05-29T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-03-10T20:18:18.0000000Z",
+    "StringValue": "2025-03-10 at 4:18 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 198312
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-10851"
+   },
+   "RecordTitle": {
+    "Value": "OGVG_SUB_EGI Rebasing Ph 2_20250218"
+   },
+   "TrimType": "Record",
+   "Uri": 891974,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Submission"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-03-10T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-03-10T20:17:46.0000000Z",
+    "StringValue": "2025-03-10 at 4:17 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 240483
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-10850"
+   },
+   "RecordTitle": {
+    "Value": "CBA_SUB_EGI Rebasing Ph 2_20250218"
+   },
+   "TrimType": "Record",
+   "Uri": 891972,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Submission"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-03-10T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-03-04T21:08:21.0000000Z",
+    "StringValue": "2025-03-04 at 4:08 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 222439
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-10431"
+   },
+   "RecordTitle": {
+    "Value": "PO_11_EGI Rebasing Phase 2_20250304_esigned"
+   },
+   "TrimType": "Record",
+   "Uri": 891199,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Procedural Order"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-03-04T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-01-27T18:35:08.0000000Z",
+    "StringValue": "2025-01-27 at 1:35 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 148018
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-2600"
+   },
+   "RecordTitle": {
+    "Value": "ED_DeclarationAndUndertaking_20250123"
+   },
+   "TrimType": "Record",
+   "Uri": 881630,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Declaration and Undertakings"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-01-23T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-01-20T14:04:48.0000000Z",
+    "StringValue": "2025-01-20 at 9:04 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 1302139
+   },
+   "RecordMimeType": {
+    "Value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+   },
+   "RecordNumber": {
+    "Value": "D25-2019"
+   },
+   "RecordTitle": {
+    "Value": "ED-GEC_EFGUndertaking_Exhibit J3.6_Attachment_20250120"
+   },
+   "TrimType": "Record",
+   "Uri": 880811,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Undertaking Responses"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-01-17T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2025-01-13T18:34:01.0000000Z",
+    "StringValue": "2025-01-13 at 1:34 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 274786
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D25-1282"
+   },
+   "RecordTitle": {
+    "Value": "REVISED_PO10_EGI Rebasing Phase 2_20250113_esigned"
+   },
+   "TrimType": "Record",
+   "Uri": 879811,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Procedural Order"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2025-01-13T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-12-19T22:14:20.0000000Z",
+    "StringValue": "2024-12-19 at 5:14 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 505856
+   },
+   "RecordMimeType": {
+    "Value": "application/msword"
+   },
+   "RecordNumber": {
+    "Value": "D24-32956"
+   },
+   "RecordTitle": {
+    "Value": "Transcript_EGI Rebasing_Ph 2_OH Vol 3_20241219"
+   },
+   "TrimType": "Record",
+   "Uri": 876787,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Transcripts"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-12-19T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-12-19T14:13:40.0000000Z",
+    "StringValue": "2024-12-19 at 9:13 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 3708825
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-32862"
+   },
+   "RecordTitle": {
+    "Value": "Exh K 2.4_ONTARIO NATURAL GAS POLICY STATEMENT DATED DECEMBER 17TH, 2024"
+   },
+   "TrimType": "Record",
+   "Uri": 876636,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Exhibits"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-12-19T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-12-17T20:28:42.0000000Z",
+    "StringValue": "2024-12-17 at 3:28 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 42305976
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-32735"
+   },
+   "RecordTitle": {
+    "Value": "EGI_Updated_Appl_Rebasing Ph 2_20241217"
+   },
+   "TrimType": "Record",
+   "Uri": 876355,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Application and Evidence"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-12-17T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-12-13T21:40:49.0000000Z",
+    "StringValue": "2024-12-13 at 4:40 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 42833139
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-32545"
+   },
+   "RecordTitle": {
+    "Value": "EGI_Updated_Appl_2024 Rebasing Ph 2_20241213"
+   },
+   "TrimType": "Record",
+   "Uri": 876032,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Application and Evidence"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-12-13T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-11-29T21:04:36.0000000Z",
+    "StringValue": "2024-11-29 at 4:04 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 2580875
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-31166"
+   },
+   "RecordTitle": {
+    "Value": "dec_order_Sett_Prop_EGI_2024_Rates_Ph2_20241129_esigned"
+   },
+   "TrimType": "Record",
+   "Uri": 873940,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Decision and Order; Interim rate order"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-11-29T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-11-25T19:39:56.0000000Z",
+    "StringValue": "2024-11-25 at 2:39 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 100256
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-30749"
+   },
+   "RecordTitle": {
+    "Value": "S Andison_Ltr of Comment_EGI Rebasing Ph 2_20240530_Redacted"
+   },
+   "TrimType": "Record",
+   "Uri": 873176,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Letter of Comment"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-05-30T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-11-15T22:51:35.0000000Z",
+    "StringValue": "2024-11-15 at 5:51 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 65847428
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-30185"
+   },
+   "RecordTitle": {
+    "Value": "EGI_Updated_IRR_2024 Rebasing Ph 2_20241115"
+   },
+   "TrimType": "Record",
+   "Uri": 872171,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Interrogatory Response from Applicant"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-11-15T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-11-14T16:59:53.0000000Z",
+    "StringValue": "2024-11-14 at 11:59 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 92057
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-29745"
+   },
+   "RecordTitle": {
+    "Value": "Intervention List_EGI Ph 2_20241114"
+   },
+   "TrimType": "Record",
+   "Uri": 871630,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Intervenor List"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-11-05T13:35:59.0000000Z",
+    "StringValue": "2024-11-05 at 8:35 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 5658325
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-29118"
+   },
+   "RecordTitle": {
+    "Value": "EGI_DRO_Rebasing Ph 2_20241104"
+   },
+   "TrimType": "Record",
+   "Uri": 870504,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Draft Rate Order"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-11-04T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-11-05T13:30:19.0000000Z",
+    "StringValue": "2024-11-05 at 8:30 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 483488
+   },
+   "RecordMimeType": {
+    "Value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+   },
+   "RecordNumber": {
+    "Value": "D24-29117"
+   },
+   "RecordTitle": {
+    "Value": "EGI_SettlementP_ADR-20_Attach 1_Rebasing Ph2_20241104"
+   },
+   "TrimType": "Record",
+   "Uri": 870503,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Settlement Proposal"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-11-04T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-08-26T14:44:03.0000000Z",
+    "StringValue": "2024-08-26 at 10:44 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 160962
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-24505"
+   },
+   "RecordTitle": {
+    "Value": "EGI_CoverLtr_IRR Update_20240823"
+   },
+   "TrimType": "Record",
+   "Uri": 863053,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Interrogatory Response from Applicant"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-08-23T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-08-22T15:45:41.0000000Z",
+    "StringValue": "2024-08-22 at 11:45 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 281658
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-24180"
+   },
+   "RecordTitle": {
+    "Value": "dec on HRAI Motion_PO4_EGI_2024 Rates_Ph2_20240822_esigned"
+   },
+   "TrimType": "Record",
+   "Uri": 862602,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Decision; Procedural Order"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-08-22T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-08-08T16:06:16.0000000Z",
+    "StringValue": "2024-08-08 at 12:06 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 274362
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-23303"
+   },
+   "RecordTitle": {
+    "Value": "decision_Confidentiality_EGI_Rebasing_Phase 2_IRRs_20240808_eSigned"
+   },
+   "TrimType": "Record",
+   "Uri": 861135,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Decision"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-08-08T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-07-23T12:44:17.0000000Z",
+    "StringValue": "2024-07-23 at 8:44 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 18974
+   },
+   "RecordMimeType": {
+    "Value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+   },
+   "RecordNumber": {
+    "Value": "D24-22623"
+   },
+   "RecordTitle": {
+    "Value": "FRPO_Exhibit_TC_EGI Total Sales and Excess_EGI Rebasing Ph 2_20240722"
+   },
+   "TrimType": "Record",
+   "Uri": 859863,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Cross Examination Material"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-07-22T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-07-08T13:21:21.0000000Z",
+    "StringValue": "2024-07-08 at 9:21 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 299304
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-21668"
+   },
+   "RecordTitle": {
+    "Value": "ED_Suppl IR_EGI Rebasing Ph 2_20240705"
+   },
+   "TrimType": "Record",
+   "Uri": 858403,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Interrogatories to Applicant"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-07-05T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-06-24T17:01:30.0000000Z",
+    "StringValue": "2024-06-24 at 1:01 PM"
+   },
+   "RecordDocumentSize": {
+    "Value": 126602
+   },
+   "RecordMimeType": {
+    "Value": "image/jpeg"
+   },
+   "RecordNumber": {
+    "Value": "D24-20799"
+   },
+   "RecordTitle": {
+    "Value": "HRAI_Document H_Ad for Enbridge Sustain_EGI_Rebasing Ph2_20240624"
+   },
+   "TrimType": "Record",
+   "Uri": 857061,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Interrogatories to Applicant"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-06-24T00:00:00.0000000Z"
+    }
+   }
+  },
+  {
+   "RecordDateRegistered": {
+    "IsClear": false,
+    "IsTimeClear": false,
+    "DateTime": "2024-05-09T12:37:39.0000000Z",
+    "StringValue": "2024-05-09 at 8:37 AM"
+   },
+   "RecordDocumentSize": {
+    "Value": 301107
+   },
+   "RecordMimeType": {
+    "Value": "application/pdf"
+   },
+   "RecordNumber": {
+    "Value": "D24-17581"
+   },
+   "RecordTitle": {
+    "Value": "Minogi_IntrvREQ_EGI Rebasing Ph 2_20240508"
+   },
+   "TrimType": "Record",
+   "Uri": 852038,
+   "Fields": {
+    "CaseNumber": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "EB-2024-0111"
+    },
+    "SIDocumentType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Intervenor Request Letter"
+    },
+    "Applicant": {
+     "__type": "HP.HPTRIM.ServiceModel.LocationRef, TRIMServiceAPIModel",
+     "LocationFormattedName": {
+      "Value": "Enbridge Gas Inc. - Gas Distributor"
+     },
+     "TrimType": "Location",
+     "Uri": 717
+    },
+    "EnergyType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Gas"
+    },
+    "PrimaryApplicationType": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimStringProperty, TRIMServiceAPIModel",
+     "Value": "Rates"
+    },
+    "DateIssued": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": true,
+     "IsTimeClear": true,
+     "DateTime": "0001-01-01T00:00:00.0000000Z"
+    },
+    "fDateReceived": {
+     "__type": "HP.HPTRIM.ServiceModel.TrimDateTime, TRIMServiceAPIModel",
+     "IsClear": false,
+     "IsTimeClear": true,
+     "DateTime": "2024-05-08T00:00:00.0000000Z"
+    }
+   }
+  }
+ ],
+ "PropertiesAndFields": {},
+ "TotalResults": 30,
+ "CountStringEx": "30 records",
+ "MinimumCount": 30,
+ "Count": 0,
+ "HasMoreItems": false,
+ "SearchTitle": "Records - CaseNumber=EB-2024-0111 - 30 records",
+ "HitHighlightString": "",
+ "TrimType": "Record",
+ "ResponseStatus": {}
+}

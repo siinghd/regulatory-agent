@@ -233,7 +233,7 @@ async def upsert_document(ref, *, sha256: str | None = None, size: int | None = 
         """,
         ref.provider,
         ref.matter,
-        ref.doc_type.value,
+        ref.doc_type,
         ref.external_id,
         ref.title,
         ref.filed_on,
