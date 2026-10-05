@@ -461,9 +461,23 @@ def _classify_rules_only(email: InboundEmail, max_docs: int) -> ParsedRequest:
 
 _WINDOW_S = {"hour": 3600, "day": DAY_S}
 _SLOW_DOWN = {
-    "hour": "You've sent a lot of requests in the last hour, so I'm pausing for a while. Please try again later.",
-    "day": "You've sent a lot of requests today, so I'm pausing until tomorrow. Please try again then.",
+    ("sender", "hour"): "You've sent a lot of requests in the last hour, so I'm pausing your requests.",
+    ("sender", "day"): "You've sent a lot of requests today, so I'm pausing your requests.",
+    ("domain", "hour"): "Your email domain has sent a lot of requests in the last hour, so I'm pausing its requests.",
+    ("domain", "day"): "Your email domain has sent a lot of requests today, so I'm pausing its requests.",
 }
+
+
+def slow_down_text(who: str, window: str, free_at: datetime | None, now: datetime) -> str:
+    """The "slow down" notice: when the next request is accepted, and that nothing is answered
+    before then (the notice is sent at most once per window, agent.pipeline._may_slow_down)."""
+    if free_at is None:
+        return f"{_SLOW_DOWN[who, window]} Please try again later."
+    minutes = max(1, -(-int((free_at - now).total_seconds()) // 60))
+    wait = f"{minutes} minute{'s' if minutes != 1 else ''}" if minutes < 90 else f"{round(minutes / 60)} hours"
+    when = free_at.strftime("%H:%M UTC") + ("" if free_at.date() == now.date() else free_at.strftime(" on %B %-d"))
+    return (f"{_SLOW_DOWN[who, window]} You can send your next request in about {wait}, after {when}. "
+            "I won't answer emails you send before then.")
 
 
 async def _within_limits(deps: Deps, row, email: InboundEmail, auth_json: dict) -> bool:
@@ -478,8 +492,9 @@ async def _within_limits(deps: Deps, row, email: InboundEmail, auth_json: dict) 
         notify = who != "global" and await _may_slow_down(deps, sender, window)
         await _event_soft(rid, "rate_limited", {"key": who, "window": window, "action": "rejected", "notice": notify})
         if notify:
+            free_at = await deps.limits.free_at(key, limit=limit, window_s=_WINDOW_S[window])
             notice = outbound.simple_reply(name=_display_name(email), subject=email.subject,
-                                           paragraphs=[_SLOW_DOWN[window]])
+                                           paragraphs=[slow_down_text(who, window, free_at, datetime.now(UTC))])
             await _queue(deps, row, email, notice, from_states={"received"}, to_state="rejected",
                          reject_reason=reason, auth=auth_json)
         else:

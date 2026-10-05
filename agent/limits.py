@@ -117,6 +117,15 @@ class Limits:
         n = int(await self._hit(keys=[f"rl:{key}"], args=[now_ms, window_s * 1000, limit, member]))
         return n <= limit, n
 
+    async def free_at(self, key: str, *, limit: int, window_s: int) -> datetime | None:
+        """When the sliding window `key` next has room for a hit (enough of its oldest hits leave
+        it), or None if it has room now. Rejected hits are never counted, so this doesn't move."""
+        cutoff_ms = time.time() * 1000 - window_s * 1000
+        live = sorted(s for _, s in await self.r.zrange(f"rl:{key}", 0, -1, withscores=True) if s > cutoff_ms)
+        if len(live) < limit:
+            return None
+        return datetime.fromtimestamp((live[len(live) - limit] + window_s * 1000) / 1000, UTC)
+
     async def decide(self, limiter: str, key: str, *, limit: int, window_s: int, member: str | None = None) -> bool:
         """`hit`, counted in the limiter_decisions metric as `limiter` allowed/limited."""
         ok, _ = await self.hit(key, limit=limit, window_s=window_s, member=member)

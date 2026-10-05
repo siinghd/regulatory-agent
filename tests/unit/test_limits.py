@@ -254,3 +254,25 @@ def test_web_client_keys_are_hmacs_under_a_per_process_key():
     assert a._client_key("198.51.100.9") != b._client_key("198.51.100.9")
     assert "198" not in a._client_key("198.51.100.9")
     assert a._client_key("2001:db8::1") == a._client_key("2001:db8::ffff")
+
+
+@pytest.mark.parametrize(
+    ("who", "window", "free_at", "expected"),
+    [
+        ("sender", "hour", datetime(2026, 10, 5, 12, 43, 10, tzinfo=UTC),
+         ("You've sent a lot of requests in the last hour, so I'm pausing your requests. You can send your next "
+          "request in about 19 minutes, after 12:43 UTC. I won't answer emails you send before then.")),
+        ("sender", "day", datetime(2026, 10, 6, 9, 30, tzinfo=UTC),
+         ("You've sent a lot of requests today, so I'm pausing your requests. You can send your next request in "
+          "about 21 hours, after 09:30 UTC on October 6. I won't answer emails you send before then.")),
+        ("domain", "hour", datetime(2026, 10, 5, 12, 25, 1, tzinfo=UTC),
+         ("Your email domain has sent a lot of requests in the last hour, so I'm pausing its requests. You can send "
+          "your next request in about 1 minute, after 12:25 UTC. I won't answer emails you send before then.")),
+        ("sender", "hour", None,
+         "You've sent a lot of requests in the last hour, so I'm pausing your requests. Please try again later."),
+    ],
+)
+def test_slow_down_text_says_when_the_next_request_is_accepted(who, window, free_at, expected):
+    from agent.pipeline import slow_down_text
+
+    assert slow_down_text(who, window, free_at, datetime(2026, 10, 5, 12, 24, 30, tzinfo=UTC)) == expected

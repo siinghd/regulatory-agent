@@ -28,7 +28,7 @@ The layers are in the order that a message meets them.
 | 6 | Suppression list | Gate, first | Address or domain (HMAC) | DSAR and operator blocks | Rejected. No reply. |
 | 7 | Automated mail | Gate | Headers | Always | Rejected. No reply. |
 | 8 | Sender authentication | Gate | DMARC-aligned SPF or DKIM | Necessary | Rejected. No reply. |
-| 9 | Each sender | Gate, after authentication | Normalised sender | 6 each hour, 20 each day | Rejected. At most 1 "slow down" reply each hour (each day for the daily cap), and at most 3 each day. |
+| 9 | Each sender | Gate, after authentication | Normalised sender | 6 each hour, 20 each day | Rejected. At most 1 "slow down" reply each hour (each day for the daily cap), and at most 3 each day. The reply tells when the next request is accepted, and that the agent does not answer emails before then. |
 | 10 | Each domain | Gate | Organizational domain | 30 each hour, 100 each day | The same as layer 9 |
 | 11 | Global | Gate | All senders | 300 each hour, 1000 each day | Rejected. No reply. |
 | 12 | Each thread | Gate | Thread and sender | 5 requests (split requests do not count) | Rejected. No reply. |

@@ -7,6 +7,7 @@ budgets; the web token buckets. And: no Redis key ever names an address.
 """
 
 import asyncio
+import re
 import time
 from types import SimpleNamespace
 
@@ -107,10 +108,22 @@ async def test_the_daily_cap_rejects_with_one_notice_a_day(h):
     rows = [await h.request(r) for r in rids]
     assert [r["state"] for r in rows] == ["done", "done", "rejected", "rejected", "rejected"]
     assert {r["reject_reason"] for r in rows[2:]} == {"rate_limited:sender_day"}
-    assert "pausing until tomorrow" in body_text(h.reply(rids[2]))
+    text = body_text(h.reply(rids[2]))
+    assert "You've sent a lot of requests today, so I'm pausing your requests." in text
+    assert re.search(r"You can send your next request in about 2\d hours, after \d\d:\d\d UTC on \w+ \d+\. "
+                     r"I won't answer emails you send before then\.", text), text
     assert h.emails(rids[3]) == [] and h.emails(rids[4]) == []
     event = [e["data"] for e in await store.events(rids[2]) if e["kind"] == "rate_limited"]
     assert event == [{"key": "sender", "window": "day", "action": "rejected", "notice": True}]
+
+
+async def test_the_hourly_notice_says_when_the_next_request_is_accepted(h):
+    h.configure(rate_per_sender_hour=1)
+    await served(h, ip="198.51.100.1")
+    rid = await served(h, ip="198.51.100.2")
+    text = body_text(h.reply(rid))
+    assert re.search(r"pausing your requests\. You can send your next request in about (59|60) minutes, "
+                     r"after \d\d:\d\d UTC\. I won't answer emails you send before then\.", text), text
 
 
 async def test_slow_down_replies_are_at_most_one_an_hour_and_three_a_day(h):
