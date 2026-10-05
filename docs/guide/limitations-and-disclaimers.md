@@ -4,7 +4,7 @@ Read this document before you use the agent, its numbers or its documents for a 
 
 ## 1. Status of the system
 
-WARNING: The Regulatory Document Agent is almost ready for production, but we made it as an MVP for evaluation. It has no service level agreement (SLA), no support hours and no guaranteed availability. The open items are in the environment, not in the software. [Path to production](#path-to-production) lists them.
+WARNING: The Regulatory Document Agent is almost ready for production. It is an MVP for evaluation. It has no service level agreement (SLA), no support hours and no guaranteed availability. The open items are in the environment, not in the software. [Path to production](#path-to-production) lists them.
 
 - 1 operator builds and runs the system. No second person reviews the changes.
 - The system runs on 1 VM. Postgres, Redis, the mail server and the UARB egress tunnel are single points of failure.
@@ -89,7 +89,7 @@ Open technical items:
 
 ## Path to production
 
-The code, the tests, the security controls, the monitoring and the runbooks are complete. These items are open because we made the agent as an MVP on personal infrastructure. Most items are configuration or infrastructure changes. Some items need a company.
+The code, the tests, the security controls, the monitoring and the runbooks are complete. These items are open because the agent is an MVP that runs on personal infrastructure. Most items are configuration or infrastructure changes. Some items need a company.
 
 | Area | Open item | Fix |
 |---|---|---|
