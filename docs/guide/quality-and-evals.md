@@ -178,7 +178,7 @@ On 2026-10-05, test collection gave these counts. The suites were not run for th
 | Command | Tests collected |
 |---|---|
 | `.venv/bin/pytest -q` (unit, adversarial, review) | 1357 (unit 1301, adversarial 39, review 17) |
-| `.venv/bin/pytest -m integration -q` | 183 (integration 116, reliability 60, review 7) |
+| `make integration` | 183 (integration 116, reliability 60, review 7) |
 | `.venv/bin/pytest -m live -q` | 4 |
 
 The adversarial corpus has 29 hostile or unusual emails (`tests/adversarial/emails/`).

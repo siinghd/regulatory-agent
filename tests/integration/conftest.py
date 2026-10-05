@@ -6,6 +6,7 @@ every test. Nothing here connects to the `agent` database or Redis db 0.
 """
 
 import asyncio
+import os
 import secrets
 from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
@@ -41,8 +42,13 @@ REDIS_TEST_DB = 15
 
 
 def _service_settings() -> Settings:
-    """Connection details of the compose services (credentials from .env)."""
-    return Settings(_env_file=REPO / ".env")
+    """Where the throwaway test databases live: TEST_DATABASE_URL / TEST_REDIS_URL (set by
+    `make integration`, which starts disposable Postgres and Redis containers). Production
+    credentials are never used: the live Postgres refuses the superuser over TCP anyway."""
+    db, redis = os.environ.get("TEST_DATABASE_URL"), os.environ.get("TEST_REDIS_URL")
+    if not (db and redis):
+        pytest.exit("integration tests need TEST_DATABASE_URL and TEST_REDIS_URL (run `make integration`)", returncode=2)
+    return Settings(_env_file=None, database_url=db, redis_url=redis)
 
 
 @pytest.fixture(scope="session")

@@ -258,9 +258,10 @@ def test_long_docket_descriptions_are_trimmed_at_a_word_boundary():
 
     title = trim_title(description)
 
+    # e-filing boilerplate ("submitted on <timestamp>", "Filing Type code") is not part of a title
     assert title == (
         "NorthWestern Corporation submits tariff filing per 35.13(a)(2)(iii): RS 27 - Third Amended and "
-        "Restated AMPS Agreement submitted on 2/12/2024 12:02:46 PM…"
+        "Restated AMPS Agreement"
     )
     assert len(title) <= ferc.TITLE_MAX + 1
     assert trim_title("  NOPR \n") == "NOPR"
@@ -303,7 +304,8 @@ async def test_matter_info_for_a_whole_docket(portal, provider):
 async def test_matter_info_for_a_sub_docket(portal, provider):
     info = await provider.fetch_matter("ER24-1234-000")
 
-    assert info.title.startswith("NorthWestern Corporation submits tariff filing") and info.title.endswith("…")
+    assert info.title.startswith("NorthWestern Corporation submits tariff filing")
+    assert info.title.endswith("AMPS Agreement")  # no e-filing timestamp
     # The opening filing, not FERC's same-day notice of it (whose accession number sorts first).
     assert info.type == "Tariff Filing"
     assert info.category is None  # "DKT"
@@ -866,3 +868,14 @@ async def test_file_types_outside_the_allowlist_are_not_fetched(portal, provider
     with pytest.raises(UnsupportedFileType):
         await collect(provider, [ref("20240601-5000")], tmp_path)
     assert route.call_count == 0
+
+
+def test_title_drops_efiling_boilerplate():
+    from agent.providers.ferc import trim_title
+
+    raw = ("NorthWestern Corporation submits tariff filing per 35.13(a)(2)(iii): RS 27 - Third Amended and "
+           "Restated AMPS Agreement submitted on 2/12/2024 12:02:46 PM. Filing Type code: 10")
+    assert trim_title(raw) == (
+        "NorthWestern Corporation submits tariff filing per 35.13(a)(2)(iii): RS 27 - Third Amended and "
+        "Restated AMPS Agreement"
+    )

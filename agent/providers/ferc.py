@@ -407,9 +407,21 @@ def _opening_application(docs: list[_Doc]) -> _Doc | None:
     return min(pool, key=lambda d: (d.filed_on or date.max, d.accession), default=None)
 
 
+_FILING_BOILERPLATE = re.compile(
+    r"\s*(?:submitted|filed)\s+on\s+\d{1,2}/\d{1,2}/\d{4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?\s*[AP]M)?.*$"
+    r"|\s*Filing Type code:\s*\d+.*$",
+    re.IGNORECASE,
+)
+
+
 def trim_title(text: str, limit: int = TITLE_MAX) -> str:
-    """Collapse whitespace and cut at a word boundary, so a long docket description reads as a title."""
+    """Collapse whitespace and cut at a word boundary, so a long docket description reads as a title.
+
+    eLibrary descriptions end in e-filing boilerplate ("... submitted on 2/12/2024 12:02:46 PM",
+    "Filing Type code: 10"); that is metadata, not part of the matter's name.
+    """
     text = " ".join(text.split())
+    text = _FILING_BOILERPLATE.sub("", text).rstrip(" ,;:-.")
     if len(text) <= limit:
         return text
     head = text[: limit + 1]

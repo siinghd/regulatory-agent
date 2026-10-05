@@ -340,11 +340,11 @@ For a deploy to the live host, use `make deploy CHANGE="<PR or commit reference>
 
 | Command | Suites | Tests collected |
 |---|---|---|
-| `.venv/bin/pytest -q` | Unit (1301), adversarial (39) and review (17). No network. | 1357 |
-| `.venv/bin/pytest -m integration -q` | Integration (116), reliability (60) and review (7). Real Postgres and Redis, with a fake portal, a fake LLM and a fake SMTP server. | 183 |
+| `.venv/bin/pytest -q` | Unit (1302), adversarial (39) and review (17). No network. | 1358 |
+| `make integration` | Integration (116), reliability (60) and review (7). Real Postgres and Redis, with a fake portal, a fake LLM and a fake SMTP server. | 183 |
 | `.venv/bin/pytest -m live -q` | The real UARB, OEB and FERC portals. UARB needs the egress tunnel. | 4 |
 
-NOTE: The counts come from test collection (`--co`) on 2026-10-05. The suites were not run for this document. The integration suite needs `DATABASE_URL` and `REDIS_URL`. `make integration` gives it temporary containers.
+NOTE: On 2026-10-05, inside the release candidate image, 1358 default tests and 181 integration tests passed (2 browser tests skip). The integration suite needs `TEST_DATABASE_URL` and `TEST_REDIS_URL`. `make integration` starts temporary containers and sets them. The tests never read `.env`.
 
 The adversarial corpus has 29 hostile or unusual emails in `tests/adversarial/emails/`. `scripts/load_limits.py` sends bursts at each abuse limit with fakes, and sends no mail.
 

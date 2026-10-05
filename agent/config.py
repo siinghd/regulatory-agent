@@ -1,5 +1,6 @@
 """Runtime settings. Every secret comes from the environment (.env in dev, compose env in prod)."""
 
+import os
 from functools import lru_cache
 from typing import Literal
 
@@ -8,7 +9,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # AGENT_ENV_FILE="" disables the file (the test suite sets it, so tests never read the
+    # operator's secrets); unset means ./.env as before.
+    model_config = SettingsConfigDict(env_file=os.environ.get("AGENT_ENV_FILE", ".env") or None, extra="ignore")
 
     # --- storage / queue
     database_url: str = "postgresql://agent:agent@127.0.0.1:5442/agent"

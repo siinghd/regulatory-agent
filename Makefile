@@ -35,7 +35,7 @@ integration:  ## integration tests in the candidate-test image against throwaway
 	docker run -d --name ragent-it-redis -p 127.0.0.1:56499:6379 $(REDIS_IMAGE) >/dev/null
 	until docker exec ragent-it-pg pg_isready -U agent -q; do sleep 1; done; sleep 1
 	docker run --rm --network host -e HOME=/tmp \
-	  -e DATABASE_URL=postgresql://agent:it-only@127.0.0.1:55499/agent -e REDIS_URL=redis://127.0.0.1:56499/0 \
+	  -e TEST_DATABASE_URL=postgresql://agent:it-only@127.0.0.1:55499/agent -e TEST_REDIS_URL=redis://127.0.0.1:56499/0 \
 	  regulatory-agent:candidate-test -m integration -q -p no:cacheprovider; rc=$$?; \
 	  docker rm -f ragent-it-pg ragent-it-redis >/dev/null; exit $$rc
 

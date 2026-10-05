@@ -1,6 +1,12 @@
 """Session-wide checks, for every test directory and marker selection."""
 
+import os
+
 import pytest
+
+# Tests never read the operator's .env (production secrets, least-privilege URLs). Must run
+# before agent.config is imported anywhere.
+os.environ["AGENT_ENV_FILE"] = ""
 
 from tests.metrics_privacy import violations
 

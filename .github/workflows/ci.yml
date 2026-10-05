@@ -80,8 +80,8 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 2s --health-retries 30
     env:
       # The suite creates (and drops) its own agent_test_<random> database and uses Redis db 15.
-      DATABASE_URL: postgresql://agent:ci-only@127.0.0.1:5432/agent
-      REDIS_URL: redis://127.0.0.1:6379/0
+      TEST_DATABASE_URL: postgresql://agent:ci-only@127.0.0.1:5432/agent
+      TEST_REDIS_URL: redis://127.0.0.1:6379/0
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with: {persist-credentials: false}
