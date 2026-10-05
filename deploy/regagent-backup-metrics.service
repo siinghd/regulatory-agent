@@ -1,0 +1,17 @@
+[Unit]
+Description=Regulatory agent backup freshness for node_exporter (textfile collector)
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=deploy
+WorkingDirectory=/home/deploy/senpilot-agent
+# /var/lib/regagent-textfile, owned by deploy, readable by node_exporter (mounted read-only).
+StateDirectory=regagent-textfile
+StateDirectoryMode=0755
+ExecStart=/home/deploy/senpilot-agent/deploy/observability/backup_metrics.sh /var/lib/regagent-textfile
+Nice=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes

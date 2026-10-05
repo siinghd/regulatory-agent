@@ -1,0 +1,12 @@
+{
+ "started_at": "2026-10-04T22:38:02+0000",
+ "wall_s": 46.3,
+ "llm_models": [
+  "deepseek/deepseek-v4.1-flash",
+  "qwen/qwen3.8-27b"
+ ],
+ "repeats": 2,
+ "concurrency": 6,
+ "cases": 190,
+ "runs": 295
+}

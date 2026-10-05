@@ -1,0 +1,11 @@
+[Unit]
+Description=Regulatory agent backup (restore-tested, age-encrypted)
+After=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+WorkingDirectory=/home/deploy/senpilot-agent
+ExecStart=/home/deploy/senpilot-agent/deploy/backup.sh
+Nice=10
+IOSchedulingClass=idle

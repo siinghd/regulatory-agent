@@ -1,0 +1,61 @@
+# Public read-only Grafana under the project domain (deploy/observability/README.md): anonymous
+# Viewer only. Login, admin and account pages, the user/org/datasource/service-account/plugin
+# APIs, Explore, snapshots and every request that is not a read (bar the dashboards' query
+# endpoint) get 404 here, so the admin account works only on 127.0.0.1:3310 (SSH tunnel).
+# Credentials and cookies are stripped on the way in (this path is anonymous, whatever the
+# client sends), and so are the client IP headers: Grafana's anonymous-device table never
+# stores visitor IPs (Caddy's access log below still has them, as for the app).
+# This Caddy build has no rate-limit module; Prometheus bounds query cost instead
+# (--query.timeout, --query.max-samples in docker-compose.yml).
+(regagent_grafana) {
+	@grafana path /grafana /grafana/*
+	handle @grafana {
+		@grafana_blocked path /grafana/login* /grafana/logout* /grafana/signup* /grafana/user/* /grafana/invite* /grafana/verify* /grafana/admin* /grafana/org* /grafana/profile* /grafana/explore* /grafana/connections* /grafana/datasources* /grafana/plugins* /grafana/alerting* /grafana/dashboard/new* /grafana/dashboard/import* /grafana/dashboard/snapshot* /grafana/dashboard/public* /grafana/public-dashboards* /grafana/metrics* /grafana/render* /grafana/avatar/* /grafana/swagger* /grafana/openapi* /grafana/debug* /grafana/api/admin* /grafana/api/users* /grafana/api/org* /grafana/api/orgs* /grafana/api/auth/* /grafana/api/login* /grafana/api/serviceaccounts* /grafana/api/datasources* /grafana/api/snapshots* /grafana/api/snapshot* /grafana/api/public* /grafana/api/plugins* /grafana/api/teams* /grafana/api/access-control* /grafana/api/alertmanager* /grafana/api/ruler* /grafana/api/prometheus* /grafana/api/v1/* /grafana/api/gnet* /grafana/api/cloudmigration* /grafana/api/swagger* /grafana/apis/iam.grafana.app*
+		respond @grafana_blocked 404
+		@grafana_write {
+			not method GET HEAD
+			not path /grafana/api/ds/query
+		}
+		respond @grafana_write 404
+		redir /grafana /grafana/ 308
+		reverse_proxy 127.0.0.1:3310 {
+			header_up -Authorization
+			header_up -Cookie
+			header_up -X-Forwarded-For
+			header_up -X-Real-Ip
+		}
+	}
+}
+
+uarb.hsingh.app {
+	import origin_tls
+	encode gzip zstd
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	log {
+		output file /var/log/caddy/uarb-access.log {
+			roll_size 50MiB
+			roll_keep_for 720h
+		}
+		format json
+	}
+
+	import regagent_grafana
+
+	# Everything else is the app. `handle` blocks are mutually exclusive, so /grafana/* never
+	# reaches it (or its rate limiter).
+	handle {
+		# The web process's /metrics is for Prometheus on loopback only.
+		respond /metrics* 404
+		# The viewer rate-limits per client IP (agent/web/ratelimit.py). Behind Cloudflare the TCP
+		# peer is an edge IP; {client_ip} is the visitor (the global `servers { trusted_proxies ...
+		# client_ip_headers CF-Connecting-IP }` in /etc/caddy/Caddyfile), and it overwrites any
+		# X-Real-IP or X-Forwarded-For the client sent.
+		reverse_proxy 127.0.0.1:8710 {
+			header_up X-Real-IP {client_ip}
+			header_up X-Forwarded-For {client_ip}
+		}
+	}
+}

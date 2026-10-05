@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Service status{% endblock %}
+{% block main %}
+<article class="prose status-page">
+  <p class="disclaimer" role="note"><b>MVP for evaluation.</b> Aggregate numbers only; no personal data. Not a service-level agreement.</p>
+  <h1>Service status</h1>
+  <p class="eyebrow">As of {{ s.computed_at }}, refreshed at most once a minute. Target: a reply within {{ s.target }} of the email arriving.</p>
+
+  <h2>Components</h2>
+  <table>
+    <thead><tr><th>Component</th><th>Status</th><th>Detail</th></tr></thead>
+    <tbody>
+      {% for c in s.components %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td><span class="pill {{ c.state }}">{{ {"ok": "Operational", "down": "Down", "unknown": "Unknown"}[c.state] }}</span></td>
+        <td>{{ c.detail }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="note">The Nova Scotia Utility and Review Board's portal only answers North American addresses, so all UARB
+  traffic leaves through a single Canadian egress server. While that server is down, UARB requests wait and retry
+  (and get one apology if it stays down); the other regulators are not affected.</p>
+
+  {% if s.db_ok %}
+  <h2>Requests</h2>
+  <table>
+    <thead><tr><th></th>{% for w in s.windows %}<th class="num">{{ w }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for r in s.requests %}
+      <tr><td>{{ r.label }}</td>{% for v in r["values"] %}<td class="num">{{ v }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Reply time (email received to reply sent)</h2>
+  <table>
+    <thead><tr><th></th>{% for w in s.windows %}<th class="num">{{ w }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for r in s.latency %}
+      <tr><td>{{ r.label }}</td>{% for v in r["values"] %}<td class="num">{{ v }}</td>{% endfor %}</tr>
+      {% endfor %}
+      <tr><td>p95 against the {{ s.target }} target</td>
+        {% for ok in s.p95_ok %}<td class="num">{% if ok is none %}–{% elif ok %}<span class="pill ok">Within</span>{% else %}<span class="pill down">Over</span>{% endif %}</td>{% endfor %}
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Requests by regulator</h2>
+  <table>
+    <thead><tr><th></th>{% for w in s.windows %}<th class="num">{{ w }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for r in s.volume %}
+      <tr><td>{{ r.label }}</td>{% for v in r["values"] %}<td class="num">{{ v }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Quality (last 7 days)</h2>
+  <table>
+    <tbody>
+      {% for q in s.quality %}
+      <tr><td>{{ q.label }}<br><span class="muted">{{ q.detail }}</span></td><td class="num">{{ q.value }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <h2>Requests</h2>
+  <p>The request numbers are not available right now. Please try again in a few minutes.</p>
+  {% endif %}
+
+  <p class="note">Counts are of emails received in each window. Rejected emails (spam, automated mail, senders whose
+  address could not be verified, senders over a rate limit) get no documents by design and are not failures. Nothing on
+  this page identifies a person, an email or a matter.</p>
+</article>
+{% endblock %}

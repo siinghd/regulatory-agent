@@ -17,17 +17,17 @@ import time
 from collections import Counter
 from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
-from email.message import Message
+from datetime import UTC, date, datetime, tzinfo
 from typing import Any
 from urllib.parse import quote
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-import anyio
 import httpx
 import structlog
 from pydantic import BaseModel, Field, ValidationError
 
 from agent.models import (
+    AgentError,
     DocumentRef,
     DownloadedFile,
     MatterInfo,
@@ -35,22 +35,31 @@ from agent.models import (
     PortalUnavailable,
     ScrapeError,
 )
-from agent.providers.base import Category
-from agent.providers.files import finalise_download
+from agent.providers import http
+from agent.providers.base import Category, nfkc
+from agent.providers.files import FilePolicy, error_to_raise, finalise_download
+from agent.providers.http import raise_for_status, served_filename
 
 log = structlog.get_logger()
 
 API_URL = "https://rds.oeb.ca/CMWebDrawer/"
 PORTAL_URL = "https://www.rds.oeb.ca/"
-USER_AGENT = "regulatory-agent/0.1 (+https://uarb.hsingh.app/bot)"
-MATTER_RE = re.compile(r"EB-\d{4}-\d{4}")
+USER_AGENT = http.USER_AGENT
+# re.ASCII: \d is 0-9 only, so full-width or other non-ASCII digits never form a case number.
+MATTER_RE = re.compile(r"EB-\d{4}-\d{4}", re.ASCII)
 # "EB-2024-0111", "eb 2024 0111", "EB2024-0111", and dash variants pasted from PDFs ("EB–2024–0111")
 MENTION_RE = re.compile(
-    r"(?<![A-Za-z0-9])EB[-‐-―\s]?(\d{4})[-‐-―\s]?(\d{4})(?!\d)", re.IGNORECASE
+    r"(?<![A-Za-z0-9])EB[-‐-―\s]?(\d{4})[-‐-―\s]?(\d{4})(?!\d)", re.IGNORECASE | re.ASCII
 )
 PAGE_SIZE = 700  # the server serves pages this large in one response
 CANARY_MATTER = "EB-2024-0111"  # a large, settled case: always has records
 MAX_RECORDS = 5_000
+_SIZES_REMEMBERED = 20_000
+try:
+    # RDS stores times in UTC; the Board, its filers and its website work in Toronto time.
+    _TORONTO: tzinfo = ZoneInfo("America/Toronto")
+except ZoneInfoNotFoundError:  # no tz database: UTC dates, a day late for evening filings
+    _TORONTO = UTC
 # Never add RecordContainer: it is access-denied for the public and fails the whole search.
 _PROPERTIES = (
     "RecordTitle,RecordNumber,RecordDateRegistered,RecordDocumentSize,RecordMimeType,CaseNumber,"
@@ -67,6 +76,16 @@ def _any_of(*document_types: str) -> Callable[[str], bool]:
 
 def _is_decision(document_type: str) -> bool:
     return "decision" in document_type or document_type.endswith("rate order")
+
+
+def _is_final_decision(document_type: str | None, title: str) -> bool:
+    """Whether a Decisions and Orders record counts for a case's decision date. Cost-award
+    decisions come months after the case is decided, and a Draft Rate Order is the applicant's
+    filing, not a decision."""
+    parts = [p.strip().casefold() for p in (document_type or "").split(";") if p.strip()]
+    if any("cost award" in p or p == "draft rate order" for p in parts):
+        return False
+    return "cost award" not in " ".join(title.replace("_", " ").split()).casefold()
 
 
 # Categories with the SIDocumentType values each one covers, in presentation order. A record can
@@ -199,6 +218,8 @@ class _Record:
     applicant: str | None
     energy_type: str | None
     application_type: str | None
+    document_type: str | None = None  # SIDocumentType as given ("Decision; Procedural Order")
+    size: int | None = None  # RecordDocumentSize, bytes
 
 
 def _field(record: dict[str, Any], name: str) -> dict[str, Any]:
@@ -214,13 +235,35 @@ def _text(record: dict[str, Any], name: str) -> str | None:
 
 
 def _date(record: dict[str, Any], name: str) -> date | None:
+    """A date-only field: its calendar date as stored (midnight, labelled UTC)."""
     value = _field(record, name)
     if value.get("IsClear", True) or not value.get("DateTime"):  # unset dates come back as 0001-01-01
         return None
     try:
-        return date.fromisoformat(str(value["DateTime"])[:10])  # UTC calendar date
+        return date.fromisoformat(str(value["DateTime"])[:10])
     except ValueError as e:
         raise ScrapeError(f"unreadable {name}: {value['DateTime']!r}") from e
+
+
+def _toronto_date(record: dict[str, Any], name: str) -> date | None:
+    """A timestamp field (UTC instant): the Toronto calendar date it falls on. A filing
+    registered at 9:30 PM in Toronto is 02:30 UTC the next day."""
+    value = _field(record, name)
+    if value.get("IsClear", True) or not value.get("DateTime"):
+        return None
+    raw = str(value["DateTime"])
+    try:
+        instant = datetime.fromisoformat(raw)  # "2024-11-06T02:30:00.0000000Z"
+    except ValueError as e:
+        raise ScrapeError(f"unreadable {name}: {raw!r}") from e
+    if "T" not in raw:  # a bare date has no instant to convert
+        return instant.date()
+    return (instant if instant.tzinfo else instant.replace(tzinfo=UTC)).astimezone(_TORONTO).date()
+
+
+def _size(record: dict[str, Any]) -> int | None:
+    value = _field(record, "RecordDocumentSize").get("Value")
+    return value if isinstance(value, int) and value >= 0 else None
 
 
 def _applicant(record: dict[str, Any]) -> str | None:
@@ -240,12 +283,14 @@ def _parse_record(raw: dict[str, Any]) -> _Record:
         title=_text(raw, "RecordTitle") or external_id,
         category=categorise(_text(raw, "SIDocumentType")),
         filed_on=(
-            _date(raw, "DateIssued") or _date(raw, "fDateReceived") or _date(raw, "RecordDateRegistered")
+            _date(raw, "DateIssued") or _date(raw, "fDateReceived") or _toronto_date(raw, "RecordDateRegistered")
         ),
         mime=_text(raw, "RecordMimeType"),
         applicant=_applicant(raw),
         energy_type=_text(raw, "EnergyType"),
         application_type=_text(raw, "PrimaryApplicationType"),
+        document_type=_text(raw, "SIDocumentType"),
+        size=_size(raw),
     )
 
 
@@ -274,27 +319,13 @@ def case_url(matter: str) -> str:
     return f"{PORTAL_URL}CMWebDrawer/Record?q=CaseNumber={matter}&sortBy=recRegisteredOn-&pageSize=400"
 
 
-def _raise_for_status(r: httpx.Response, what: str) -> None:
-    if r.status_code >= 500 or r.status_code == 429:
-        raise PortalUnavailable(f"{what}: HTTP {r.status_code}")
-    if r.status_code != 200:
-        raise ScrapeError(f"{what}: HTTP {r.status_code}")
-
-
-def _served_filename(headers: httpx.Headers) -> str:
-    msg = Message()
-    msg["content-disposition"] = headers.get("content-disposition", "")
-    return msg.get_filename() or ""
-
-
 def make_client(proxy: str | None = None) -> httpx.AsyncClient:
-    return httpx.AsyncClient(
-        base_url=API_URL,
-        proxy=proxy,
-        headers={"User-Agent": USER_AGENT},
-        timeout=httpx.Timeout(60, connect=10),
-        follow_redirects=True,
-    )
+    """Redirects are not followed (see agent.providers.http)."""
+    return http.make_client(API_URL, proxy)
+
+
+def _file_ext(mime: str | None) -> str:
+    return mimetypes.guess_extension(mime or "", strict=False) or ""
 
 
 # ---------------------------------------------------------------- provider
@@ -311,14 +342,29 @@ class OebProvider:
 
     @staticmethod
     def normalise(raw: str) -> str | None:
-        m = MENTION_RE.fullmatch(raw)
+        m = MENTION_RE.fullmatch(nfkc(raw))
         return f"EB-{m.group(1)}-{m.group(2)}" if m else None
 
-    def __init__(self, client: httpx.AsyncClient, *, max_concurrency: int = 4):
+    def __init__(
+        self,
+        client: httpx.AsyncClient,
+        *,
+        max_concurrency: int = 4,
+        file_policy: FilePolicy | None = None,
+        download_timeout_s: float = http.DOWNLOAD_TIMEOUT_S,
+    ):
         self._client = client
         # Politeness cap per worker, shared by searches and downloads.
         self._sem = asyncio.Semaphore(max_concurrency)
         self._search_verified_at = 0.0
+        self._file_policy = file_policy
+        self._download_timeout_s = download_timeout_s
+        # record number -> RecordDocumentSize, from recent listings (a cached listing has none).
+        self._sizes: dict[str, int] = {}
+
+    @property
+    def _policy(self) -> FilePolicy:
+        return self._file_policy or FilePolicy.from_settings()
 
     # ------------------------------------------------------------------ metadata and listings
 
@@ -342,17 +388,30 @@ class OebProvider:
                 external_id=r.external_id,
                 title=r.title,
                 filed_on=r.filed_on,
-                file_ext=mimetypes.guess_extension(r.mime or "", strict=False) or "",
+                file_ext=_file_ext(r.mime),
                 row_index=i,
+                source_type=r.document_type,
             )
             for i, r in enumerate(wanted)
         ]
+        for r in wanted:
+            if r.size is not None:
+                self._remember_size(r.external_id, r.size)
         return self._matter_info(matter, records), refs
+
+    def _remember_size(self, external_id: str, size: int) -> None:
+        self._sizes.pop(external_id, None)
+        self._sizes[external_id] = size
+        if len(self._sizes) > _SIZES_REMEMBERED:
+            del self._sizes[next(iter(self._sizes))]
 
     def _matter_info(self, matter: str, records: list[_Record]) -> MatterInfo:
         counts = Counter(r.category for r in records)
         dated = [r.filed_on for r in records if r.filed_on]
-        decided = [r.filed_on for r in records if r.filed_on and r.category == _DECISIONS]
+        decided = [
+            r.filed_on for r in records
+            if r.filed_on and r.category == _DECISIONS and _is_final_decision(r.document_type, r.title)
+        ]
         return MatterInfo(
             provider=self.name,
             matter=matter,
@@ -407,7 +466,7 @@ class OebProvider:
                 r = await self._client.get("Record", params=params)
             except httpx.RequestError as e:
                 raise PortalUnavailable(f"{what}: {e!r}") from e
-        _raise_for_status(r, what)
+        raise_for_status(r, what)
         try:
             page = _Page.model_validate_json(r.content)
         except ValidationError as e:
@@ -423,12 +482,12 @@ class OebProvider:
     ) -> AsyncIterator[DownloadedFile]:
         """Yield files as they land. One failed file is logged and skipped; all failing raises."""
         tasks = [asyncio.create_task(self._download_one(ref, dest_dir)) for ref in refs]
-        errors: list[PortalUnavailable | ScrapeError] = []
+        errors: list[AgentError] = []
         try:
             for finished in asyncio.as_completed(tasks):
                 try:
                     file = await finished
-                except (PortalUnavailable, ScrapeError) as e:
+                except AgentError as e:  # incl. TooLarge and file types we don't deliver
                     log.warning("oeb.download_failed", matter=matter, error=str(e)[:200])
                     errors.append(e)
                     continue
@@ -437,24 +496,21 @@ class OebProvider:
             for t in tasks:
                 t.cancel()
         if errors and len(errors) == len(refs):
-            raise errors[0]
+            raise error_to_raise(errors)
 
     async def _download_one(self, ref: DocumentRef, dest_dir: str) -> DownloadedFile:
         what = f"OEB download of {ref.external_id}"
+        policy = self._policy
+        if ref.file_ext:  # from the record's MIME type: don't fetch what we won't deliver
+            policy.check_ext(ref.file_ext, what)
+        policy.check_size(self._sizes.get(ref.external_id), what)
         tmp = os.path.join(dest_dir, f".{secrets.token_hex(8)}.part")
         async with self._sem:
-            try:
-                # RDS resolves a record by its number as well as by its Uri, so the stored id is
-                # enough to fetch the file again later (e.g. from a cached listing).
-                url = f"Record/{quote(ref.external_id, safe='')}/File/document"
-                async with self._client.stream("GET", url) as r:
-                    _raise_for_status(r, what)
-                    # An unknown record is a 200 with an HTML error page, not a 404.
-                    if r.headers.get("content-type", "").startswith("text/html"):
-                        raise ScrapeError(f"{what}: got an HTML page instead of the file")
-                    async with await anyio.open_file(tmp, "wb") as f:
-                        async for chunk in r.aiter_bytes():
-                            await f.write(chunk)
-            except httpx.RequestError as e:
-                raise PortalUnavailable(f"{what}: {e!r}") from e
-        return finalise_download(tmp, ref, _served_filename(r.headers), dest_dir)
+            # RDS resolves a record by its number as well as by its Uri, so the stored id is
+            # enough to fetch the file again later (e.g. from a cached listing). An unknown record
+            # is a 200 with an HTML error page, not a 404.
+            headers = await http.download_to(
+                self._client, "GET", f"Record/{quote(ref.external_id, safe='')}/File/document", tmp,
+                what=what, policy=policy, deadline_s=self._download_timeout_s,
+            )
+        return finalise_download(tmp, ref, served_filename(headers), dest_dir, policy)

@@ -38,6 +38,21 @@ _EVENT_LABELS = {
     "state:clarify": "Asked you a question",
     "state:rejected": "Not processed",
     "retry": "Hit a problem, retrying",
+    "parked": "Waiting for a service to recover",
+    "summary_failed": "Couldn't write a summary; sending the documents without one",
+    "summary_skipped": "Today's summary budget is used up; sending the documents without one",
+    "reply_too_large": "Reply too large to email; switching to a download link",
+    "waiting": "Waiting for a usage limit to free up",
+    "sent:notice": "Emailed you that this is delayed",
+}
+# Who an end-of-the-road failure is attributed to (pipeline._failure_kind): never the regulator
+# for a problem of ours.
+_FAILED = {
+    "regulator": "The regulator's website kept failing.",
+    "drop": "Our file-sharing service kept failing.",
+    "mail": "Your mail server wouldn't accept the reply.",
+    "too_large": "The documents are larger than I can deliver in one request.",
+    "limit": "A usage limit was reached before this request could run.",
 }
 # What a requester may learn about a rejection (internal reasons stay internal).
 _PUBLIC_REJECT = {
@@ -78,20 +93,28 @@ async def _view(token: str) -> dict | None:
             {"label": _EVENT_LABELS[e["kind"]], "at": e["at"].isoformat()}
             for e in events if e["kind"] in _EVENT_LABELS
         ],
-        "outcome": _outcome(row, result),
+        "outcome": _outcome(row, result, emailed=any(e["kind"] == "sent:reply" for e in events)),
         "received_at": row["received_at"].isoformat(),
         "updated_at": row["updated_at"].isoformat(),
     }
 
 
-def _outcome(row, result: dict) -> str | None:
+def _plural(n: int, word: str) -> str:
+    return f"{n} {word}" + ("" if n == 1 else "s")
+
+
+def _outcome(row, result: dict, *, emailed: bool = False) -> str | None:
     state = row["state"]
     if state == "done" and result.get("files"):
-        return f"Sent {result['files']} documents" + (f" with {result['citations']} cited key points." if result.get("citations") else ".")
+        cited = result.get("citations")
+        return f"Sent {_plural(result['files'], 'document')}" + (
+            f" with {_plural(cited, 'cited key point')}." if cited else "."
+        )
     if state == "done":
         return "Answered by email."
     if state == "failed":
-        return "The regulator's website kept failing. You've been emailed; please try again later."
+        cause = _FAILED.get(result.get("failure") or "", "Something went wrong on our side.")
+        return f"{cause} " + ("You've been emailed; please try again later." if emailed else "Please try again later.")
     if state == "clarify":
         return "I emailed you a question. Reply to that email to continue."
     if state == "rejected":

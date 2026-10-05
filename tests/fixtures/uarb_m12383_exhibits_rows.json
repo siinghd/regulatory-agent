@@ -1,0 +1,93 @@
+{
+ "matter": "M12383",
+ "tab": "Exhibits",
+ "read": "2026-10-04",
+ "screens": [
+  [
+   {
+    "texts": [
+     "Application for Mutual Boundary Change",
+     "07/10/2025",
+     "Public",
+     "A-1",
+     "Preview",
+     "GO GET IT",
+     ".pdf"
+    ],
+    "top": 338,
+    "y": 0,
+    "active": true
+   },
+   {
+    "texts": [
+     "Affidavit of Service - Dolan (Redacted)",
+     "08/18/2025",
+     "Public",
+     "A-2",
+     "Preview",
+     "GO GET IT",
+     ".pdf"
+    ],
+    "top": 406,
+    "y": 68,
+    "active": false
+   },
+   {
+    "texts": [
+     "Affidavit of Service - Hunter ( Redacted)",
+     "08/18/2025",
+     "Public",
+     "A-3",
+     "Preview",
+     "GO GET IT",
+     ".pdf"
+    ],
+    "top": 474,
+    "y": 136,
+    "active": false
+   },
+   {
+    "texts": [
+     "Affidavit of Service - Mattinson ( Redacted)",
+     "08/18/2025",
+     "Public",
+     "A-4",
+     "Preview",
+     "GO GET IT",
+     ".pdf"
+    ],
+    "top": 542,
+    "y": 204,
+    "active": false
+   },
+   {
+    "texts": [
+     "Letters of Objection (Redacted)",
+     "09/15/2025",
+     "Public",
+     "A-6",
+     "Preview",
+     "GO GET IT",
+     ".pdf"
+    ],
+    "top": 610,
+    "y": 272,
+    "active": false
+   },
+   {
+    "texts": [
+     "Affidavit of Service - Hunter( Redacted)",
+     "08/18/2025",
+     "Public",
+     "A -5",
+     "Preview",
+     "GO GET IT",
+     ".pdf"
+    ],
+    "top": 678,
+    "y": 340,
+    "active": false
+   }
+  ]
+ ]
+}

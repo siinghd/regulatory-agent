@@ -8,7 +8,8 @@ non-PDF files and every date field; its totals were rewritten to match the trimm
 import asyncio
 import hashlib
 import json
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
+from email.utils import format_datetime
 from pathlib import Path
 from typing import Any
 
@@ -16,8 +17,16 @@ import httpx
 import pytest
 import respx
 
-from agent.models import DocumentRef, MatterNotFound, PortalUnavailable, ScrapeError
+from agent.models import (
+    DocumentRef,
+    MatterNotFound,
+    PortalUnavailable,
+    ProviderRejected,
+    ScrapeError,
+    TooLarge,
+)
 from agent.providers import oeb
+from agent.providers.files import FilePolicy, UnsupportedFileType
 from agent.providers.oeb import CATEGORIES, OebProvider, categorise
 
 MATTER = "EB-2024-0111"
@@ -125,7 +134,8 @@ async def test_matter_info_builds_a_title_and_dates_from_the_records(portal, pro
     assert info.title == "Enbridge Gas Inc. – Gas rates application"
     assert (info.type, info.category, info.status) == ("Gas", "Rates", None)
     assert info.date_received == date(2024, 5, 8)  # earliest filing
-    assert info.decision_date == date(2025, 7, 29)  # latest record in Decisions and Orders
+    # The latest decision; not the later cost-awards decision (D25-18072, 2025-07-29).
+    assert info.decision_date == date(2025, 5, 29)
     assert info.portal_url == oeb.case_url(MATTER)
 
 
@@ -181,6 +191,7 @@ async def test_listing_is_newest_first_within_one_category(portal, provider):
     }
     assert [r.file_ext for r in refs] == [".pdf", ".pdf", ".xlsx", ".pdf"]
     assert refs[0].title == "OGVG_SUB_EGI Rebasing Ph 2_20250218"
+    assert all(r.source_type for r in refs)  # SIDocumentType as given, for ranking in the summary
     assert info.counts["Submissions and Arguments"] == 4
 
 
@@ -356,3 +367,181 @@ async def test_downloads_stay_within_the_concurrency_cap(portal, provider, tmp_p
     files = await collect(provider, [ref(f"D25-{i}") for i in range(6)], tmp_path)
 
     assert len(files) == 6 and peak == 2
+
+
+# ---------------------------------------------------------------- matter numbers, dates, decisions (fix pass B)
+
+
+def test_case_numbers_are_ascii_only_but_full_width_input_is_normalised():
+    assert OebProvider.normalise("ＥＢ－２０２４－０１１１") == MATTER  # NFKC first
+    assert oeb.MATTER_RE.fullmatch("EB-２０２４-0111") is None
+    assert oeb.MENTION_RE.search("see EB-２０２４-０１１１") is None
+
+
+def test_a_late_evening_registration_is_dated_in_toronto():
+    raw = {
+        "Uri": 7, "RecordNumber": {"Value": "D24-7"}, "RecordTitle": {"Value": "Evening filing"},
+        "RecordDateRegistered": {"IsClear": False, "DateTime": "2024-07-03T01:15:00.0000000Z"},  # 9:15 PM EDT
+    }
+    assert oeb._parse_record(raw).filed_on == date(2024, 7, 2)
+    raw["RecordDateRegistered"]["DateTime"] = "2024-07-03T15:00:00.0000000Z"
+    assert oeb._parse_record(raw).filed_on == date(2024, 7, 3)
+
+
+def _record(number: str, document_type: str, title: str, issued: str) -> dict:
+    return {
+        "Uri": 1, "RecordNumber": {"Value": number}, "RecordTitle": {"Value": title},
+        "DateIssued": {"IsClear": False, "DateTime": f"{issued}T00:00:00.0000000Z"},
+        "Fields": {"SIDocumentType": {"Value": document_type}},
+    }
+
+
+async def test_decision_date_ignores_cost_awards_and_draft_rate_orders(portal, provider):
+    results = [
+        _record("D1", "Draft Rate Order", "EGI_DRO", "2025-09-01"),
+        _record("D2", "Decision and Order on Cost Awards", "dec_order_costs", "2025-08-01"),
+        _record("D3", "Decision and Order", "dec_order_cost awards_EGI", "2025-07-01"),  # typed loosely
+        _record("D4", "Decision and Order", "dec_order_EGI Rates", "2025-05-29"),
+        _record("D5", "Submission", "SUB", "2025-10-01"),
+    ]
+    portal.get("Record").respond(200, json={**PAGE, "Results": results, "TotalResults": 5, "HasMoreItems": False})
+
+    info = await provider.fetch_matter(MATTER)
+
+    assert info.counts["Decisions and Orders"] == 4  # still listed under the category
+    assert info.decision_date == date(2025, 5, 29)
+
+
+# ---------------------------------------------------------------- HTTP policy (fix pass B)
+
+
+@pytest.mark.parametrize("status", [400, 403])
+async def test_a_refused_request_is_provider_rejected_not_retried(portal, provider, status):
+    portal.get("Record").respond(status, text="Forbidden")
+
+    with pytest.raises(ProviderRejected) as info:
+        await provider.fetch_matter(MATTER)
+    assert not info.value.retryable
+
+
+@pytest.mark.parametrize(
+    ("headers", "expected"),
+    [({"Retry-After": "120"}, 120.0), ({}, None), ({"Retry-After": "soon"}, None)],
+)
+@pytest.mark.parametrize("status", [429, 503])
+async def test_retry_after_is_passed_on(portal, provider, status, headers, expected):
+    portal.get("Record").respond(status, headers=headers)
+
+    with pytest.raises(PortalUnavailable) as info:
+        await provider.fetch_matter(MATTER)
+    assert info.value.retry_after == expected
+
+
+async def test_retry_after_as_an_http_date(portal, provider):
+    later = datetime.now(UTC) + timedelta(minutes=10)
+    portal.get("Record").respond(503, headers={"Retry-After": format_datetime(later, usegmt=True)})
+
+    with pytest.raises(PortalUnavailable) as info:
+        await provider.fetch_matter(MATTER)
+    assert 590 <= info.value.retry_after <= 600
+
+
+async def test_redirects_are_not_followed(portal, provider):
+    portal.get("Record").respond(302, headers={"Location": "https://login.example.com/"})
+
+    with pytest.raises(ScrapeError, match="redirect"):
+        await provider.fetch_matter(MATTER)
+    assert len(portal.calls) == 1
+
+
+async def test_a_redirected_download_is_not_followed(portal, provider, tmp_path):
+    portal.get("Record/D25-1/File/document").respond(301, headers={"Location": "https://elsewhere.example/x.pdf"})
+
+    with pytest.raises(ScrapeError, match="redirect"):
+        await collect(provider, [ref("D25-1")], tmp_path)
+
+
+# ---------------------------------------------------------------- size budget and file types (fix pass B)
+
+
+def small_provider(client: httpx.AsyncClient, max_bytes: int, **kw) -> OebProvider:
+    policy = FilePolicy.of(max_bytes, [".pdf", ".xlsx", ".doc"])
+    return OebProvider(client, max_concurrency=2, file_policy=policy, **kw)
+
+
+async def test_a_listed_size_over_the_budget_is_skipped_before_downloading(portal, provider, tmp_path):
+    portal.get("Record").respond(200, json=PAGE)
+    route = serve_file(portal, "D24-32735", PDF, filename="appl.pdf")
+    capped = small_provider(provider._client, max_bytes=10_000_000)  # D24-32735 is listed at 42 MB
+    _, refs = await capped.list_matter_and_documents(MATTER, "Application and Evidence", 10)
+    big = next(r for r in refs if r.external_id == "D24-32735")
+
+    with pytest.raises(TooLarge):
+        await collect(capped, [big], tmp_path)
+    assert route.call_count == 0
+
+
+async def test_a_declared_content_length_over_the_budget_stops_the_download(portal, provider, tmp_path):
+    serve_file(portal, "D25-1", PDF, filename="one.pdf")
+
+    with pytest.raises(TooLarge):
+        await collect(small_provider(provider._client, max_bytes=len(PDF) - 1), [ref("D25-1")], tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+async def test_an_undeclared_size_is_capped_while_streaming(portal, provider, tmp_path):
+    async def body():
+        for _ in range(10):
+            yield b"%PDF-" + b"x" * 1_000
+
+    portal.get("Record/D25-1/File/document").mock(
+        side_effect=lambda request: httpx.Response(200, content=body(), headers={"Content-Type": "application/pdf"})
+    )
+
+    with pytest.raises(TooLarge):
+        await collect(small_provider(provider._client, max_bytes=4_000), [ref("D25-1")], tmp_path)
+    assert not list(tmp_path.iterdir())  # no partial file left behind
+
+
+async def test_a_download_that_drags_on_is_cut_off(portal, provider, tmp_path):
+    async def body():
+        yield b"%PDF-1.6\n"
+        await asyncio.sleep(5)
+        yield b"never"
+
+    portal.get("Record/D25-1/File/document").mock(
+        side_effect=lambda request: httpx.Response(200, content=body(), headers={"Content-Type": "application/pdf"})
+    )
+    slow = small_provider(provider._client, max_bytes=10_000, download_timeout_s=0.2)
+
+    with pytest.raises(PortalUnavailable, match="not finished"):
+        await asyncio.wait_for(collect(slow, [ref("D25-1")], tmp_path), timeout=3)
+    assert not list(tmp_path.iterdir())
+
+
+async def test_file_types_outside_the_allowlist_are_not_fetched(portal, provider, tmp_path):
+    portal.get("Record").respond(200, json=PAGE)
+    route = serve_file(portal, "D24-20799", b"\xff\xd8\xff", filename="ad.jpg", content_type="image/jpeg")
+    refs = await provider.list_documents(MATTER, "Interrogatories", 10)
+    (image,) = [r for r in refs if r.external_id == "D24-20799"]
+    assert image.file_ext in {".jpg", ".jpeg"}
+
+    with pytest.raises(UnsupportedFileType) as info:
+        await collect(provider, [image], tmp_path)
+    assert route.call_count == 0 and not info.value.retryable
+
+
+async def test_a_served_type_outside_the_allowlist_is_rejected(portal, provider, tmp_path):
+    serve_file(portal, "D25-1", b"MZ\x90\x00", filename="setup.exe", content_type="application/octet-stream")
+
+    with pytest.raises(UnsupportedFileType):
+        await collect(provider, [ref("D25-1", file_ext="")], tmp_path)
+    assert not list(tmp_path.iterdir())
+
+
+async def test_when_every_file_fails_a_retryable_error_wins(portal, provider, tmp_path):
+    serve_file(portal, "D25-1", PDF, filename="one.pdf")
+    serve_file(portal, "D25-2", b"", filename="two.pdf", status=503)
+
+    with pytest.raises(PortalUnavailable):
+        await collect(small_provider(provider._client, max_bytes=100), [ref("D25-1"), ref("D25-2")], tmp_path)

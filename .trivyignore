@@ -1,0 +1,4 @@
+# Accepted Trivy findings (CI fails on HIGH/CRITICAL with a fix available, see .github/workflows/ci.yml).
+# Every entry needs: the ID, why it does not apply or why it cannot be fixed yet, who accepted it,
+# and an expiry no more than 90 days out (docs/policies/vulnerability-management.md).
+#   CVE-YYYY-NNNNN  exp:YYYY-MM-DD  <reason>  (accepted by <name>, <date>)

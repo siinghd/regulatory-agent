@@ -1,0 +1,77 @@
+# Application alerts: request outcomes, queue, ingest, circuit breakers, budgets.
+# Metric names and labels: agent/metrics.py (existing) and METRICS_CONTRACT.md (to be added).
+# Alerts on metrics the app does not export yet evaluate to nothing until it does.
+# Severities: page (act now), warning (act today). Routing: alertmanager/alertmanager.yml.tmpl.
+groups:
+  - name: regagent-app
+    rules:
+      - alert: RegagentRequestsFailed
+        expr: sum(increase(requests_total{final_state="failed"}[1h])) > 0
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $value | humanize }} request(s) ended in `failed` in the last hour"
+          description: >-
+            Requests reached the final state `failed` (the requester got an apology). Look at
+            the failed rows and their errors before the next one arrives.
+          runbook_url: docs/runbooks/requests-failed.md
+
+      - alert: RegagentQueueStuck
+        expr: max(queue_depth) > 20
+        for: 10m
+        labels: {severity: page}
+        annotations:
+          summary: "{{ $value }} jobs waiting in the arq queue for 10 minutes"
+          description: The worker is not draining the queue (stalled, paused, or a backlog it cannot keep up with).
+          runbook_url: docs/runbooks/queue-stuck.md
+
+      - alert: RegagentWorkerMetricsDown
+        expr: up{job="regagent-worker"} == 0 or absent(up{job="regagent-worker"})
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: The worker's metrics endpoint (127.0.0.1:9710) has not answered for 5 minutes
+          description: Either the worker is down or it started without metrics (port taken, METRICS_PORT=0).
+          runbook_url: docs/runbooks/worker-metrics-down.md
+
+      # ingest_heartbeat_age_seconds: METRICS_CONTRACT.md (worker refresh job, from Redis
+      # ingest:heartbeat). Absent until the app exports it: no alert then.
+      - alert: RegagentIngestStalled
+        expr: max(ingest_heartbeat_age_seconds) > 600
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "Ingest heartbeat is {{ $value | humanizeDuration }} old (limit 10 minutes)"
+          description: The IMAP ingest loop has stopped writing ingest:heartbeat; new email is not being read.
+          runbook_url: docs/runbooks/ingest-stalled.md
+
+      - alert: RegagentBreakerOpen
+        expr: max by (dependency) (breaker_open) == 1
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Circuit breaker for {{ $labels.dependency }} open for more than 10 minutes"
+          description: Calls to {{ $labels.dependency }} are short-circuited; requests that need it wait or fail over.
+          runbook_url: docs/runbooks/breaker-open.md
+
+  - name: regagent-budgets
+    rules:
+      - alert: RegagentBudgetHigh
+        expr: |
+          max by (budget) (budget_used / budget_limit) > 0.8
+          and max by (budget) (budget_limit) > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "Daily budget {{ $labels.budget }} is {{ $value | humanizePercentage }} used"
+          description: The budget resets at midnight UTC. At 100 % the agent stops spending (LLM calls or portal visits) until then.
+          runbook_url: docs/runbooks/budget.md
+
+      - alert: RegagentBudgetExhausted
+        expr: |
+          max by (budget) (increase(budget_exhausted_total[1h])) > 0
+          or (max by (budget) (budget_used >= budget_limit) and max by (budget) (budget_limit) > 0)
+        labels: {severity: page}
+        annotations:
+          summary: "Daily budget {{ $labels.budget }} exhausted"
+          description: Work that needs this budget is deferred until midnight UTC.
+          runbook_url: docs/runbooks/budget.md

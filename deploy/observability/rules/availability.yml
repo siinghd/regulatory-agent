@@ -1,0 +1,105 @@
+# Black-box availability (blackbox exporter probes; names in prometheus/prometheus.yml) and the
+# data stores. Postgres/Redis alerts use the probes now and the exporters after the cutover.
+groups:
+  - name: regagent-availability
+    rules:
+      - alert: RegagentWebHealthDown
+        expr: max by (probe, instance) (probe_success{probe=~"uarb-health|web-local-health"}) == 0
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "{{ $labels.instance }} has failed for 5 minutes"
+          description: >-
+            The viewer's /health is failing or reports the database down. uarb-health goes through
+            Cloudflare and Caddy; web-local-health hits the web process directly. One failing
+            without the other locates the fault.
+          runbook_url: docs/runbooks/web-down.md
+
+      - alert: RegagentDropHealthDown
+        expr: max by (probe, instance) (probe_success{probe="drop-health"}) == 0
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: drop.hsingh.app/health has failed for 5 minutes
+          description: Large deliveries go out as drop links; while drop is down they fail or fall back.
+          runbook_url: docs/runbooks/web-down.md
+
+      - alert: RegagentMailEndpointDown
+        expr: max by (probe, instance) (probe_success{probe=~"mail-submission|mail-imaps"}) == 0
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "{{ $labels.instance }} ({{ $labels.probe }}) has failed for 5 minutes"
+          description: IMAP (993) is how ingest reads mail; submission (587, STARTTLS) is how replies leave.
+          runbook_url: docs/runbooks/mail-endpoint-down.md
+
+      - alert: RegagentEgressTunnelDown
+        expr: max(probe_success{probe="egress-tunnel"}) == 0
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: The SOCKS egress tunnel (127.0.0.1:1080) has been closed for 5 minutes
+          description: uarb-egress-tunnel.service is down; the UARB portal cannot be reached.
+          runbook_url: docs/runbooks/egress-tunnel-down.md
+
+      - alert: RegagentEgressViaTunnelFailing
+        expr: max(probe_success{probe="egress-via-tunnel"}) == 0
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: HTTPS through the egress tunnel has failed for 15 minutes
+          description: The tunnel port is open but traffic does not get through (remote side or its network).
+          runbook_url: docs/runbooks/egress-tunnel-down.md
+
+      - alert: RegagentTLSCertExpiringSoon
+        expr: min by (probe, instance) (probe_ssl_earliest_cert_expiry - time()) < 14 * 86400
+        for: 1h
+        labels: {severity: warning}
+        annotations:
+          summary: "Certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"
+          description: Renew before it lapses; mail and the viewer break when it does.
+          runbook_url: docs/runbooks/tls-expiry.md
+
+      - alert: RegagentTLSCertExpiryCritical
+        expr: min by (probe, instance) (probe_ssl_earliest_cert_expiry - time()) < 3 * 86400
+        for: 10m
+        labels: {severity: page}
+        annotations:
+          summary: "Certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}"
+          runbook_url: docs/runbooks/tls-expiry.md
+
+      - alert: RegagentPostgresDown
+        expr: max(probe_success{probe="postgres"}) == 0 or max(pg_up) == 0
+        for: 2m
+        labels: {severity: page}
+        annotations:
+          summary: Postgres (127.0.0.1:5442) is down
+          runbook_url: docs/runbooks/postgres-down.md
+
+      - alert: RegagentRedisDown
+        expr: max(probe_success{probe="redis"}) == 0 or max(redis_up) == 0
+        for: 2m
+        labels: {severity: page}
+        annotations:
+          summary: Redis (127.0.0.1:6392) is down
+          runbook_url: docs/runbooks/redis-down.md
+
+      - alert: RegagentRedisUnauthenticatedAccess
+        expr: max(probe_success{probe="redis-auth"}) == 0 and max(probe_success{probe="redis"}) == 1
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: Redis answers unauthenticated clients (the ACL with the default user off is not in force)
+          description: >-
+            An unauthenticated PING on 127.0.0.1:6392 was not refused with NOAUTH. Expected until
+            deploy/redis-cutover.sh has run; a regression after it.
+          runbook_url: docs/runbooks/cutover-least-privilege.md
+
+      # redis_exporter (after the cutover).
+      - alert: RegagentRedisMemoryHigh
+        expr: max(redis_memory_used_bytes / redis_memory_max_bytes) > 0.8 and max(redis_memory_max_bytes) > 0
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Redis is at {{ $value | humanizePercentage }} of maxmemory (noeviction: writes fail at 100 %)"
+          runbook_url: docs/runbooks/redis-down.md

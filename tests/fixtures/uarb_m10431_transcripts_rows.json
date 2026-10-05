@@ -1,0 +1,273 @@
+{
+ "matter": "M10431",
+ "tab": "Transcripts",
+ "read": "2026-10-04",
+ "screens": [
+  [
+   {
+    "texts": [
+     "09/12/2022",
+     "September 12, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 338,
+    "y": 0,
+    "active": true
+   },
+   {
+    "texts": [
+     "09/12/2022",
+     "September 12, 2022",
+     "Evening Session",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 406,
+    "y": 68,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/13/2022",
+     "September 13, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 474,
+    "y": 136,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/14/2022",
+     "September 14, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 542,
+    "y": 204,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "September 15, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 610,
+    "y": 272,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "September 16, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 678,
+    "y": 340,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "September 20, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 746,
+    "y": 408,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "September 21, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 814,
+    "y": 476,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/22/2022",
+     "September 22, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 882,
+    "y": 544,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/23/2022",
+     "September 23, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 950,
+    "y": 612,
+    "active": false
+   }
+  ],
+  [
+   {
+    "texts": [
+     "09/12/2022",
+     "September 12, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 313,
+    "y": 0,
+    "active": true
+   },
+   {
+    "texts": [
+     "09/12/2022",
+     "September 12, 2022",
+     "Evening Session",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 381,
+    "y": 68,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/13/2022",
+     "September 13, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 449,
+    "y": 136,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/14/2022",
+     "September 14, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 517,
+    "y": 204,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "September 15, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 585,
+    "y": 272,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "September 16, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 653,
+    "y": 340,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "September 20, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 721,
+    "y": 408,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "September 21, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 789,
+    "y": 476,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/22/2022",
+     "September 22, 2022",
+     "PDF",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 857,
+    "y": 544,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/23/2022",
+     "September 23, 2022",
+     "Pdf",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 925,
+    "y": 612,
+    "active": false
+   }
+  ]
+ ]
+}

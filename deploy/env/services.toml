@@ -1,0 +1,62 @@
+# Which .env keys each compose service receives. deploy/split-env.sh writes
+# deploy/env/<service>.env (mode 600, gitignored) from this file and .env.
+#
+#   keys   .env keys (glob patterns allowed) copied verbatim
+#   map    {TARGET = "SOURCE"}: the service sees .env's SOURCE under the name TARGET
+#   libpq  a DSN key expanded to PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE (psql services)
+#
+# Fail-closed: a key no section mentions is copied nowhere and reported, so a new secret has to
+# be placed deliberately. [host] lists keys only host scripts and compose interpolation use.
+
+[ingest]
+# IMAP in, raw MIME to disk, request row + queue job. No LLM, SMTP, drop or proxy secrets.
+# Pre-authentication limits (PREAUTH_*, INBOUND_*) key on the client IP in the Received header
+# our own MTA (TRUSTED_MTA_HOSTNAME) wrote.
+keys = ["DATABASE_URL", "REDIS_URL", "AGENT_MAIL_ADDRESS", "AGENT_MAIL_PASSWORD", "IMAP_*",
+        "AUDIT_HMAC_KEY", "MAX_INBOUND_BYTES", "DISK_MIN_FREE_BYTES", "TRUSTED_MTA_HOSTNAME",
+        "PREAUTH_*", "INBOUND_*", "LOG_*"]
+
+[worker]
+# Gate, providers, packaging, delivery, LLM, outbound mail. DATA_ENCRYPTION_KEY seals the
+# outbox bodies and drop links at rest (agent/crypto.py); only the worker seals or opens them.
+keys = ["DATABASE_URL", "REDIS_URL", "AGENT_MAIL_ADDRESS", "AGENT_MAIL_PASSWORD", "IMAP_*", "SMTP_*",
+        "TRUSTED_MTA_HOSTNAME", "SENDER_AUTH_MODE", "SENDER_ALLOWLIST",
+        "OPENROUTER_*", "TYPESAFE_*", "LLM_*", "GATE_*", "CITATION_CHECK", "UARB_*", "OEB_*", "FERC_*", "BROWSER_*",
+        "DROP_*", "ATTACH_*", "PUBLIC_BASE_URL", "MATTER_CACHE_TTL_S",
+        "MAX_*", "RATE_*", "RETRY_*", "REQUEST_*", "PIPELINE_*", "JOB_*", "BREAKER_*",
+        "PORTAL_*", "BYTES_*",
+        "ALLOWED_FILE_EXTS", "DISK_MIN_FREE_BYTES", "*_RETENTION_DAYS",
+        "AUDIT_HMAC_KEY", "DATA_ENCRYPTION_KEY", "OUTBOUND_*", "LOG_*"]
+
+[web]
+# Read-only viewer: its own read-only database role, nothing else secret.
+# REDIS_URL feeds the per-client-IP rate limiter (token buckets: Lua over GET/SET) and the
+# /health/deep (loopback-only) queue and heartbeat readings.
+# GATE_CLASSIFIER / CITATION_CHECK / LLM_CHECK_SUPPORT: the privacy notice names TypeSafe only while
+# the worker sends it data.
+keys = ["PUBLIC_BASE_URL", "WEB_PORT", "REDIS_URL", "WEB_RATE_*", "*_RETENTION_DAYS", "REQUEST_PSEUDONYMISE_DAYS",
+        "GATE_CLASSIFIER", "CITATION_CHECK", "LLM_CHECK_SUPPORT", "LOG_*"]
+map = { DATABASE_URL = "WEB_DATABASE_URL" }
+
+[migrate]
+# One-shot schema migrations as agent_migrator (acts as agent_owner). `ragent migrate` reads
+# DATABASE_URL today; MIGRATION_DATABASE_URL is the explicit name the code is moving to.
+keys = ["MIGRATION_DATABASE_URL", "LOG_*"]
+map = { DATABASE_URL = "MIGRATION_DATABASE_URL" }
+
+[db-grants]
+# One-shot psql run of deploy/sql/grants.sql after each migration, as agent_migrator.
+libpq = "MIGRATION_DATABASE_URL"
+
+[retention]
+# Purge job (compose profile "ops"): its own role, retention settings, the HMAC key it
+# pseudonymises with.
+keys = ["*_RETENTION_DAYS", "REQUEST_PSEUDONYMISE_DAYS", "AUDIT_HMAC_KEY", "DATA_ENCRYPTION_KEY", "DATA_DIR", "LOG_*"]
+map = { DATABASE_URL = "RETENTION_DATABASE_URL" }
+
+[host]
+# Never copied into a service env file. POSTGRES_PASSWORD (break-glass superuser),
+# REDIS_PASSWORD / REDIS_ADMIN_PASSWORD (read by compose interpolation for the redis service),
+# backups, e2e test sender, image selection.
+keys = ["POSTGRES_PASSWORD", "REDIS_PASSWORD", "REDIS_ADMIN_PASSWORD", "BACKUP_*",
+        "TEST_SENDER_*", "DATA_DIR", "AGENT_IMAGE", "GIT_SHA", "COMPOSE_*"]

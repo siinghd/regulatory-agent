@@ -1,0 +1,19 @@
+# Grafana datasource (provisioned; not editable in the UI). Prometheus on the host's loopback.
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: regagent-prometheus
+    type: prometheus
+    access: proxy
+    url: http://127.0.0.1:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      # Stated, so the frontend never probes Prometheus for its type/version (the public path
+      # refuses /api/datasources/*).
+      prometheusType: Prometheus
+      prometheusVersion: 3.15.0
+      timeInterval: 30s
+      httpMethod: POST
+      manageAlerts: false
+      queryTimeout: 30s

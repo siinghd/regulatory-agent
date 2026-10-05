@@ -1,67 +1,509 @@
-# Postgres + Redis for the agent. Both bound to loopback only; the app talks to them over
-# 127.0.0.1 (it runs with host networking so the browser can reach the egress SOCKS tunnel).
+# Regulatory agent: Postgres + Redis published on loopback only, and the app processes.
+#
+# Secrets: .env (mode 600) is the single source. deploy/split-env.sh writes
+# deploy/env/<service>.env with only the keys each service needs (deploy/env/services.toml);
+# compose reads .env itself only to interpolate the Postgres/Redis passwords below.
+#
+# Networking: the app runs with host networking because the worker's browser must reach the
+# egress SOCKS tunnel on the host's loopback (uarb-egress-tunnel.service, 127.0.0.1:1080), and
+# Postgres/Redis are published on 127.0.0.1 only. Nothing listens publicly; Caddy proxies
+# uarb.hsingh.app to the web process on 127.0.0.1:8710.
+# Plan to drop host networking: run the tunnel as a sidecar (autossh in its own container on an
+# internal network, key mounted read-only), give the app services a private bridge network with
+# postgres/redis/tunnel, and publish only web on 127.0.0.1:8710. That also unblocks gVisor for
+# the worker (see the worker service).
+#
+# Start-up order: postgres healthy -> migrate (schema, as agent_migrator) -> db-grants
+# (deploy/sql/grants.sql, as agent_migrator) -> ingest, worker, web. Each app process is
+# read-only, unprivileged, capability-free and resource-capped.
 name: regulatory-agent
+
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "20m", max-file: "5"}
+
+# Shared by every app-image service.
+x-app: &app
+  image: ${AGENT_IMAGE:-regulatory-agent:latest}
+  network_mode: host
+  user: "1000:1000"  # matches the host owner of ./data
+  init: true  # reaps Chromium's orphaned children; forwards SIGTERM
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  logging: *logging
+
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
     restart: unless-stopped
     environment:
-      POSTGRES_USER: agent
+      POSTGRES_USER: agent  # bootstrap superuser: break-glass only, refused over TCP (pg_hba.conf)
       POSTGRES_DB: agent
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    command:
+      - postgres
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - log_connections=on
+      - -c
+      - log_statement=ddl  # every schema/role change is in the log (passwords arrive as SCRAM verifiers)
+      - -c
+      - log_lock_waits=on
+      - -c
+      - "log_line_prefix=%m [%p] %q%u@%d "
     ports: ["127.0.0.1:5442:5432"]
-    volumes: ["pgdata:/var/lib/postgresql/data"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    read_only: true
+    tmpfs: ["/var/run/postgresql:size=1m", "/tmp:size=64m"]
+    # The entrypoint fixes ownership of the data dir, then drops to the postgres user.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+    security_opt: ["no-new-privileges:true"]
+    shm_size: "128mb"
+    mem_limit: 1g
+    pids_limit: 256
+    logging: *logging
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U agent"]
-      interval: 5s
-      retries: 10
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
-    ports: ["127.0.0.1:6392:6379"]
-    volumes: ["redisdata:/data"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "pg_isready -U agent -d agent"]
       interval: 5s
       retries: 10
 
-  # The app runs with host networking: the browser must reach the egress SOCKS tunnel on the
-  # host's loopback, and Postgres/Redis are published on loopback only. Nothing listens publicly;
-  # Caddy proxies uarb.hsingh.app to the web process on 127.0.0.1:8710.
+  redis:
+    image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    restart: unless-stopped
+    # Renders the ACL (deploy/redis/users.acl.template) with hashes of these two passwords, then
+    # starts redis-server with deploy/redis/redis.conf: AOF on, noeviction, default user off.
+    entrypoint: ["/usr/local/bin/ragent-redis-entrypoint.sh"]
+    environment:
+      # `:-` so other compose commands still work before deploy/redis-cutover.sh has run; the
+      # entrypoint refuses to start without them.
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_ADMIN_PASSWORD: ${REDIS_ADMIN_PASSWORD:-}
+    ports: ["127.0.0.1:6392:6379"]
+    volumes:
+      - redisdata:/data
+      - ./deploy/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./deploy/redis/users.acl.template:/usr/local/etc/redis/users.acl.template:ro
+      - ./deploy/redis/entrypoint.sh:/usr/local/bin/ragent-redis-entrypoint.sh:ro
+    read_only: true
+    tmpfs: ["/run/redis:size=1m,mode=0755", "/tmp:size=8m"]
+    # The image's entrypoint walks /data as root (chown) before dropping to the redis user,
+    # which then runs with no capabilities at all.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 384m  # maxmemory 256mb + AOF rewrite headroom
+    pids_limit: 64
+    logging: *logging
+    healthcheck:
+      # REDISCLI_AUTH keeps the password out of argv
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$REDIS_PASSWORD\" redis-cli --user agent --no-auth-warning ping | grep -q PONG"]
+      interval: 5s
+      retries: 10
+
+  # One-shot: schema migrations as agent_migrator (its sessions act as agent_owner).
+  migrate:
+    <<: *app
+    build:
+      context: .
+      target: release
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    command: ["migrate"]
+    restart: "no"
+    env_file: [{path: deploy/env/migrate.env, required: false}]
+    environment: {HOME: /tmp}
+    tmpfs: ["/tmp:size=16m"]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 64
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  # One-shot: re-assert table privileges after migrations (new tables, events append-only,
+  # the viewer's column list). Same role; psql from the pinned Postgres image.
+  db-grants:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    network_mode: host
+    user: "70:70"
+    entrypoint: ["psql", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-f", "/sql/grants.sql"]
+    restart: "no"
+    env_file: [{path: deploy/env/db-grants.env, required: false}]
+    volumes: ["./deploy/sql:/sql:ro"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 64m
+    pids_limit: 16
+    logging: *logging
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+
   ingest:
-    build: .
-    image: regulatory-agent:latest
+    <<: *app
     command: ["ingest"]
     restart: unless-stopped
-    network_mode: host
-    user: "1000:1000"  # matches the host owner of ./data
-    env_file: .env
+    env_file: [{path: deploy/env/ingest.env, required: false}]
     environment: {DATA_DIR: /data, HOME: /tmp}
     volumes: ["./data:/data"]
-    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+    tmpfs: ["/tmp:size=64m"]
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    healthcheck:
+      # ingest writes ingest:heartbeat at least every 60 s from inside its IMAP loop
+      test: ["CMD", "ragent", "healthcheck", "ingest"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    depends_on:
+      db-grants: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+
   worker:
-    image: regulatory-agent:latest
-    command: ["worker"]
+    <<: *app
+    # TMPDIR on disk: ZIPs (up to max_request_bytes) and Chromium's profiles/downloads must not
+    # live in RAM. The directory is created at start because ./data is a bind mount.
+    entrypoint: ["sh", "-c", "mkdir -p /data/tmp && exec ragent worker"]
     restart: unless-stopped
-    network_mode: host
-    user: "1000:1000"  # matches the host owner of ./data
-    env_file: .env
-    environment: {DATA_DIR: /data, HOME: /tmp}
+    env_file: [{path: deploy/env/worker.env, required: false}]
+    environment: {DATA_DIR: /data, HOME: /tmp, TMPDIR: /data/tmp}
     volumes: ["./data:/data"]
-    shm_size: "1gb"  # Chromium uses /dev/shm for rendering
-    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+    tmpfs: ["/tmp:size=256m"]
+    shm_size: "1gb"  # Chromium
+    mem_limit: 3g
+    cpus: 3.0
+    pids_limit: 1024
+    stop_grace_period: 60s  # let arq finish or hand back jobs; the pipeline resumes either way
+    # gVisor (runsc) is installed (/etc/docker/daemon.json: runsc, runsc-net, runsc-untrusted).
+    # Chromium + Playwright run under runsc-net (checked with a throwaway container), but gVisor
+    # cannot share the host network namespace, so this waits for the tunnel sidecar above.
+    # runtime: runsc-net
+    healthcheck:
+      # arq's own check: the worker refreshes <queue>:health-check every health_check_interval.
+      test: ["CMD", "ragent", "healthcheck", "worker"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      db-grants: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+
   web:
-    image: regulatory-agent:latest
+    <<: *app
     command: ["web"]
     restart: unless-stopped
-    network_mode: host
-    user: "1000:1000"  # matches the host owner of ./data
-    env_file: .env
+    env_file: [{path: deploy/env/web.env, required: false}]
     environment: {DATA_DIR: /data, HOME: /tmp}
-    volumes: ["./data:/data:ro"]
-    depends_on: {postgres: {condition: service_healthy}}
+    volumes: ["./data/blobs:/data/blobs:ro"]  # serves PDFs; never sees raw mail
+    tmpfs: ["/tmp:size=32m"]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    healthcheck:
+      test: ["CMD", "ragent", "healthcheck", "web"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      db-grants: {condition: service_completed_successfully}
+
+  # Retention purge (raw MIME 30 d, rejected 7 d, pseudonymise at 90 d, delete at 400 d, ...)
+  # under its own SELECT/UPDATE/DELETE role. Off by default (profile "ops"); run from a timer:
+  #   docker compose --profile ops run --rm retention
+  # Requires `ragent purge`, which the image does not have yet.
+  retention:
+    <<: *app
+    profiles: ["ops"]
+    command: ["purge"]
+    restart: "no"
+    env_file: [{path: deploy/env/retention.env, required: false}]
+    environment: {DATA_DIR: /data, HOME: /tmp}
+    volumes: ["./data:/data"]
+    tmpfs: ["/tmp:size=16m"]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  # ---------------------------------------------------------------- observability
+  # Prometheus, Alertmanager, Grafana and exporters (deploy/observability/README.md). They start
+  # with the stack but are independent of the app: no depends_on either way, so app deploys
+  # (`up -d --no-deps <svc>`) never touch them and they keep reporting while the app is down.
+  # `make metrics-up | metrics-down | metrics-status` manage just these.
+  # Host networking because their targets (worker metrics, web, the SOCKS tunnel) are on the
+  # host's loopback; each listener is pinned to 127.0.0.1 by its own flag:
+  #   prometheus 9090, alertmanager 9093, grafana 3310, node-exporter 9100, blackbox-exporter 9117
+  # Grafana is public read-only (anonymous Viewer) only through Caddy at
+  # https://uarb.hsingh.app/grafana/ (deploy/caddy/uarb.caddy); admin login is local only.
+  # Settings and secrets: deploy/observability/.env (mode 600, gitignored; .env.example).
+  prometheus:
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+    container_name: regagent-prometheus
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=5GB
+      - --web.listen-address=127.0.0.1:9090
+      - --web.external-url=http://127.0.0.1:9090
+      # Anonymous Grafana viewers can send queries: bound what one query may cost.
+      - --query.timeout=30s
+      - --query.max-samples=10000000
+      - --query.max-concurrency=8
+    volumes:
+      - promdata:/prometheus
+      - ./deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/observability/rules:/etc/prometheus/rules:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 128
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9090/-/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Renders its config from alertmanager.yml.tmpl + the ALERT_* settings at start. Default
+  # receiver: blackhole (nothing leaves the host) until the owner configures one.
+  alertmanager:
+    image: prom/alertmanager:v0.34.1@sha256:e9733bafb1bdef9b00e25a21f8f99dc26a22224bf16641ad754d1649f4c3357a
+    container_name: regagent-alertmanager
+    network_mode: host
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/etc/alertmanager/entrypoint.sh"]
+    command:
+      - --storage.path=/alertmanager
+      - --web.listen-address=127.0.0.1:9093
+      - --web.external-url=http://127.0.0.1:9093
+      - --cluster.listen-address=  # single instance: no gossip port
+    env_file: [{path: deploy/observability/.env, required: false}]
+    volumes:
+      - alertmanagerdata:/alertmanager
+      - ./deploy/observability/alertmanager/alertmanager.yml.tmpl:/etc/alertmanager/alertmanager.yml.tmpl:ro
+      - ./deploy/observability/alertmanager/entrypoint.sh:/etc/alertmanager/entrypoint.sh:ro
+    read_only: true
+    tmpfs: ["/tmp:size=1m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:9093/-/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  grafana:
+    image: grafana/grafana-oss:13.0.2@sha256:5dad0df181cb644a14e13617b913b261a54f7d4fd4510721dba420929f35bea2
+    container_name: regagent-grafana
+    network_mode: host
+    restart: unless-stopped
+    # Without an admin password Grafana would create admin/admin: refuse to start instead.
+    entrypoint:
+      - sh
+      - -c
+      - '[ -n "$${GF_SECURITY_ADMIN_PASSWORD:-}" ] || { echo "GF_SECURITY_ADMIN_PASSWORD missing in deploy/observability/.env (make metrics-env)" >&2; exit 1; }; exec /run.sh'
+    env_file: [{path: deploy/observability/.env, required: false}]
+    environment:
+      GF_SERVER_HTTP_ADDR: 127.0.0.1
+      GF_SERVER_HTTP_PORT: "3310"  # 3300 is taken on this host (codeshot)
+      GF_SERVER_ROOT_URL: https://uarb.hsingh.app/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_SERVER_ENABLE_GZIP: "false"  # Caddy compresses
+      GF_SERVER_ROUTER_LOGGING: "false"
+      GF_DEFAULT_INSTANCE_NAME: regagent-grafana
+      GF_LOG_MODE: console
+      GF_LOG_LEVEL: warn
+      GF_SECURITY_ADMIN_USER: regagent-admin
+      GF_SECURITY_COOKIE_SECURE: "true"  # browsers still accept it on http://localhost (SSH tunnel)
+      GF_SECURITY_COOKIE_SAMESITE: strict
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_SECURITY_ALLOW_EMBEDDING: "false"  # X-Frame-Options: deny
+      GF_SECURITY_CONTENT_SECURITY_POLICY: "true"
+      GF_SECURITY_X_CONTENT_TYPE_OPTIONS: "true"
+      GF_SECURITY_X_XSS_PROTECTION: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_NAME: Regulatory Document Agent  # org 1, renamed by grafana-init
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_ANONYMOUS_HIDE_VERSION: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_ALLOW_ORG_CREATE: "false"
+      GF_USERS_VIEWERS_CAN_EDIT: "false"
+      GF_USERS_DEFAULT_THEME: system
+      GF_EXPLORE_ENABLED: "false"
+      GF_HELP_ENABLED: "false"
+      GF_PROFILE_ENABLED: "false"
+      GF_QUERY_HISTORY_ENABLED: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_SNAPSHOTS_ENABLED: "false"
+      GF_SNAPSHOTS_EXTERNAL_ENABLED: "false"
+      GF_PUBLIC_DASHBOARDS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_ANALYTICS_FEEDBACK_LINKS_ENABLED: "false"
+      GF_PLUGINS_PLUGIN_ADMIN_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"  # no plugin downloads at start
+      GF_SMTP_ENABLED: "false"
+      GF_METRICS_ENABLED: "false"
+      GF_LIVE_MAX_CONNECTIONS: "0"
+      GF_UNIFIED_ALERTING_ENABLED: "false"  # alerting is Prometheus + Alertmanager
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/home.json
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/etc/grafana/dashboards:ro
+    read_only: true
+    tmpfs: ["/tmp:size=64m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3310/grafana/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  # One-shot after Grafana is healthy: names org 1 "Regulatory Document Agent" (the anonymous
+  # org). Grafana cannot provision org names from files. Idempotent.
+  grafana-init:
+    image: grafana/grafana-oss:13.0.2@sha256:5dad0df181cb644a14e13617b913b261a54f7d4fd4510721dba420929f35bea2
+    container_name: regagent-grafana-init
+    network_mode: host
+    restart: "no"
+    entrypoint: ["sh", "/init.sh"]
+    env_file: [{path: deploy/observability/.env, required: false}]
+    environment: {GF_SECURITY_ADMIN_USER: regagent-admin, GRAFANA_URL: "http://127.0.0.1:3310/grafana"}
+    volumes: ["./deploy/observability/grafana/init.sh:/init.sh:ro"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 64m
+    pids_limit: 16
+    logging: *logging
+    depends_on:
+      grafana: {condition: service_healthy}
+
+  # Host CPU/memory/disk/network, plus the textfile directory written by
+  # regagent-backup-metrics.timer (backup freshness). Only the collectors the dashboards use.
+  node-exporter:
+    image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
+    container_name: regagent-node-exporter
+    network_mode: host
+    pid: host
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+      - --web.listen-address=127.0.0.1:9100
+      - --collector.disable-defaults
+      - --collector.cpu
+      - --collector.meminfo
+      - --collector.loadavg
+      - --collector.filesystem
+      - --collector.diskstats
+      - --collector.netdev
+      - --collector.pressure
+      - --collector.time
+      - --collector.textfile
+      - --collector.textfile.directory=/textfile
+    volumes:
+      - /:/host:ro,rslave
+      - /var/lib/regagent-textfile:/textfile:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 32
+    logging: *logging
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.28.0@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+    container_name: regagent-blackbox-exporter
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox_exporter/config.yml
+      - --web.listen-address=127.0.0.1:9117  # 9115 is taken on this host
+    volumes: ["./deploy/observability/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    logging: *logging
+
+  # After the cutover only (profile db-exporters): they need read-only monitoring logins that do
+  # not exist yet: deploy/sql/monitor_role.sql + pg_hba.conf for Postgres, the `monitor` user in
+  # deploy/redis/users.acl.template for Redis. Credentials: deploy/observability/exporters.env.
+  # Until then Postgres and Redis are watched by blackbox probes (TCP connect; PING -> NOAUTH).
+  postgres-exporter:
+    profiles: ["db-exporters"]
+    image: prometheuscommunity/postgres-exporter:v0.20.1@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
+    container_name: regagent-postgres-exporter
+    network_mode: host
+    restart: unless-stopped
+    command: ["--web.listen-address=127.0.0.1:9187"]
+    env_file: [{path: deploy/observability/exporters.env, required: false}]  # DATA_SOURCE_PASS
+    environment:
+      DATA_SOURCE_URI: 127.0.0.1:5442/agent?sslmode=disable
+      DATA_SOURCE_USER: agent_monitor
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 32
+    logging: *logging
+
+  redis-exporter:
+    profiles: ["db-exporters"]
+    image: oliver006/redis_exporter:v1.93.0@sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820
+    container_name: regagent-redis-exporter
+    network_mode: host
+    restart: unless-stopped
+    env_file: [{path: deploy/observability/exporters.env, required: false}]  # REDIS_PASSWORD
+    environment:
+      REDIS_ADDR: redis://127.0.0.1:6392
+      REDIS_USER: monitor
+      REDIS_EXPORTER_WEB_LISTEN_ADDRESS: 127.0.0.1:9121
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 32
+    logging: *logging
 
 volumes:
   pgdata:
   redisdata:
+  promdata:
+  alertmanagerdata:
+  grafanadata:

@@ -11,12 +11,14 @@ unmodified download page (/d/:id):
 
 import asyncio
 import base64
+import contextvars
 import os
 import random
 import re
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any, Self
 
 import httpx
@@ -38,9 +40,17 @@ MAX_DOWNLOADS_CAP = 1000  # ... and maxDownloads to [0, 1000]
 
 _RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 _FILE_ID = re.compile(r"[A-Za-z0-9_-]{6,64}")  # drop ids are nanoid(12)
+MAX_RETRY_AFTER_S = 120.0  # wait out a Retry-After inline up to this; longer goes back to the queue
+
+# Per task (each upload, each chunk worker): drop's Retry-After for the retry being scheduled, and
+# when the current upload's time budget runs out (event-loop time).
+_retry_after: contextvars.ContextVar[float | None] = contextvars.ContextVar("drop_retry_after", default=None)
+_budget_ends: contextvars.ContextVar[float | None] = contextvars.ContextVar("drop_budget_ends", default=None)
 
 
 class DropError(AgentError):
+    dependency = "drop"
+
     def __init__(self, message: str, *, status: int | None = None):
         super().__init__(message)
         self.status = status
@@ -177,6 +187,7 @@ class DropClient:
             raise DropRejected(f"{plain_size} bytes exceeds drop's 500 MiB limit", status=413)
 
         key = AESGCM.generate_key(bit_length=256)
+        _budget_ends.set(asyncio.get_running_loop().time() + self._timeout_s)
         try:
             async with asyncio.timeout(self._timeout_s):
                 session = await self._init(display_name, plain_size)
@@ -259,6 +270,7 @@ class DropClient:
         attempt = 0
         while True:
             attempt += 1
+            retry_after = None
             try:
                 resp = await self._client().request(method, url, **kwargs)
             except httpx.TransportError as exc:
@@ -270,14 +282,32 @@ class DropClient:
                     _raise_for_status(resp, what)
                     return resp
                 reason = f"HTTP {resp.status_code}"
-            log.warning("drop.retry", what=what, attempt=attempt, reason=reason)
-            await asyncio.sleep(self._backoff_s(attempt))
+                retry_after = _retry_after_s(resp)
+                if retry_after is not None and retry_after > self._inline_wait_limit():
+                    # drop asked for longer than this upload can wait: let the queue wait instead
+                    raise DropUnavailable(f"drop {what}: HTTP {resp.status_code}, retry after {retry_after:.0f}s",
+                                          status=resp.status_code).with_retry_after(retry_after)
+            token = _retry_after.set(retry_after)
+            try:
+                delay = self._backoff_s(attempt)
+            finally:
+                _retry_after.reset(token)
+            log.warning("drop.retry", what=what, attempt=attempt, reason=reason, delay_s=round(delay, 1))
+            await asyncio.sleep(delay)
+
+    def _inline_wait_limit(self) -> float:
+        ends = _budget_ends.get()
+        left = ends - asyncio.get_running_loop().time() if ends is not None else self._timeout_s
+        return min(MAX_RETRY_AFTER_S, left - 5.0)
 
     def _backoff_s(self, attempt: int) -> float:
         # Equal jitter: always waits at least half the step (drop's rate-limit window is a fixed
         # 60 s, so near-zero sleeps just burn attempts) while desynchronising parallel workers.
+        # A Retry-After from drop (within the upload's budget) is honoured as the minimum.
         step = min(self._backoff_cap_s, self._backoff_base_s * 2 ** (attempt - 1))
-        return step / 2 + random.uniform(0, step / 2)
+        delay = step / 2 + random.uniform(0, step / 2)
+        hint = _retry_after.get()
+        return max(delay, hint) if hint is not None else delay
 
     async def _discard(self, session: _Session) -> None:
         """Best-effort delete of a half-made upload; never masks the error being propagated."""
@@ -319,8 +349,23 @@ def _raise_for_status(resp: httpx.Response, what: str) -> None:
     # 404 mid-upload means drop lost the session (restart, or its 10-minute stale sweep) and 507 is
     # a full disk: both can succeed later from scratch, unlike a request drop refuses outright.
     if status >= 500 or status in (404, 408, 429):
-        raise DropUnavailable(detail, status=status)
+        raise DropUnavailable(detail, status=status).with_retry_after(_retry_after_s(resp))
     raise DropRejected(detail, status=status)
+
+
+def _retry_after_s(resp: httpx.Response) -> float | None:
+    """Retry-After as seconds (delta-seconds or an HTTP date), None if absent or unparseable."""
+    value = resp.headers.get("Retry-After", "").strip()
+    if not value:
+        return None
+    try:
+        return max(float(value), 0.0)
+    except ValueError:
+        pass
+    try:
+        return max((parsedate_to_datetime(value) - datetime.now(UTC)).total_seconds(), 0.0)
+    except (TypeError, ValueError):
+        return None
 
 
 def _primary_error(eg: ExceptionGroup) -> Exception:

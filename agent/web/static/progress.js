@@ -50,13 +50,14 @@
   async function tick() {
     try {
       const r = await fetch(`/r/${encodeURIComponent(token)}.json`, { cache: "no-store" });
-      if (!r.ok) return;
+      if (r.status === 404) return; // the request is gone: nothing more to show
+      if (!r.ok) throw new Error(`HTTP ${r.status}`); // 502 during a deploy, 429...: keep trying
       const v = await r.json();
       render(v);
       if (v.terminal) return;
       delay = 1500;
     } catch (_) {
-      delay = Math.min(delay * 2, 15000); // network hiccup: back off, keep trying
+      delay = Math.min(delay * 2, 15000); // network hiccup or server error: back off, keep trying
     }
     setTimeout(tick, delay);
   }

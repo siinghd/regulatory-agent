@@ -14,7 +14,8 @@ import re
 import pytest
 from arq import Retry
 
-from agent import blobs, db, worker
+from agent import blobs, db, store, worker
+from agent.config import get_settings
 from agent.models import PortalUnavailable
 
 from .harness import (
@@ -61,6 +62,13 @@ def assert_counts_sentence(text: str) -> None:
 
 async def count(sql: str, *args) -> int:
     return await db.pool().fetchval(sql, *args)
+
+
+def assert_backoff(defer_s: float, attempt: int, retry_after: float = 0.0) -> None:
+    """Jittered exponential backoff: U(0.5, 1) * min(cap, base * 2^(attempt-1)), never below retry_after."""
+    s = get_settings()
+    step = min(s.retry_cap_s, s.retry_base_s * 2 ** (attempt - 1))
+    assert max(0.5 * step, retry_after) <= defer_s <= max(step, retry_after), (defer_s, attempt)
 
 
 # ======================================================================== 1. happy path
@@ -115,7 +123,7 @@ async def test_happy_path_acks_then_replies_with_zip_and_grounded_citations(h):
     for d in docs:
         assert d["sha256"] and blobs.has_blob(d["sha256"]) and d["page_count"] == 1
         assert d["filename"] == f"{d['external_id']}.pdf" and d["downloaded_at"] is not None
-        assert f"{PUBLIC_BASE_URL}/files/{d['id']}.pdf" in text
+        assert f"{PUBLIC_BASE_URL}/files/{d['id']}/{d['sha256']}.pdf" in text  # the version sent
     assert await count("SELECT count(*) FROM pages") == 3
 
     # citations: every quote is the exact span of our own extracted text it points at
@@ -134,7 +142,8 @@ async def test_happy_path_acks_then_replies_with_zip_and_grounded_citations(h):
     )
     assert "summary" in kinds and "retry" not in kinds
     assert h.provider.calls == {"list": 1, "download": 1}
-    assert h.llm.calls == {"_SummaryOut": 1}  # the request itself parsed by rules, no LLM
+    # the request itself parsed by rules, no LLM; the summary (and its citation entailment check)
+    assert h.llm.calls.keys() - {"_Verdicts"} == {"_SummaryOut"} and h.llm.calls["_SummaryOut"] == 1
 
 
 # ======================================================================== 2. how many documents
@@ -273,7 +282,8 @@ async def test_crash_after_the_ack_resumes_without_a_second_ack(h):
     h.provider.portal_errors.append(RuntimeError("unexpected portal state"))  # a bug, not an AgentError
     rid = await h.ingest(make_email(REQUEST))
 
-    assert await h.run_job(rid) == [worker.BACKOFF_S[0]]
+    (defer,) = await h.run_job(rid)
+    assert_backoff(defer, 1)
 
     row = await h.request(rid)
     assert row["state"] == "done" and row["attempts"] == 2
@@ -288,24 +298,27 @@ async def test_smtp_failure_on_the_reply_resends_the_reserved_message_once(h):
     h.smtp.fail["reply"] = 1
     rid = await h.ingest(make_email(REQUEST))
 
-    with pytest.raises(Retry) as exc:
-        await h.process(rid, 1)
-    assert exc.value.defer_score == worker.BACKOFF_S[0] * 1000
+    await h.process(rid, 1)  # the reply is in the outbox: the job itself is finished
+
     row = await h.request(rid)
     assert row["state"] == "replying"
     assert row["reply_message_id"] == outbound_id(rid, "reply") and row["reply_sent_at"] is None
+    (out,) = [r for r in await store.outbound_rows(rid) if r["kind"] == "reply"]
+    assert out["status"] == "queued" and out["attempts"] == 1
+    jobs = {j.job_id for j in await h.redis.queued_jobs()}
+    assert f"out:{outbound_id(rid, 'reply')}" in jobs  # the outbox retries it, not the request job
 
-    await h.process(rid, 2)
+    await worker.send_outbound(h.ctx(), out["message_id"])
 
     row = await h.request(rid)
-    assert row["state"] == "done" and row["reply_sent_at"] is not None
+    assert row["state"] == "done" and row["reply_sent_at"] is not None and row["attempts"] == 1
     assert h.smtp.attempts == [outbound_id(rid, "ack"), outbound_id(rid, "reply"), outbound_id(rid, "reply")]
     (reply,) = h.replies(rid)
     assert reply["Message-ID"] == row["reply_message_id"]
     assert len(h.acks(rid)) == 1
     text = body_text(reply)
     assert pdf_names(zip_members(reply)) == [f"{d}.pdf" for d in OTHER_DOCS]
-    assert h.provider.visits() == 2  # the retry re-used the cached listing and blobs
+    assert h.provider.visits() == 2  # the resend re-used the rendered reply: no fetch, no packaging
     linked = [c for c in await h.citations(rid) if f"/c/{c['id']}" in text]
     assert len(linked) == 4  # every link in the email resolves
 
@@ -330,17 +343,20 @@ async def test_portal_down_on_every_try_fails_with_one_apology(h):
 
     defers = await h.run_job(rid)
 
-    assert defers == worker.BACKOFF_S  # tries 1-5 back off 20s, 60s, 180s, 420s, 600s
-    assert len(defers) == worker.MAX_TRIES - 1
+    max_attempts = get_settings().max_attempts
+    assert len(defers) == max_attempts - 1
+    for attempt, defer in enumerate(defers, start=1):
+        assert_backoff(defer, attempt)
     row = await h.request(rid)
-    assert row["state"] == "failed" and row["attempts"] == worker.MAX_TRIES
+    assert row["state"] == "failed" and row["attempts"] == max_attempts
     assert row["error"].startswith("PortalUnavailable")
-    assert h.provider.calls["list"] == worker.MAX_TRIES
+    assert h.provider.calls["list"] == max_attempts
     assert [m["Message-ID"] for m in h.smtp.sent] == [outbound_id(rid, "ack"), outbound_id(rid, "reply")]
     apology = h.reply(rid)
     assert_threaded(apology, to="alice@example.com", in_reply_to=row["message_id"], references=row["message_id"])
     assert "kept failing" in body_text(apology) and not attachments(apology)
-    assert (await h.event_kinds(rid)).count("retry") == worker.MAX_TRIES - 1
+    assert (await h.event_kinds(rid)).count("retry") == max_attempts - 1
+    assert "dead_letter" in await h.event_kinds(rid)
 
 
 # ======================================================================== 8. matter not found
@@ -382,7 +398,7 @@ async def test_dns_temperror_is_retried_not_rejected(h):
 
     with pytest.raises(Retry) as exc:
         await h.process(rid, 1)
-    assert exc.value.defer_score == worker.BACKOFF_S[0] * 1000
+    assert_backoff(exc.value.defer_score / 1000, 1)
     row = await h.request(rid)
     assert row["state"] == "received" and row["reject_reason"] is None
     assert h.smtp.attempts == [] and h.provider.visits() == 0
@@ -553,7 +569,7 @@ async def test_request_without_a_document_type_asks_which_one(h):
     reply = h.reply(rid)
     assert_threaded(reply, to="alice@example.com", in_reply_to=message_id_of(raw), references=message_id_of(raw))
     text = body_text(reply)
-    assert COUNTS_SENTENCE in text and "Which document type would you like for M12205?" in text
+    assert COUNTS_SENTENCE in text and "Which document type would you like for M12205: Exhibits," in text
     assert not attachments(reply)
 
     # the job running again (sweeper, redelivery) leaves a clarify request alone
@@ -579,7 +595,7 @@ async def test_smtp_failure_on_a_clarification_resends_the_clarification(h):
     await h.run_job(rid)
 
     assert (await h.request(rid))["state"] == "clarify"
-    assert "Which document type would you like for M12205?" in body_text(h.reply(rid))
+    assert "Which document type would you like for M12205: Exhibits," in body_text(h.reply(rid))
 
 
 # ======================================================================== 14. injection
@@ -766,14 +782,15 @@ async def test_another_regulator_runs_through_the_same_pipeline(h):
     row = await h.request(rid)
     assert (row["state"], row["provider"], row["matter"], row["doc_type"]) == ("done", "fakereg", "FK-1234", "Rulings")
     assert row["result"]["counts"] == {"Rulings": 2, "Filings": 0}
-    assert h.llm.calls == {"_SummaryOut": 1}  # parsed by the rules, with this regulator's own aliases
+    # parsed by the rules, with this regulator's own aliases (plus the citation entailment check)
+    assert h.llm.calls.keys() - {"_Verdicts"} == {"_SummaryOut"} and h.llm.calls["_SummaryOut"] == 1
     assert other.calls == {"list": 1, "download": 1} and h.provider.visits() == 0
 
     (ack,) = h.acks(rid)
     assert "collecting the Rulings for FK-1234 from the Fake Energy Regulator database" in body_text(ack)
     reply = h.reply(rid)
     text = body_text(reply)
-    assert "I found 2 Rulings, and no Filings." in text
+    assert "I found 2 Rulings and no Filings." in text
     assert "I downloaded all 2 Rulings and attached them as a ZIP" in text
     assert 'href="https://regulator.example/documents">Fake Energy Regulator database</a>' in (
         reply.get_body(preferencelist=("html",)).get_content()
@@ -805,6 +822,6 @@ async def test_a_follow_up_must_name_a_category_of_the_threads_regulator(h):
     row = await h.request(r2)
     assert (row["state"], row["provider"], row["matter"], row["doc_type"]) == ("clarify", "fakereg", "FK-1234", None)
     text = body_text(h.reply(r2))
-    assert "I found 2 Rulings, 1 Filings." in text
+    assert "I found 2 Rulings and 1 Filing." in text
     assert "Which document type would you like for FK-1234: Rulings, Filings?" in text
     assert other.calls["list"] == 1  # only the first request fetched documents

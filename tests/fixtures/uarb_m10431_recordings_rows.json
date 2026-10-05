@@ -1,0 +1,411 @@
+{
+ "matter": "M10431",
+ "tab": "Recordings",
+ "read": "2026-10-04",
+ "screens": [
+  [
+   {
+    "texts": [
+     "09/12/2022",
+     "M10431 – NS Power 2022 GRA - Monday",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 338,
+    "y": 0,
+    "active": true
+   },
+   {
+    "texts": [
+     "09/12/2022",
+     "M10431 – NS Power 2022 GRA - Monday Evening Session",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 406,
+    "y": 68,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/13/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 474,
+    "y": 136,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/14/2022",
+     "M10431 – NS Power 2022 GRA - Wednesday",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 542,
+    "y": 204,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 610,
+    "y": 272,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday (2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 678,
+    "y": 340,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday(3 - 1 of 2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 746,
+    "y": 408,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday(3 - 2 of 2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 814,
+    "y": 476,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday (4)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 882,
+    "y": 544,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 950,
+    "y": 612,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 1018,
+    "y": 680,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (3)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 1086,
+    "y": 748,
+    "active": false
+   }
+  ],
+  [
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Monday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 653,
+    "y": 816,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Monday (2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 721,
+    "y": 884,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Monday (3)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 789,
+    "y": 952,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 857,
+    "y": 1020,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (2(1of2))",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 925,
+    "y": 1088,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (2(1of2))",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 993,
+    "y": 1156,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday(3 - 1 of 2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 245,
+    "y": 408,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday(3 - 2 of 2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 313,
+    "y": 476,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/15/2022",
+     "M10431 – NS Power 2022 GRA - Thursday (4)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 381,
+    "y": 544,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 449,
+    "y": 612,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 517,
+    "y": 680,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (3)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 585,
+    "y": 748,
+    "active": false
+   }
+  ],
+  [
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (3)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 653,
+    "y": 1224,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "September 21, final track",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 721,
+    "y": 1292,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/22/2022",
+     "M10431 - NS Power GRA - September 22 1/3",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 789,
+    "y": 1360,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/22/2022",
+     "M10431 - NS Power GRA - Thursday 2/3",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 857,
+    "y": 1428,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/22/2022",
+     "M10431 - NS Power GRA - thusday 3/3",
+     "Public",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 925,
+    "y": 1496,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/16/2022",
+     "M10431 – NS Power 2022 GRA - Friday (3)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 177,
+    "y": 748,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Monday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 245,
+    "y": 816,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Monday (2)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 313,
+    "y": 884,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/20/2022",
+     "M10431 – NS Power 2022 GRA - Monday (3)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 381,
+    "y": 952,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (1)",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 449,
+    "y": 1020,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (2(1of2))",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 517,
+    "y": 1088,
+    "active": false
+   },
+   {
+    "texts": [
+     "09/21/2022",
+     "M10431 – NS Power 2022 GRA - Tuesday (2(1of2))",
+     "Preview",
+     "GO GET IT"
+    ],
+    "top": 585,
+    "y": 1156,
+    "active": false
+   }
+  ]
+ ]
+}

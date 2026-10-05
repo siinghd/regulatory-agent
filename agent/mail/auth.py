@@ -10,6 +10,9 @@ import ipaddress
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from email.utils import parsedate_to_datetime
+from importlib.resources import files
 from typing import NamedTuple
 
 import dkim
@@ -17,9 +20,12 @@ import dns.asyncresolver
 import dns.exception
 import dns.name
 import dns.resolver
+import idna
 import spf
 import structlog
+from publicsuffixlist import PublicSuffixList
 
+from agent.config import get_settings
 from agent.mail.mime import envelope_sender, parse_headers, received_headers
 from agent.models import AuthVerdict, InboundEmail, SenderAuth
 
@@ -43,18 +49,27 @@ _TEMP_FAILURE = (dns.exception.Timeout, dns.resolver.NoNameservers)
 # l=, binascii.Error (a ValueError) for bad base64.
 _DKIM_ERRORS = (dkim.DKIMException, IndexError, ValueError)
 
-# Approximates the Public Suffix List (RFC 7489 §3.2) without a PSL dependency: the
-# organizational domain is the last two labels, or three under these two-level suffixes
-# (including the Canadian federal and provincial ones our users mail from).
-# fmt: off
-_TWO_LEVEL_SUFFIXES = frozenset({
-    "co.uk", "org.uk", "ac.uk", "gov.uk",
-    "com.au", "net.au", "org.au", "edu.au", "gov.au", "co.nz", "govt.nz",
-    "co.jp", "co.in", "co.za", "com.br", "com.mx", "com.cn",
-    "gc.ca", "ab.ca", "bc.ca", "mb.ca", "nb.ca", "nl.ca", "ns.ca", "nt.ca", "nu.ca", "on.ca", "pe.ca",
-    "qc.ca", "sk.ca", "yk.ca",
-})
-# fmt: on
+# Organizational domains (RFC 7489 §3.2) come from the Public Suffix List snapshot bundled
+# with the pinned publicsuffixlist release: read from the package, never downloaded. The
+# private section is included, as DMARC implementations do, so tenants of shared hosting
+# suffixes (github.io, herokuapp.com, ...) are separate organizations: one tenant can't align
+# with another's From domain or inherit its DMARC policy. The PSL omits some shared mail-tenant
+# suffixes; without these, evil.onmicrosoft.com would align with victim.onmicrosoft.com.
+_SHARED_TENANT_SUFFIXES = (
+    "onmicrosoft.com",  # Microsoft 365 initial tenant domains
+    "mail.onmicrosoft.com",  # and their mail routing domains
+    "onmicrosoft.us",  # Microsoft 365 GCC High / DoD
+    "mail.onmicrosoft.us",
+    "partner.onmschina.cn",  # Microsoft 365 operated by 21Vianet
+)
+_PSL = PublicSuffixList(
+    files("publicsuffixlist").joinpath("public_suffix_list.dat").read_text("utf-8")
+    + "\n"
+    + "\n".join(_SHARED_TENANT_SUFFIXES)
+)
+# A DKIM signature that leaves these out can be replayed under another subject (the request
+# we act on), so it doesn't count towards alignment.
+_REQUIRED_SIGNED_HEADERS = frozenset({"from", "subject"})
 _HOSTNAME = re.compile(
     r"(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?"
 )
@@ -79,9 +94,21 @@ class DmarcPolicy:
 
 
 @dataclass(frozen=True)
+class DkimSignature:
+    domain: str  # d=, lowercase
+    signed_headers: frozenset[str]  # h=, lowercase field names
+    timestamp: int | None = None  # t= (signing time, Unix seconds); optional in RFC 6376
+    body_length: int | None = None  # l=: only this many body bytes are signed
+
+
+@dataclass(frozen=True)
 class DkimResult:
-    domains: tuple[str, ...]  # d= of every signature that verified
+    signatures: tuple[DkimSignature, ...]  # every signature that verified, topmost first
     temperror: bool  # some signature's key lookup failed transiently
+
+    @property
+    def domains(self) -> tuple[str, ...]:
+        return tuple(dict.fromkeys(sig.domain for sig in self.signatures))
 
 
 class SmtpClient(NamedTuple):
@@ -97,9 +124,12 @@ async def verify_sender(
     resolver: dns.asyncresolver.Resolver | None = None,
     spf_check: SpfCheck | None = None,
     dkim_dnsfunc: DkimDnsFunc | None = None,
+    max_age: timedelta | None = None,
 ) -> SenderAuth:
     """DMARC-style verdict for the From domain of `email` (parsed from `raw`).
 
+    Replay guard: mail whose Date is more than `max_age` (default: mail_max_age_days) before
+    `email.received_at` fails, and an aligned DKIM signature made before then doesn't count.
     `spf_check` and `dkim_dnsfunc` default to live DNS; tests inject fakes.
     """
     from_domain = to_ascii_domain(email.from_addr.rpartition("@")[2])
@@ -114,6 +144,23 @@ async def verify_sender(
     headers = parse_headers(raw)
     client = smtp_client(received_headers(headers), trusted_mta)
     client_ip = client.ip if client else None
+    window = max_age if max_age is not None else timedelta(days=get_settings().mail_max_age_days)
+    not_before = _as_utc(email.received_at) - window
+    # A missing or unparseable Date doesn't fail the message: where Date isn't signed, a
+    # replayer could just as easily write a fresh one, so rejecting its absence would only
+    # drop mail from broken clients. The aligned signature's t= is the guard that holds.
+    sent_at = _date_header(headers.get("date"))
+    if sent_at is not None and sent_at < not_before:
+        return SenderAuth(
+            verdict=AuthVerdict.FAIL,
+            from_domain=from_domain,
+            spf="none",
+            client_ip=client_ip,
+            reason=(
+                f"stale Date {sent_at:%Y-%m-%d %H:%M} UTC: more than {window.total_seconds() / 86400:g} "
+                "days before we received it (possible replay)"
+            ),
+        )
     try:
         policy = await lookup_dmarc(from_domain, resolver or dns.asyncresolver.get_default_resolver())
     except DnsTempError as e:
@@ -131,7 +178,13 @@ async def verify_sender(
         asyncio.to_thread(verify_dkim, raw, dkim_dnsfunc or dkim_txt_lookup),
     )
     auth = dmarc_alignment(
-        from_domain, spf_result, spf_domain, dkim_result.domains, policy, dkim_temperror=dkim_result.temperror
+        from_domain,
+        spf_result,
+        spf_domain,
+        dkim_result.signatures,
+        policy,
+        dkim_temperror=dkim_result.temperror,
+        not_before=not_before,
     )
     return auth.model_copy(update={"client_ip": client_ip})
 
@@ -141,6 +194,15 @@ def is_temperror(auth: SenderAuth) -> bool:
     return auth.verdict is AuthVerdict.NONE and auth.reason.startswith(TEMPERROR)
 
 
+def reply_address(email: InboundEmail, auth: SenderAuth) -> str:
+    """Where to answer `email`: its From local part at the domain `verify_sender` checked.
+
+    The From header may spell the domain as a U-label, in fullwidth or in mixed case; the reply
+    goes to the A-label that SPF/DKIM/DMARC were evaluated for, not to the sender's spelling.
+    """
+    return f"{email.from_addr.rpartition('@')[0]}@{auth.from_domain}"
+
+
 # ---------------------------------------------------------------- DMARC
 
 
@@ -148,12 +210,19 @@ def dmarc_alignment(
     from_domain: str,
     spf_result: str,
     spf_domain: str | None,
-    dkim_domains: Sequence[str],
+    dkim_signatures: Sequence[DkimSignature],
     policy: DmarcPolicy | None,
     *,
     dkim_temperror: bool = False,
+    not_before: datetime | None = None,
 ) -> SenderAuth:
-    """RFC 7489 §3.1/§4.2: PASS iff an aligned SPF pass or an aligned valid DKIM signature."""
+    """RFC 7489 §3.1/§4.2: PASS iff an aligned SPF pass or an aligned valid DKIM signature.
+
+    An aligned signature counts only if it signed From and Subject, signed the whole body (no l=)
+    and, when it carries t=, was made at or after `not_before`. Others are still reported in
+    `dkim_domains`, and why they didn't count is logged and in the reason.
+    """
+    dkim_domains = tuple(dict.fromkeys(sig.domain for sig in dkim_signatures))
 
     def result(verdict: AuthVerdict, reason: str, aligned_via: str | None = None) -> SenderAuth:
         return SenderAuth(
@@ -161,19 +230,27 @@ def dmarc_alignment(
             from_domain=from_domain,
             spf=spf_result,
             spf_domain=spf_domain,
-            dkim_domains=tuple(dkim_domains),
+            dkim_domains=dkim_domains,
             aligned_via=aligned_via,
             reason=reason,
         )
 
     adkim, aspf = (policy.adkim, policy.aspf) if policy else ("r", "r")
-    for domain in dkim_domains:
-        if _aligned(domain, from_domain, adkim):
-            return result(AuthVerdict.PASS, f"DKIM d={domain} aligned with {from_domain}", "dkim")
+    not_counted: list[str] = []
+    for sig in dkim_signatures:
+        if not _aligned(sig.domain, from_domain, adkim):
+            continue
+        problem = _signature_problem(sig, not_before)
+        if problem is None:
+            return result(AuthVerdict.PASS, f"DKIM d={sig.domain} aligned with {from_domain}", "dkim")
+        log.info("dkim_signature_not_counted", domain=sig.domain, from_domain=from_domain, reason=problem)
+        not_counted.append(f"d={sig.domain} {problem}")
     if spf_result == "pass" and spf_domain and _aligned(spf_domain, from_domain, aspf):
         return result(AuthVerdict.PASS, f"SPF pass for {spf_domain} aligned with {from_domain}", "spf")
 
     evidence = f"spf={spf_result} for {spf_domain or '-'}, valid dkim d={','.join(dkim_domains) or '-'}"
+    if not_counted:
+        evidence += f" (aligned but not counted: {'; '.join(not_counted)})"
     if spf_result == TEMPERROR or dkim_temperror:
         return result(
             AuthVerdict.NONE, f"{TEMPERROR}: DNS failed before alignment was established; {evidence}"
@@ -186,9 +263,23 @@ def dmarc_alignment(
 
 
 def organizational_domain(domain: str) -> str:
-    labels = domain.lower().rstrip(".").split(".")
-    keep = 3 if ".".join(labels[-2:]) in _TWO_LEVEL_SUFFIXES else 2
-    return ".".join(labels[-keep:])
+    """Public suffix plus one label; a public suffix (or a name the PSL can't place) is its own."""
+    name = domain.lower().rstrip(".")
+    return _PSL.privatesuffix(name) or name
+
+
+def _signature_problem(sig: DkimSignature, not_before: datetime | None) -> str | None:
+    """Why an aligned, cryptographically valid signature still doesn't authenticate the message."""
+    unsigned = _REQUIRED_SIGNED_HEADERS - sig.signed_headers
+    if unsigned:
+        return f"does not sign {', '.join(sorted(unsigned))}"
+    if sig.body_length is not None:
+        # Anyone can append to a body signed with l= (a request, a link) and the signature still
+        # verifies: it vouches for the first l= bytes, not for the message we act on.
+        return f"signs only the first {sig.body_length} body bytes (l=); appended content would be unsigned"
+    if not_before is not None and sig.timestamp is not None and sig.timestamp < not_before.timestamp():
+        return f"signed at t={sig.timestamp}, before {not_before.astimezone(UTC):%Y-%m-%d %H:%M} UTC (stale)"
+    return None
 
 
 def _aligned(domain: str, from_domain: str, mode: str) -> bool:
@@ -293,10 +384,10 @@ def verify_dkim(raw: bytes, dnsfunc: DkimDnsFunc) -> DkimResult:
         verifier = dkim.DKIM(raw, timeout=DNS_TIMEOUT_S)
     except _DKIM_ERRORS as e:
         log.info("dkim_unparseable_message", error=f"{type(e).__name__}: {e}")
-        return DkimResult(domains=(), temperror=False)
+        return DkimResult(signatures=(), temperror=False)
 
     count = sum(1 for name, _ in verifier.headers if name.lower() == b"dkim-signature")
-    domains: list[str] = []
+    signatures: list[DkimSignature] = []
     temperror = False
     for idx in range(min(count, MAX_DKIM_SIGNATURES)):
         try:
@@ -309,8 +400,25 @@ def verify_dkim(raw: bytes, dnsfunc: DkimDnsFunc) -> DkimResult:
             log.info("dkim_signature_invalid", index=idx, error=f"{type(e).__name__}: {e}")
             continue
         if valid:
-            domains.append(verifier.domain.decode("ascii", "replace").lower())
-    return DkimResult(domains=tuple(dict.fromkeys(domains)), temperror=temperror)
+            signatures.append(_verified_signature(verifier))
+    return DkimResult(signatures=tuple(signatures), temperror=temperror)
+
+
+def _verified_signature(verifier: dkim.DKIM) -> DkimSignature:
+    """d=, h=, t= and l= of the signature `verifier` just verified.
+
+    dkimpy has validated their syntax: t= and l= are decimal digits it already converted with int().
+    """
+    timestamp = verifier.signature_fields.get(b"t")
+    length = verifier.signature_fields.get(b"l")
+    return DkimSignature(
+        domain=verifier.domain.decode("ascii", "replace").lower(),
+        signed_headers=frozenset(
+            name.decode("ascii", "replace").strip().lower() for name in verifier.include_headers
+        ),
+        timestamp=int(timestamp) if timestamp is not None else None,
+        body_length=int(length) if length is not None else None,
+    )
 
 
 def dkim_txt_lookup(name: bytes, timeout: float = DNS_TIMEOUT_S) -> bytes | None:
@@ -331,12 +439,35 @@ def dkim_txt_lookup(name: bytes, timeout: float = DNS_TIMEOUT_S) -> bytes | None
 
 
 def to_ascii_domain(domain: str) -> str | None:
-    """Lowercase A-label form of a hostname, or None if it isn't one."""
+    """Lowercase A-label form of a hostname (UTS #46 mapping, IDNA2008), or None if it isn't one.
+
+    A trailing dot (also a mapped one, like the ideographic full stop) is rejected rather than
+    stripped: a mail domain is never written as an absolute name.
+    """
+    domain = domain.strip()
+    # A valid name is at most 253 octets; the cap also bounds idna's work on hostile input.
+    if not domain or len(domain) > 253:
+        return None
     try:
-        ascii_domain = domain.strip().rstrip(".").encode("idna").decode("ascii").lower()
-    except UnicodeError:
+        ascii_domain = idna.encode(domain, uts46=True).decode("ascii").lower()
+    except (UnicodeError, ValueError):  # idna.IDNAError is a UnicodeError
         return None
     return ascii_domain if _HOSTNAME.fullmatch(ascii_domain) else None
+
+
+def _date_header(value: object) -> datetime | None:
+    """The Date header as an aware UTC datetime, or None if absent or unparseable."""
+    if value is None:
+        return None
+    try:
+        return _as_utc(parsedate_to_datetime(str(value)))
+    except (ValueError, TypeError, IndexError, OverflowError):
+        return None
+
+
+def _as_utc(moment: datetime) -> datetime:
+    # RFC 5322's "-0000" zone (parsed as naive) means UTC with no local offset known.
+    return moment.replace(tzinfo=UTC) if moment.tzinfo is None else moment.astimezone(UTC)
 
 
 def _query_name(name: str) -> dns.name.Name | None:

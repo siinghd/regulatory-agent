@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Privacy notice{% endblock %}
+{% block main %}
+<article class="prose">
+  <p class="eyebrow">Last updated October 5, 2026</p>
+  <h1>Privacy notice</h1>
+  <p>This explains what happens to your information when you email <b>{{ p.agent_address }}</b> or open a
+  link it sends you. Questions or requests: <a href="mailto:{{ p.privacy }}">{{ p.privacy }}</a>.</p>
+
+  <h2>What we collect</h2>
+  <ul>
+    <li><b>Your email:</b> your address and display name, the subject and text of your message, and its
+    technical headers, which include the IP address of the server that sent it to us and the results of the
+    checks that prove the email really came from you. We don't open attachments.</li>
+    <li><b>What we did with it:</b> the request we understood, its progress, and the emails we sent you.</li>
+    <li><b>When you open our links:</b> our web server and our network provider record your IP address, browser,
+    the page and the time.</li>
+  </ul>
+  <p>We don't use tracking cookies, build profiles, or sell or rent your information.</p>
+
+  <h2>Why we use it</h2>
+  <ul>
+    <li>To answer your request and send you the documents: that's why you wrote to us.</li>
+    <li>To keep the service safe: we only answer email that provably comes from its sender and we limit how often
+    anyone can use the service, so it can't be used to send mail to people who didn't ask for it.</li>
+    <li>To keep it working and accountable: diagnosing failures and keeping a record of what the system did.</li>
+  </ul>
+
+  <h2>Who else processes it</h2>
+  <ul>
+    {% if p.typesafe_gate or p.typesafe_check %}<li><b>TypeSafe</b> (api.typesafe.ai) runs a classification model,
+    Jev, for us.{% if p.typesafe_gate %} When our rules can't work out what an email asks for, its subject and text
+    are sent to TypeSafe to classify the request.{% endif %}{% if p.typesafe_check %} Short excerpts of the public
+    documents, with the summary sentences that cite them, are sent to TypeSafe to check the citations.{% endif %}
+    TypeSafe doesn't train on what we send, but it is <b>not zero data retention</b> on our plan: it may keep what
+    we send for a period under its own terms.</li>{% endif %}
+    <li><b>AI language models, through OpenRouter.</b> {% if p.typesafe_gate %}When TypeSafe can't classify an
+    email confidently, or is unavailable{% else %}When our rules can't work out what an email asks for{% endif %},
+    its text is sent to a language model; summaries are written by a model from the public documents.
+    {% if p.zdr %}Requests are routed only to model providers that commit to zero data retention: they don't keep
+    or train on what we send.{% endif %}</li>
+    <li><b>Hetzner</b> hosts our server.</li>
+    <li><b>Cloudflare</b> delivers our website and sees the traffic to it.</li>
+    <li><b>Microsoft Azure</b> carries our requests to regulators' websites that only answer North American
+    addresses. Those requests contain matter numbers, not your personal information.</li>
+  </ul>
+  <p>Download links are end-to-end encrypted: the key is only in the link we email you, so the storage never sees
+  the files. These providers process data on our behalf under their terms; some are outside your country.</p>
+
+  <h2>How long we keep it</h2>
+  <table>
+    <thead><tr><th>What</th><th>How long</th></tr></thead>
+    <tbody>
+      <tr><td>The original email</td><td>{{ p.raw_days }} days after we finish with it ({{ p.rejected_days }} days if we
+        didn't process it, for example because it failed authentication)</td></tr>
+      <tr><td>Your request record</td><td>{{ p.pseudonymise_days }} days with your address; then your address is replaced by a
+        one-way code and the subject is removed; deleted after {{ p.delete_days }} days</td></tr>
+      <tr><td>Our audit log (what the system did, with your address only as a one-way code)</td>
+        <td>{{ p.audit_days }} days</td></tr>
+      <tr><td>Download links</td><td>Expire after {{ p.link_days }} days</td></tr>
+      <tr><td>Website access logs</td><td>{{ p.access_log_days }} days</td></tr>
+      <tr><td>Backups</td><td>Deleted data can remain in our encrypted backups for up to {{ p.backup_days }} days
+        ({{ p.offsite_backup_days }} days for off-site copies)</td></tr>
+    </tbody>
+  </table>
+  <p>The documents themselves are public records; we keep them as a cache for up to {{ p.blob_days }} days after
+  they were last used.</p>
+
+  <h2>Your rights</h2>
+  <p>You can ask for a copy of what we hold about you, for it to be corrected or deleted, or for us to stop
+  processing it. To have everything deleted, email <b>{{ p.agent_address }}</b> from the same address with
+  <b>DELETE MY DATA</b> in the subject: we confirm by email, delete everything we hold about that address within
+  30 days (usually within a day) and stop processing mail from it. For anything else, or if you no longer have that
+  address, write to <a href="mailto:{{ p.privacy }}">{{ p.privacy }}</a>; we answer within 30 days. You can also
+  complain to your data protection authority.</p>
+
+  <h2 id="security">Security</h2>
+  <p>We only answer authenticated email, encrypt data in transit, download links and backups, and restrict access to
+  our systems. To report a vulnerability, email <a href="mailto:{{ p.security }}">{{ p.security }}</a>; please don't
+  test against other people's data or disrupt the service. If something goes wrong that affects you, we'll tell you.</p>
+</article>
+{% endblock %}

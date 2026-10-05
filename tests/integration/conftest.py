@@ -11,17 +11,16 @@ from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
-import arq
 import asyncpg
 import pytest
-from arq.connections import RedisSettings
 
 import agent.citations.claims
 import agent.citations.ground
 import agent.llm
 import agent.mail.auth
 import agent.mail.outbound
-from agent import db
+import agent.typesafe
+from agent import breaker, db, limits, queue, worker
 from agent.config import Settings, get_settings
 from agent.providers import base as providers_base
 
@@ -77,6 +76,10 @@ async def _no_network(*_args, **_kwargs):
     raise AssertionError("integration tests must not reach a real LLM")
 
 
+def _no_typesafe():
+    raise AssertionError("integration tests must not reach the real TypeSafe API")
+
+
 @pytest.fixture
 async def h(database_url: str, redis_url: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> AsyncIterator[Harness]:
     env = {
@@ -90,11 +93,27 @@ async def h(database_url: str, redis_url: str, monkeypatch: pytest.MonkeyPatch, 
         "RATE_PER_SENDER_HOUR": "6",
         "RATE_PER_DOMAIN_HOUR": "30",
         "RATE_GLOBAL_HOUR": "300",
+        "RATE_PER_SENDER_DAY": "20",
+        "RATE_PER_DOMAIN_DAY": "100",
+        "RATE_GLOBAL_DAY": "1000",
+        "MAX_INFLIGHT_PER_SENDER": "2",
+        "PREAUTH_PER_IP_HOUR": "30",
+        "PREAUTH_PER_DOMAIN_HOUR": "60",
+        "INBOUND_PER_MINUTE": "120",
         "MAX_REQUESTS_PER_THREAD": "5",
         "MAX_DOCS_PER_REQUEST": "10",
         "SMTP_HOST": "127.0.0.1",
         "SMTP_PORT": "9",
         "OPENROUTER_API_KEY": "not-used-in-tests",
+        # The suite drives the LLM gate and checker through FakeLLM; tests of the Jev path switch these
+        # (h.configure) and fake TypeSafe's API (tests/integration/test_jev.py).
+        "GATE_CLASSIFIER": "llm",
+        "CITATION_CHECK": "llm",
+        "TYPESAFE_API_KEY": "not-used-in-tests",
+        # Breakers are off unless a test turns them on (h.configure(breaker_failures=...)): the
+        # harness re-runs a deferred job at once, which an open breaker would just park again.
+        "BREAKER_FAILURES": "1000",
+        "DISK_MIN_FREE_BYTES": "1000000",
     }
     for key, value in env.items():
         monkeypatch.setenv(key, value)
@@ -112,9 +131,12 @@ async def h(database_url: str, redis_url: str, monkeypatch: pytest.MonkeyPatch, 
         )
         await conn.execute(f"TRUNCATE {tables} RESTART IDENTITY CASCADE")
 
-    redis = await arq.create_pool(RedisSettings.from_dsn(redis_url))
+    redis = await queue.create_pool(redis_url)  # JSON jobs, as in production
     assert redis.connection_pool.connection_kwargs.get("db") == REDIS_TEST_DB
     await redis.flushdb()
+    monkeypatch.setattr(worker, "SWEEP_JITTER_S", 0.0)
+    breaker.install(None)
+    limits.install(limits.Budgets(redis))  # as the worker does: LLM costs count against the day's budget
 
     provider = FakeProvider()
     provider.add_matter(MATTER, DEFAULT_COUNTS)
@@ -125,6 +147,7 @@ async def h(database_url: str, redis_url: str, monkeypatch: pytest.MonkeyPatch, 
     monkeypatch.setattr(agent.citations.claims, "structured", llm.structured)  # from agent.llm import structured
     monkeypatch.setattr(agent.citations.ground, "structured", llm.structured)
     monkeypatch.setattr(agent.llm, "_http", _no_network)
+    monkeypatch.setattr(agent.typesafe, "_http", _no_typesafe)
 
     auth = FakeAuth()
     monkeypatch.setattr(agent.mail.auth, "verify_sender", auth.verify)
@@ -135,6 +158,7 @@ async def h(database_url: str, redis_url: str, monkeypatch: pytest.MonkeyPatch, 
     try:
         yield harness
     finally:
+        limits.install(None)
         await redis.flushdb()
         await redis.aclose()
         await db.close_pool()

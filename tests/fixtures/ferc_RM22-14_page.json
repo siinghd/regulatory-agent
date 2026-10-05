@@ -1,0 +1,2600 @@
+{
+ "searchHits": [
+  {
+   "reference": "{938FE3A8-3F28-CB86-84F5-99ED68A00000}-{07AB141B-E7D4-CA3F-9B3B-99ED68C00000}",
+   "documentId": "938FE3A8-3F28-CB86-84F5-99ED68A00000",
+   "description": "Arizona Public Service Company submits request to update service lists under ER21-2885, et al.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20251016-5022",
+   "issuedDate": "10/15/2025",
+   "filedDate": "10/16/2025",
+   "postedDate": "10/16/2025",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Procedural Motion"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricGas"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "ER21-2915-000",
+    "RP21-1153-000",
+    "ER21-2973-000",
+    "ER21-2986-000",
+    "ER22-111-000",
+    "ER22-277-000",
+    "ER22-338-000",
+    "ER22-340-000",
+    "ER22-516-000",
+    "AD22-5-000",
+    "ER22-778-000",
+    "ER22-870-000",
+    "ER22-1064-000",
+    "ER22-1098-000",
+    "RM22-10-000",
+    "RM22-14-000",
+    "ER22-1871-000",
+    "EL22-59-000",
+    "ER22-1961-000",
+    "ER22-1966-000",
+    "ER22-2094-000",
+    "ER22-2166-000",
+    "ER21-2885-000",
+    "ER21-2941-000",
+    "ER22-278-000",
+    "ER22-341-000",
+    "ER22-514-000",
+    "ER22-598-000",
+    "ID-9365-000",
+    "ER22-1105-000",
+    "ER22-1148-000",
+    "ER22-1186-000",
+    "ER22-1193-000",
+    "ER22-1371-000",
+    "ER22-1432-000",
+    "ER22-1484-000",
+    "ER22-1485-000",
+    "ER22-1550-000",
+    "ER22-1863-000",
+    "ER22-1873-000",
+    "ER22-1960-000",
+    "ER22-2035-000",
+    "ER22-2246-000",
+    "QF22-739-000",
+    "RM22-20-000",
+    "ER22-2327-000",
+    "ER22-2331-000",
+    "ER22-2476-000",
+    "ER22-2488-000",
+    "ER22-2512-000",
+    "ER22-2514-000",
+    "ER22-2600-000",
+    "ER22-2613-000",
+    "ER22-2702-000",
+    "ER22-2734-000",
+    "ER22-2762-000",
+    "ID-9563-000",
+    "ID-9564-000",
+    "ER22-2803-000",
+    "ER22-2840-000",
+    "ER22-2863-000",
+    "ER22-2864-000",
+    "ER22-2899-000",
+    "ER22-2900-000",
+    "ER22-2903-000",
+    "ER23-5-000",
+    "ER23-125-000",
+    "ER23-127-000",
+    "ER23-160-000",
+    "ER23-214-000",
+    "ER23-271-000",
+    "ER23-486-000",
+    "ER23-524-000",
+    "ER23-551-000",
+    "ER23-579-000",
+    "ER23-608-000",
+    "ER23-770-000",
+    "ER23-772-000",
+    "ER23-895-000",
+    "ER23-1080-000",
+    "ER23-1177-000",
+    "ER23-1192-000",
+    "ER23-1194-000",
+    "ER23-1254-000",
+    "ER23-1256-000",
+    "ER23-1272-000",
+    "ER23-1404-000",
+    "EC23-72-000",
+    "ER23-1788-000",
+    "ER23-1856-000",
+    "ER23-1912-000",
+    "ER23-1937-000",
+    "ER23-1986-000",
+    "ER23-1988-000",
+    "ER23-2132-000",
+    "ER23-2398-000",
+    "ER23-2340-000",
+    "ER23-2348-000",
+    "ER23-2387-000",
+    "RP22-1031-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "B8A39139-0D09-C5C4-93F7-99ED68C00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Transmittal Letter 6 of 7.pdf",
+     "fileDesc": "No description given",
+     "fileSize": 287045,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "07AB141B-E7D4-CA3F-9B3B-99ED68C00000",
+     "fileType": "XLSX",
+     "fileFormat": "Standard",
+     "fileName": "Attachment A_Remove J. Spina and add F. Gillman.xlsx",
+     "fileDesc": "No description given",
+     "fileSize": 67013,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Arizona Public Service Company",
+     "lastName": "Spina",
+     "firstInitial": "J",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Pinnacle West Capital Corporation",
+     "lastName": "Spina",
+     "firstInitial": "J",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    }
+   ]
+  },
+  {
+   "reference": "{BA4E2395-E49D-CC71-8588-9635D9700000}-{57F08100-D5F1-C217-9BE3-9635D9700000}",
+   "documentId": "BA4E2395-E49D-CC71-8588-9635D9700000",
+   "description": "Certified Index to the Record filed in the United States Court of Appeals for the District of Columbia Circuit re Advanced Energy United, et al. v. FERC under RM22-14 (Case No. 23-1282 et al.). ",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20250414-4001",
+   "issuedDate": "08/21/2024",
+   "filedDate": "04/14/2025",
+   "postedDate": "04/14/2025",
+   "classTypes": [
+    {
+     "documentClass": "Court Related Documents",
+     "documentType": "Court Related Documents"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "57F08100-D5F1-C217-9BE3-9635D9700000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14signedcopy.pdf",
+     "fileDesc": "",
+     "fileSize": 4340783,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "FEDERAL ENERGY REGULATORY COMMISSION",
+     "lastName": "Chu",
+     "firstInitial": "S",
+     "middleInitial": "Y"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION - FERC",
+     "lastName": "REESE",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    }
+   ]
+  },
+  {
+   "reference": "{121AFDD5-80CA-C28B-8643-95F775C00000}-{8CF6F741-6CE9-C589-A672-95F775C00000}",
+   "documentId": "121AFDD5-80CA-C28B-8643-95F775C00000",
+   "description": "Chairman Mark Christie's response to United States Senate Sheldon Whitehouse's et al. 02/21/2025 letter re ISO New England Inc.'s et al. compliance requirements of Order Nos. 2023 and 2023-A under ER24-2007 et al. ",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20250402-4003",
+   "issuedDate": "04/02/2025",
+   "filedDate": "04/02/2025",
+   "postedDate": "04/02/2025",
+   "classTypes": [
+    {
+     "documentClass": "Informational Correspondence",
+     "documentType": "Informational Correspondence (Miscellaneous Issuances)"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "ER24-2007-000",
+    "RM22-14-000",
+    "ER24-2009-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "8CF6F741-6CE9-C589-A672-95F775C00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Sen. Whitehouse+ 2025-00023 (Final).pdf",
+     "fileDesc": "",
+     "fileSize": 174735,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "CHAIR AND IMMEDIATE STAFF (FERC)",
+     "lastName": "CHRISTIE",
+     "firstInitial": "M",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "UNITED STATES SENATE",
+     "lastName": "Whitehouse",
+     "firstInitial": "S",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "UNITED STATES SENATE",
+     "lastName": "Markey",
+     "firstInitial": "E",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "UNITED STATES SENATE",
+     "lastName": "Welch",
+     "firstInitial": "P",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{8EFBD785-60B0-C991-8401-954DAE400000}-{FA30AA3E-EA12-C60E-A506-954DAE400000}",
+   "documentId": "8EFBD785-60B0-C991-8401-954DAE400000",
+   "description": "Comments of U.S. Senator Sheldon Whitehouse et al. urging the Commission to render a decision on the Order 2023 Interconnection Rule re Independent System Operator-New England's et al. compliance filings under RM22-14 et al. ",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20250228-4001",
+   "issuedDate": "02/21/2025",
+   "filedDate": "02/28/2025",
+   "postedDate": "02/28/2025",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    },
+    {
+     "documentClass": "Other Submittal",
+     "documentType": "Congressional Submittal"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000",
+    "ER24-2007-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "FA30AA3E-EA12-C60E-A506-954DAE400000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Incoming 2025-00023.pdf",
+     "fileDesc": "",
+     "fileSize": 167604,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "US SENATOR",
+     "lastName": "Welch",
+     "firstInitial": "P",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "CHAIR AND IMMEDIATE STAFF (FERC)",
+     "lastName": "CHRISTIE",
+     "firstInitial": "M",
+     "middleInitial": "C"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "US SENATOR",
+     "lastName": "Whitehouse",
+     "firstInitial": "S",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "US SENATOR",
+     "lastName": "Markey",
+     "firstInitial": "E",
+     "middleInitial": "J"
+    }
+   ]
+  },
+  {
+   "reference": "{8E1D3337-4497-CC7C-861A-9234B9200000}-{339E3048-B068-CB8B-9EC7-9234B9200001}",
+   "documentId": "8E1D3337-4497-CC7C-861A-9234B9200000",
+   "description": "PacifiCorp submits request to update service list under EC23-111, et al. Erroneously Filed.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20240927-5178",
+   "issuedDate": "09/27/2024",
+   "filedDate": "09/27/2024",
+   "postedDate": "09/27/2024",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Procedural Motion"
+    }
+   ],
+   "availCode": "N",
+   "familyValue": "None",
+   "libraries": [
+    "Electric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "EC23-111-000",
+    "ER24-2085-000",
+    "ER10-3246-026",
+    "ER24-2614-000",
+    "ER19-1948-000",
+    "ER24-2728-000",
+    "ER21-1536-000",
+    "ER24-2729-000",
+    "ER21-60-000",
+    "ER24-2803-000",
+    "ER23-1892-000",
+    "RM21-17-000",
+    "ER24-2004-000",
+    "RM22-14-000",
+    "ER24-2017-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "339E3048-B068-CB8B-9EC7-9234B9200001",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "PacifiCorp - Request to Update Service List - EC23-111et al.pdf",
+     "fileDesc": "No description given",
+     "fileSize": 47658,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "PacifiCorp",
+     "lastName": "Thompson",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "PacifiCorp",
+     "lastName": "Davis",
+     "firstInitial": "Q",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Troutman Pepper Hamilton Sanders LLP",
+     "lastName": "Thompson",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Troutman Pepper Hamilton Sanders LLP",
+     "lastName": "Davis",
+     "firstInitial": "Q",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    }
+   ]
+  },
+  {
+   "reference": "{D0CDE60C-4903-C501-86F8-9171C4D00000}-{6C059724-4B9D-CE53-9527-9171C4D00000}",
+   "documentId": "D0CDE60C-4903-C501-86F8-9171C4D00000",
+   "description": "Errata to the 03/21/2024 Commission issued order on rehearing and clarification of Order No. 2023 in RM22-14-001; correcting Appendix C etc. re Improvements to Generator Interconnection Procedures and Agreements under RM22-14. For order see 20230728-3060.",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20240820-3075",
+   "issuedDate": "08/20/2024",
+   "filedDate": "08/20/2024",
+   "postedDate": "08/20/2024",
+   "classTypes": [
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Commission Order/Opinion"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "child",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000",
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "6C059724-4B9D-CE53-9527-9171C4D00000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-000 Errata.docx",
+     "fileDesc": "Errata",
+     "fileSize": 48639,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    }
+   ]
+  },
+  {
+   "reference": "{DDC1188D-6D1A-CECE-8454-912453D00000}-{5AE0CD16-ADBE-C44E-9422-912453D00000}",
+   "documentId": "DDC1188D-6D1A-CECE-8454-912453D00000",
+   "description": "Notice Granting Extension of Time re Improvements to Generator Interconnection Procedures and Agreements under RM22-14. ",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20240805-3079",
+   "issuedDate": "08/05/2024",
+   "filedDate": "08/05/2024",
+   "postedDate": "08/05/2024",
+   "classTypes": [
+    {
+     "documentClass": "Notice",
+     "documentType": "Formal Notice"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "5AE0CD16-ADBE-C44E-9422-912453D00000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-000 EOT.docx",
+     "fileDesc": "NOTICE GRANTING EXTENSION OF TIME",
+     "fileSize": 38598,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{572AA923-240E-C7E9-842F-8F9C90100000}-{B093F123-D4E2-CCA6-864F-8F9CD9D00000}",
+   "documentId": "572AA923-240E-C7E9-842F-8F9C90100000",
+   "description": "Petition for Review filed in the US Court of Appeals for the District of Columbia Circuit of PJM Interconnection, L.L.C. re FERC’s Order Nos. 2023 and 2023-A under RM22-14 (No Case No.).",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20240520-0032",
+   "issuedDate": "05/17/2024",
+   "filedDate": "05/20/2024",
+   "postedDate": "05/21/2024",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Petition for Review"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001",
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "5A9F767C-7B0C-CA21-84F3-8F9CD9100000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part01.pdf",
+     "fileDesc": "",
+     "fileSize": 165204807,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "591D44DF-4A7E-C992-873E-8F9CD9200000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part02.pdf",
+     "fileDesc": "",
+     "fileSize": 166292053,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "B5DB9925-D852-C75F-8731-8F9CD9400000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part03.pdf",
+     "fileDesc": "",
+     "fileSize": 167526546,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "095F15EB-BC9F-CE1E-8624-8F9CD9500000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part04.pdf",
+     "fileDesc": "",
+     "fileSize": 167804439,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "1851FC49-A7FF-CB79-84AF-8F9CD9600000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part05.pdf",
+     "fileDesc": "",
+     "fileSize": 167440067,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "A59E0CE5-0D72-C255-8703-8F9CD9700000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part06.pdf",
+     "fileDesc": "",
+     "fileSize": 168117644,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "720CF4BD-BC0E-C18C-8697-8F9CD9800000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part07.pdf",
+     "fileDesc": "",
+     "fileSize": 167734639,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "02CA3C7E-EB26-CE7C-86D0-8F9CD9900000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part08.pdf",
+     "fileDesc": "",
+     "fileSize": 166727784,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "8EC1E152-B495-CD50-860E-8F9CD9A00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part09.pdf",
+     "fileDesc": "",
+     "fileSize": 167941912,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "1850794A-B6C9-CFF8-875D-8F9CD9B00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part10.pdf",
+     "fileDesc": "",
+     "fileSize": 167494562,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "0725B532-29B9-C7AE-8452-8F9CD9C00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part11.pdf",
+     "fileDesc": "",
+     "fileSize": 168027078,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "B093F123-D4E2-CCA6-864F-8F9CD9D00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part12.pdf",
+     "fileDesc": "",
+     "fileSize": 167532475,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "B87E63A2-7762-C96C-86D9-8F9CD9E00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part13.pdf",
+     "fileDesc": "",
+     "fileSize": 165963965,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "BC5B65B6-080E-C3EC-85B7-8F9CD9F00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part14.pdf",
+     "fileDesc": "",
+     "fileSize": 163584247,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "4D95EC20-A72A-C7A0-8491-8F9CDA000000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part15.pdf",
+     "fileDesc": "",
+     "fileSize": 163860876,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "B9947E04-10A2-CB62-84FF-8F9CDA100000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part16.pdf",
+     "fileDesc": "",
+     "fileSize": 165025677,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "207C375B-FC26-CF59-86F5-8F9CDA300000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part17.pdf",
+     "fileDesc": "",
+     "fileSize": 165341082,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "27E79453-40A2-C806-845B-8F9CDA400000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part18.pdf",
+     "fileDesc": "",
+     "fileSize": 167165373,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "902BD31D-D8B9-C3EC-8536-8F9CDA500000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part19.pdf",
+     "fileDesc": "",
+     "fileSize": 167038531,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "4B77429F-CD4D-CE8E-8719-8F9CDA600000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part20.pdf",
+     "fileDesc": "",
+     "fileSize": 167960410,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "5C69F673-061A-CAD7-85B5-8F9CDA700000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part21.pdf",
+     "fileDesc": "",
+     "fileSize": 167441718,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "B7D444E1-D7F0-C33D-8723-8F9CDA800000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part22.pdf",
+     "fileDesc": "",
+     "fileSize": 168411100,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "22F9D35B-7E12-CA58-86CE-8F9CDA900000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part23.pdf",
+     "fileDesc": "",
+     "fileSize": 168597098,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "DB904C8B-77ED-CF45-85CB-8F9CDAA00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part24.pdf",
+     "fileDesc": "",
+     "fileSize": 170484930,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "4235FEFC-4D36-C2D3-846E-8F9CDAB00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part25.pdf",
+     "fileDesc": "",
+     "fileSize": 171324958,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "871433B6-910B-C8EE-85D5-8F9CDAC00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part26.pdf",
+     "fileDesc": "",
+     "fileSize": 169931349,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "0F947A89-9CF1-C198-86F6-8F9CDAD00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part27.pdf",
+     "fileDesc": "",
+     "fileSize": 171405684,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "57173F9F-3C19-C4AB-878C-8F9CDAE00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part28.pdf",
+     "fileDesc": "",
+     "fileSize": 170022149,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "F1EC28C6-0F94-C034-8660-8F9CDAF00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part29.pdf",
+     "fileDesc": "",
+     "fileSize": 169026262,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "776E535B-B641-C167-8408-8F9CDB000000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_Part30.pdf",
+     "fileDesc": "",
+     "fileSize": 99245722,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "EC8EB28C-A681-CA94-8566-8FA0EA000000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part31.pdf",
+     "fileDesc": "",
+     "fileSize": 253628485,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "240A70E2-016F-C5A9-84F2-8FA0ECE00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part32.pdf",
+     "fileDesc": "",
+     "fileSize": 252825260,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "CC1CD78B-F4B6-C173-856F-8FA0EFE00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part33.pdf",
+     "fileDesc": "",
+     "fileSize": 251810406,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "C3E67567-684D-C1F4-8695-8FA0F2D00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part34.pdf",
+     "fileDesc": "",
+     "fileSize": 252506634,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "C0B12599-063E-C225-84A8-8FA0F6400000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part35.pdf",
+     "fileDesc": "",
+     "fileSize": 253173981,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "F0034D3D-BD61-CDD5-861A-8FA0F9600000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part36.pdf",
+     "fileDesc": "",
+     "fileSize": 250315008,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "FE6BAC1B-ED7C-C458-8639-8FA0FC800000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part37.pdf",
+     "fileDesc": "",
+     "fileSize": 254404194,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "BB5E5CCE-A792-CC8F-85C8-8FA0FFC00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part38.pdf",
+     "fileDesc": "",
+     "fileSize": 252545149,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "BF5725F8-8D37-C8A9-8433-8FA112B00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part39.pdf",
+     "fileDesc": "",
+     "fileSize": 255627459,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "05D28E7A-EC29-C4DC-86F1-8FA118E00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part40.pdf",
+     "fileDesc": "",
+     "fileSize": 250342844,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "59DCDD3C-DBE1-C0E8-84CC-8FA11EA00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part41.pdf",
+     "fileDesc": "",
+     "fileSize": 251220949,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "19ACAB91-B457-C1DD-8696-8FA159100000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part42.pdf",
+     "fileDesc": "",
+     "fileSize": 254831397,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "EDAF9F2B-B6A4-CD1D-84D2-8FA15E900000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part43.pdf",
+     "fileDesc": "",
+     "fileSize": 253649975,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "93F1AD81-F6D4-C70C-875A-8FA164300000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part44.pdf",
+     "fileDesc": "",
+     "fileSize": 235050835,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "5F7E87D9-2503-C139-870C-8FA164A00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part44.pdf",
+     "fileDesc": "",
+     "fileSize": 235050835,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "9B7166C7-74D9-CFB2-863D-8FA167500000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240520-0032_part45.pdf",
+     "fileDesc": "",
+     "fileSize": 171499782,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AGENT",
+     "affiliation": "WRIGHT & TALISMAN, PC",
+     "lastName": "Warren",
+     "firstInitial": "W",
+     "middleInitial": "B"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "FEDERAL ENERGY REGULATORY COMMISSION",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "PJM INTERCONNECTION, L.L.C.",
+     "lastName": "Warren",
+     "firstInitial": "W",
+     "middleInitial": "B"
+    }
+   ]
+  },
+  {
+   "reference": "{A5754CC3-6854-CD05-85AA-8F1B59400000}-{86EC5256-4213-CFCD-8B87-91D6D2800000}",
+   "documentId": "A5754CC3-6854-CD05-85AA-8F1B59400000",
+   "description": "Petition for Review filed in the U.S. Court of Appeals for the District of Columbia of PacifiCorp re Order No. 2023-A, issued Mar. 21, 2024 under RM22-14 (Case No. 24-1093). ",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20240425-0007",
+   "issuedDate": "04/22/2024",
+   "filedDate": "04/25/2024",
+   "postedDate": "04/29/2024",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Petition for Review"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "Gas"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "5797480A-CBDA-C934-871B-91D6D2600000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240425-0007 part 01.pdf",
+     "fileDesc": "",
+     "fileSize": 61976679,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "504AB9FE-940E-C1C3-8814-91D6D2700000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240425-0007 part 02.pdf",
+     "fileDesc": "",
+     "fileSize": 62684476,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "86EC5256-4213-CFCD-8B87-91D6D2800000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240425-0007 part 03.pdf",
+     "fileDesc": "",
+     "fileSize": 61809621,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "762D49DA-123F-C7B5-8901-91D6D2900000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "20240425-0007 part 04.pdf",
+     "fileDesc": "",
+     "fileSize": 42398611,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "PACIFICORP",
+     "lastName": "Tseytlin",
+     "firstInitial": "M",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "OFFICE OF THE SECRETARY - FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "TROUTMAN PEPPER HAMILTON SANDERS LLP",
+     "lastName": "Tseytlin",
+     "firstInitial": "M",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{5EC87F66-9B5A-C6C3-8513-8E63A0D00000}-{56CF9ABC-3FAE-C28D-969F-8E63A0D00000}",
+   "documentId": "5EC87F66-9B5A-C6C3-8513-8E63A0D00000",
+   "description": "Order No. 2023-A: Order on rehearing and clarification; Improvements to Generator Interconnection Procedures and Agreements under RM22-14. Commissioner Christie is concurring with a separate statement attached. ",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20240321-3128",
+   "issuedDate": "03/21/2024",
+   "filedDate": "03/21/2024",
+   "postedDate": "03/21/2024",
+   "classTypes": [
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Commission Order/Opinion"
+    },
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Dissent/Concurrence by the Commissioner"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "56CF9ABC-3FAE-C28D-969F-8E63A0D00000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-001.docx",
+     "fileDesc": "Commission Order",
+     "fileSize": 970103,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{E8D29C67-0EF7-C41A-86A2-8B20FBC00000}-{9BFAD93A-AC0A-C758-9737-8B20FBD00000}",
+   "documentId": "E8D29C67-0EF7-C41A-86A2-8B20FBC00000",
+   "description": "Commissioner Clements’ response to U.S. Senator Charles E. Schumer’s July 20, 2023 letter re FERC's notices of proposed rulemaking related to electric transmission under RM22-14.",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20231011-4003",
+   "issuedDate": "08/11/2023",
+   "filedDate": "10/11/2023",
+   "postedDate": "10/11/2023",
+   "classTypes": [
+    {
+     "documentClass": "Informational Correspondence",
+     "documentType": "Informational Correspondence (Miscellaneous Issuances)"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "9BFAD93A-AC0A-C758-9737-8B20FBD00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Commissioner Clements Letter Resp Majority Leader Schumer 8.11.23 (Final)_AC.pdf",
+     "fileDesc": "",
+     "fileSize": 791547,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "US SENATOR",
+     "lastName": "Schumer",
+     "firstInitial": "C",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "CLEMENTS",
+     "firstInitial": "A",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{F48AB284-88D6-C7C0-87D6-8ADB7C200000}-{3936C8D2-0055-CDBF-9565-8ADB7C200000}",
+   "documentId": "F48AB284-88D6-C7C0-87D6-8ADB7C200000",
+   "description": "Notice of Denial of Rehearing by Operation of Law and Providing for Further Consideration re Improvements to Generator Interconnection Procedures and Agreements under RM22-14.",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20230928-3000",
+   "issuedDate": "09/28/2023",
+   "filedDate": "09/28/2023",
+   "postedDate": "09/28/2023",
+   "classTypes": [
+    {
+     "documentClass": "Notice",
+     "documentType": "Formal Notice"
+    },
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Delegated Order"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "3936C8D2-0055-CDBF-9565-8ADB7C200000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-001.docx",
+     "fileDesc": "NOTICE OF DENIAL OF REHEARING BY OPERATION OF LAW AND PROVIDING FOR FURTHER CONSIDERATION",
+     "fileSize": 34054,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{EBA95DC6-220C-CC55-8478-8A8B84700000}-{B6F42169-7A1F-C1C8-9D6E-8A8B84900000}",
+   "documentId": "EBA95DC6-220C-CC55-8478-8A8B84700000",
+   "description": "Motion for Leave to Answer and Answer of Shell Energy North America (US), L.P., et al. to Certain Issues Raised in Requests for Rehearing Filed in Response to the July 28, 2023 Order under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230912-5190",
+   "issuedDate": "09/12/2023",
+   "filedDate": "09/12/2023",
+   "postedDate": "09/12/2023",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Answer/Response to a Pleading/Motion"
+    },
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Procedural Motion"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "Electric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000",
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "B6F42169-7A1F-C1C8-9D6E-8A8B84900000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Shell_Companies_Answer_RM22-14_(9-12-23).pdf",
+     "fileDesc": "Motion for Leave to Answer and Answer of the Shell Companies",
+     "fileSize": 4875237,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Shell New Energies US, LLC",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Savion, LLC",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    }
+   ]
+  },
+  {
+   "reference": "{27C37FF6-E201-CE6F-84EA-8A8B70800000}-{0A6A6DC2-0E9D-CE0E-A062-8A8B70900000}",
+   "documentId": "27C37FF6-E201-CE6F-84EA-8A8B70800000",
+   "description": "(doc-less) Out-of-Time Motion to Intervene of Shell Energy North America (U.S.), L.P., Shell New Energies US, LLC, and Savion, LLC under RM22-14.  ",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230912-5183",
+   "issuedDate": "09/12/2023",
+   "filedDate": "09/12/2023",
+   "postedDate": "09/12/2023",
+   "classTypes": [
+    {
+     "documentClass": "Intervention",
+     "documentType": "Motion to Intervene Out of Time"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "Electric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001",
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "0A6A6DC2-0E9D-CE0E-A062-8A8B70900000",
+     "fileType": "TXT",
+     "fileFormat": "Standard",
+     "fileName": "1445328_Interv.txt",
+     "fileDesc": "Public Intervention",
+     "fileSize": 3,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AGENT",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Shell New Energies US, LLC",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Savion, LLC",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Shell Energy North America (U.S.), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{96048037-E584-C12A-8469-8A8A47D00000}-{01A8A54E-4016-C3E5-9467-8A8A47E00000}",
+   "documentId": "96048037-E584-C12A-8469-8A8A47D00000",
+   "description": "Comments of U.S. Senator Kevin Cramer on ongoing rulemakings regarding transmission planning, cost allocation, and federal backstop siting authority under RM22-14.\t",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230912-4000",
+   "issuedDate": "09/12/2023",
+   "filedDate": "09/12/2023",
+   "postedDate": "09/12/2023",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    },
+    {
+     "documentClass": "Other Submittal",
+     "documentType": "Congressional Submittal"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "01A8A54E-4016-C3E5-9467-8A8A47E00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Incoming letter 2023-00063.pdf",
+     "fileDesc": "",
+     "fileSize": 327196,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "US SENATOR",
+     "lastName": "Cramer",
+     "firstInitial": "K",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "CHAIR AND IMMEDIATE STAFF (FERC)",
+     "lastName": "PHILLIPS",
+     "firstInitial": "W",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{8335B04B-C434-CCE9-85B0-8A4D78F00000}-{906FCAD3-154F-C2DB-A2F7-8A4D79000000}",
+   "documentId": "8335B04B-C434-CCE9-85B0-8A4D78F00000",
+   "description": "Duke Energy Carolinas, LLC, et al. submits Request for Clarification of the July 28, 2023, Order under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230831-5267",
+   "issuedDate": "08/31/2023",
+   "filedDate": "08/31/2023",
+   "postedDate": "08/31/2023",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Request for Rehearing or Appeal"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "906FCAD3-154F-C2DB-A2F7-8A4D79000000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "Duke Order No. 2023 Request for Clarification (FINAL 8-31-23).docx",
+     "fileDesc": "No description given",
+     "fileSize": 138693,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Duke Energy Carolinas, LLC",
+     "lastName": "Warren",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Duke Energy Corporation",
+     "lastName": "Warren",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Duke Energy Florida, LLC",
+     "lastName": "Warren",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Duke Energy Progress, LLC",
+     "lastName": "Warren",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Duke Energy Corporation",
+     "lastName": "Warren",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Duke Energy Corporation",
+     "lastName": "Warren",
+     "firstInitial": "A",
+     "middleInitial": "L"
+    }
+   ]
+  },
+  {
+   "reference": "{AE3EFD0B-3415-C170-8498-8A3DEAA00000}-{9B6D0FE3-5308-CF14-8473-8A3DEAB00000}",
+   "documentId": "AE3EFD0B-3415-C170-8498-8A3DEAA00000",
+   "description": "(doc-less) Motion to Intervene of Omaha Public Power District under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230828-5412",
+   "issuedDate": "08/28/2023",
+   "filedDate": "08/28/2023",
+   "postedDate": "08/28/2023",
+   "classTypes": [
+    {
+     "documentClass": "Intervention",
+     "documentType": "Motion/Notice of Intervention"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "RulemakingElectric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "9B6D0FE3-5308-CF14-8473-8A3DEAB00000",
+     "fileType": "TXT",
+     "fileFormat": "Standard",
+     "fileName": "1443055_Interv.txt",
+     "fileDesc": "Public Intervention",
+     "fileSize": 2162,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Omaha Public Power District",
+     "lastName": "Sniff",
+     "firstInitial": "C",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{C8927EA0-3C0C-CD54-8739-8A3C50000000}-{05938766-AAE6-CDC8-9F9D-8A3C50000000}",
+   "documentId": "C8927EA0-3C0C-CD54-8739-8A3C50000000",
+   "description": "Shell Energy North America (US), L.P., et al. submits Request for Rehearing and Clarification of the July 28, 2023, Order under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230828-5139",
+   "issuedDate": "08/27/2023",
+   "filedDate": "08/28/2023",
+   "postedDate": "08/28/2023",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Request for Rehearing or Appeal"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "05938766-AAE6-CDC8-9F9D-8A3C50000000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Shell.Companies.Rehg.Req.RM22_14.pdf",
+     "fileDesc": "Request for Rehearing of Shell Companies in Docket No. RM22-14-000",
+     "fileSize": 208160,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Shell Energy North America (US), L.P.",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SHELL NEW ENERGIES US LLC",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SAVION LLC",
+     "lastName": "Picardi",
+     "firstInitial": "M",
+     "middleInitial": "J"
+    }
+   ]
+  },
+  {
+   "reference": "{E61FA0B8-7C16-C8AF-8751-8A3C19200000}-{547B79CB-96BA-C3A0-9A04-8A3C19300000}",
+   "documentId": "E61FA0B8-7C16-C8AF-8751-8A3C19200000",
+   "description": "WIRES submits Request for Rehearing of the July 28, 2023, Order under RM22-14. Erroneously filed.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230825-5227",
+   "issuedDate": "08/25/2023",
+   "filedDate": "08/25/2023",
+   "postedDate": "08/28/2023",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Request for Rehearing or Appeal"
+    }
+   ],
+   "availCode": "N",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-001"
+   ],
+   "transmittals": [
+    {
+     "fileId": "547B79CB-96BA-C3A0-9A04-8A3C19300000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "WIRES Rehearing Request RM22-14 .pdf",
+     "fileDesc": "Request for rehearing",
+     "fileSize": 263791,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "WIRES",
+     "lastName": "Gasteiger",
+     "firstInitial": "L",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "No Organization Found",
+     "lastName": "Gasteiger",
+     "firstInitial": "L",
+     "middleInitial": "x"
+    }
+   ]
+  },
+  {
+   "reference": "{483397C3-065D-C73E-87B5-899E95700000}-{8DCC683C-2E07-CA5C-87CD-899E95800000}",
+   "documentId": "483397C3-065D-C73E-87B5-899E95700000",
+   "description": "Order No. 2023: Final Rule; Improvements to Generator Interconnection Procedures and Agreements under RM22-14. Commissioners Danly, Clements and Christie are concurring with separate statements attached. ",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20230728-3060",
+   "issuedDate": "07/28/2023",
+   "filedDate": "07/28/2023",
+   "postedDate": "07/28/2023",
+   "classTypes": [
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Commission Order/Opinion"
+    },
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Dissent/Concurrence by the Commissioner"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "Parent",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "8DCC683C-2E07-CA5C-87CD-899E95800000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-000.docx",
+     "fileDesc": "Commission Order",
+     "fileSize": 1900158,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{CA763961-15F2-CA0B-85FC-898933100000}-{AD72C375-CF66-CC23-AB8F-898933100000}",
+   "documentId": "CA763961-15F2-CA0B-85FC-898933100000",
+   "description": "Comments of U.S. Senator Charles E. Schumer re the transmission planning and cost allocation rule etc. under RM22-14 et al.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230724-4001",
+   "issuedDate": "07/20/2023",
+   "filedDate": "07/24/2023",
+   "postedDate": "07/24/2023",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "AD23-3-000",
+    "RM21-17-000",
+    "RM22-7-000",
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "AD72C375-CF66-CC23-AB8F-898933100000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "Incoming letter 2023-00057.pdf",
+     "fileDesc": "",
+     "fileSize": 269647,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "CHAIR AND IMMEDIATE STAFF",
+     "lastName": "PHILLIPS",
+     "firstInitial": "W",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "UNITED STATES SENATE",
+     "lastName": "SCHUMER",
+     "firstInitial": "C",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "COMMISSIONERS AND IMMEDIATE STAFF (THE COMMISSION)",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{37D885CD-073A-C176-8665-88BFBCE00000}-{E0D20972-9EB7-C8B7-9D47-88BFBCE00000}",
+   "documentId": "37D885CD-073A-C176-8665-88BFBCE00000",
+   "description": "Comments of AES Clean Energy Development, LLC re the Notice of Proposed Rulemaking of the Generator Interconnection Procedures under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20230615-5029",
+   "issuedDate": "06/15/2023",
+   "filedDate": "06/15/2023",
+   "postedDate": "06/15/2023",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "RulemakingElectric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "E0D20972-9EB7-C8B7-9D47-88BFBCE00000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "2023-06-15 AES Comments on FERC Interconnection NOPR.docx",
+     "fileDesc": "Supplemental Comments",
+     "fileSize": 54134,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "AES Clean Energy Development, LLC",
+     "lastName": "Sparks",
+     "firstInitial": "B",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "AES Clean Energy Development, LLC",
+     "lastName": "Sparks",
+     "firstInitial": "B",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{30143469-0B38-CFFF-8780-8512A0300000}-{6077BC73-97F8-C4A1-BEDD-8512A0300000}",
+   "documentId": "30143469-0B38-CFFF-8780-8512A0300000",
+   "description": "Reply Comments of Sierra Club, et al. under RM22-14. Erroneously filed",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20221214-5203",
+   "issuedDate": "12/14/2022",
+   "filedDate": "12/14/2022",
+   "postedDate": "12/14/2022",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "N",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "6077BC73-97F8-C4A1-BEDD-8512A0300000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "PIO Reply Comments - Interconnection NOPR 12_14.pdf",
+     "fileDesc": "PIO Reply Comments - Interconnection NOPR 12_14",
+     "fileSize": 253979,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Sierra Club",
+     "lastName": "Wannier",
+     "firstInitial": "G",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "EARTHJUSTICE",
+     "lastName": "Powell",
+     "firstInitial": "C",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "EARTHJUSTICE",
+     "lastName": "Powell",
+     "firstInitial": "C",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sustainable FERC Project",
+     "lastName": "Moore",
+     "firstInitial": "J",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sierra Club",
+     "lastName": "Wannier",
+     "firstInitial": "G",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "ENVIRONMENTAL DEFENSE FUND",
+     "lastName": "Kelly",
+     "firstInitial": "T",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Environmental Defense Fund",
+     "lastName": "Kelly",
+     "firstInitial": "T",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "NATURAL RESOURCES DEFENSE COUNCIL",
+     "lastName": "Rutigliano",
+     "firstInitial": "T",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "NRDC/FERC Project",
+     "lastName": "Rutigliano",
+     "firstInitial": "T",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Sustainable FERC Project",
+     "lastName": "Moore",
+     "firstInitial": "J",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sierra Club",
+     "lastName": "Wannier",
+     "firstInitial": "G",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sierra Club",
+     "lastName": "Wannier",
+     "firstInitial": "G",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sierra Club",
+     "lastName": "Wannier",
+     "firstInitial": "G",
+     "middleInitial": "E"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "EARTHJUSTICE",
+     "lastName": "Powell",
+     "firstInitial": "C",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "EARTHJUSTICE",
+     "lastName": "Powell",
+     "firstInitial": "C",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "EARTHJUSTICE",
+     "lastName": "Powell",
+     "firstInitial": "C",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sustainable FERC Project",
+     "lastName": "Moore",
+     "firstInitial": "J",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sustainable FERC Project",
+     "lastName": "Moore",
+     "firstInitial": "J",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Sustainable FERC Project",
+     "lastName": "Moore",
+     "firstInitial": "J",
+     "middleInitial": "x"
+    }
+   ]
+  },
+  {
+   "reference": "{4939D512-3193-C44D-86E4-851232900000}-{BADFCC43-9979-CA34-85FD-851232A00000}",
+   "documentId": "4939D512-3193-C44D-86E4-851232900000",
+   "description": "Reply Comments of Orsted North America under RM22-14. Erroneously filed",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20221214-5122",
+   "issuedDate": "12/14/2022",
+   "filedDate": "12/14/2022",
+   "postedDate": "12/14/2022",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "N",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "BADFCC43-9979-CA34-85FD-851232A00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "12 14 2022 interconnection reply comments final.pdf",
+     "fileDesc": "Reply Comments of Orsted North America",
+     "fileSize": 156131,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Orsted Wind Power North America LLC",
+     "lastName": "Parikh",
+     "firstInitial": "L",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "Orsted North America Inc.",
+     "lastName": "Parikh",
+     "firstInitial": "L",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{2596E3F9-B6EA-C3CD-86C9-84524E300000}-{6541AB94-1C63-C7F1-9ED5-84524E300000}",
+   "documentId": "2596E3F9-B6EA-C3CD-86C9-84524E300000",
+   "description": "Motion for Leave to Reply and Reply Comments of Dr. Roy J. Shanker PH.D. under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20221107-5017",
+   "issuedDate": "11/04/2022",
+   "filedDate": "11/07/2022",
+   "postedDate": "11/07/2022",
+   "classTypes": [
+    {
+     "documentClass": "Pleading/Motion",
+     "documentType": "Answer/Response to a Pleading/Motion"
+    },
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "RulemakingElectric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "6541AB94-1C63-C7F1-9ED5-84524E300000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "2022 11 04 V4 Shanker FINAL  REPLY TO PJM COMMENTS INTERCONNECTION NOPR.pdf",
+     "fileDesc": "Motion for Leave to Reply and Reply Comments of Roy J. Shanker Ph.D. Re: PJM Reply",
+     "fileSize": 358325,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Individual No Affiliation",
+     "lastName": "Shanker",
+     "firstInitial": "R",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "No Organization Found",
+     "lastName": "Shanker",
+     "firstInitial": "R",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{39C8C343-439D-C49F-8446-841F8DB00000}-{B7314984-8648-C266-8BE4-841F8DC00000}",
+   "documentId": "39C8C343-439D-C49F-8446-841F8DB00000",
+   "description": "Notice on Request for Extension of Time re Improvements to Generator Interconnection Procedures and Agreements under RM22-14.",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20221028-3086",
+   "issuedDate": "10/28/2022",
+   "filedDate": "10/28/2022",
+   "postedDate": "10/28/2022",
+   "classTypes": [
+    {
+     "documentClass": "Notice",
+     "documentType": "Formal Notice"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "B7314984-8648-C266-8BE4-841F8DC00000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-000 EOT.docx",
+     "fileDesc": "Notice",
+     "fileSize": 43874,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{97F30DAE-F387-C72F-869E-83D32C700000}-{B193B2C2-4C4F-C9E8-A5B9-83D32C700000}",
+   "documentId": "97F30DAE-F387-C72F-869E-83D32C700000",
+   "description": "Comments of Roy J. Shanker Ph.D. under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20221013-5249",
+   "issuedDate": "10/13/2022",
+   "filedDate": "10/13/2022",
+   "postedDate": "10/13/2022",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "RulemakingElectric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "5D8EBFC6-F26E-C5EC-9D08-83D32C700000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "2022 10 13 SHANKER ATTACHMENT A.pdf",
+     "fileDesc": "No description given",
+     "fileSize": 254988,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "B193B2C2-4C4F-C9E8-A5B9-83D32C700000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "2022 10 13 Shanker Final FERC NOPR INTERCONNECTION.pdf",
+     "fileDesc": "No description given",
+     "fileSize": 288178,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "Roy J Shanker Ph.D.",
+     "lastName": "Shanker",
+     "firstInitial": "R",
+     "middleInitial": "J"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "No Organization Found",
+     "lastName": "Shanker",
+     "firstInitial": "R",
+     "middleInitial": "J"
+    }
+   ]
+  },
+  {
+   "reference": "{DC09A7D3-F177-CFBF-8737-83D2F1D00000}-{8FFEC88C-FF39-C6C7-9C81-83D2F1D00000}",
+   "documentId": "DC09A7D3-F177-CFBF-8737-83D2F1D00000",
+   "description": "Motion to Intervene and Comments of National Association of Regulatory Utility Commissioners under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20221013-5192",
+   "issuedDate": "10/13/2022",
+   "filedDate": "10/13/2022",
+   "postedDate": "10/13/2022",
+   "classTypes": [
+    {
+     "documentClass": "Intervention",
+     "documentType": "Motion/Notice of Intervention"
+    },
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "RulemakingElectric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "8FFEC88C-FF39-C6C7-9C81-83D2F1D00000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14 -  GI NOPR - NARUC comments - final.pdf",
+     "fileDesc": "NARUC Comments",
+     "fileSize": 322806,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "National Association of Regulatory Utility Commissioners",
+     "lastName": "Murphy",
+     "firstInitial": "J",
+     "middleInitial": "M"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "National Association of Regulatory Utility Commissioners",
+     "lastName": "Murphy",
+     "firstInitial": "J",
+     "middleInitial": "M"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{F001DA86-6979-CEC4-858F-83D251900000}-{B4555A05-DA29-CBE7-9FE8-83D251900000}",
+   "documentId": "F001DA86-6979-CEC4-858F-83D251900000",
+   "description": "(doc-less) Motion to Intervene of Minnesota Public Utilities Commission under RM22-14.",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20221013-5085",
+   "issuedDate": "10/13/2022",
+   "filedDate": "10/13/2022",
+   "postedDate": "10/13/2022",
+   "classTypes": [
+    {
+     "documentClass": "Comments/Protest",
+     "documentType": "Rulemaking Comment"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "RulemakingElectric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "B4555A05-DA29-CBE7-9FE8-83D251900000",
+     "fileType": "TXT",
+     "fileFormat": "Standard",
+     "fileName": "1353605_Interv.txt",
+     "fileDesc": "Public Intervention",
+     "fileSize": 1065,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "MINNESOTA PUBLIC UTILITIES COMMISSION",
+     "lastName": "Seuffert",
+     "firstInitial": "W",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "MINNESOTA PUBLIC UTILITIES COMMISSION",
+     "lastName": "Seuffert",
+     "firstInitial": "W",
+     "middleInitial": "x"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  },
+  {
+   "reference": "{DEB63363-2863-C372-8448-816F6C500000}-{CBDFE52A-1EB1-C21C-97B6-816F6C500000}",
+   "documentId": "DEB63363-2863-C372-8448-816F6C500000",
+   "description": "Notice of Proposed Rulemaking re Improvements to Generator Interconnection Procedures and Agreements under RM22-14. Commissioner Danly and Commissioner Christie are concurring with separate statements attached.  ",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20220616-3082",
+   "issuedDate": "06/16/2022",
+   "filedDate": "06/16/2022",
+   "postedDate": "06/16/2022",
+   "classTypes": [
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Dissent/Concurrence by the Commissioner"
+    },
+    {
+     "documentClass": "Notice",
+     "documentType": "Notice of Proposed Rulemaking"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "ElectricRulemaking"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "RM22-14-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "CBDFE52A-1EB1-C21C-97B6-816F6C500000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "RM22-14-000.docx",
+     "fileDesc": "Commission Order",
+     "fileSize": 505600,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    }
+   ]
+  }
+ ],
+ "totalHits": 30,
+ "numHits": 30,
+ "success": true,
+ "errorMessage": null,
+ "searchResultId": null
+}

@@ -85,6 +85,9 @@ class DocumentRef(Frozen):
     access: str = "Public"
     file_ext: str = ".pdf"
     row_index: int = 0
+    # The portal's own document type, when it has one (OEB SIDocumentType "Decision and Order", FERC
+    # "Order/Opinion: Order on Rehearing"): ranks documents for the summary better than a title.
+    source_type: str | None = None
 
 
 class MatterInfo(Frozen):
@@ -125,10 +128,20 @@ class Citation(Frozen):
 
 
 class AgentError(Exception):
-    """Base. `retryable` drives the queue: retry with backoff vs fail fast and tell the user."""
+    """Base. `retryable` drives the queue: retry with backoff vs fail fast and tell the user.
+
+    `retry_after` (seconds) carries a dependency's own hint (HTTP Retry-After) to the queue,
+    which never retries sooner than that.
+    """
 
     retryable = False
     user_message = "Something went wrong while handling your request."
+    retry_after: float | None = None
+    dependency: str | None = None  # which circuit breaker this failure counts against
+
+    def with_retry_after(self, seconds: float | None) -> "AgentError":
+        self.retry_after = seconds
+        return self
 
 
 class MatterNotFound(AgentError):
@@ -147,3 +160,24 @@ class PortalUnavailable(AgentError):
 class ScrapeError(AgentError):
     retryable = True
     user_message = "I hit an unexpected problem reading the regulator's website. I'll retry shortly."
+
+
+class ProviderRejected(AgentError):
+    """The portal refused the request outright (HTTP 400/403...): retrying won't help."""
+
+    retryable = False
+    user_message = "The regulator's website refused this request, so I couldn't fetch the documents."
+
+
+class TooLarge(AgentError):
+    """A file or the whole request is over our size budget."""
+
+    retryable = False
+    user_message = "The documents are larger than I can deliver in one request."
+
+
+class DeliveryFailed(AgentError):
+    """Permanent mail rejection (SMTP 5xx): resending the same message won't succeed."""
+
+    retryable = False
+    user_message = "I couldn't deliver the reply to your mailbox."

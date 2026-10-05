@@ -1,0 +1,237 @@
+{
+ "searchHits": [
+  {
+   "reference": "{98B76F71-A56C-C4A7-853A-8EBEE2F00000}-{CB6128B5-6F22-C196-8B12-8EBEE3000000}",
+   "documentId": "98B76F71-A56C-C4A7-853A-8EBEE2F00000",
+   "description": "Letter order accepting NorthWestern Corporation's et al. 02/12/2024 filing of its Third Amended and Restated Interconnection Agreement, designated as Rate Schedule No. 27 etc. under ER24-1234.",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20240408-3032",
+   "issuedDate": "04/08/2024",
+   "filedDate": "04/08/2024",
+   "postedDate": "04/08/2024",
+   "classTypes": [
+    {
+     "documentClass": "Order/Opinion",
+     "documentType": "Delegated Order"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "Electric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "ER24-1234-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "CB6128B5-6F22-C196-8B12-8EBEE3000000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "ER24-1234-000.docx",
+     "fileDesc": "Letter order accepting NorthWestern Corporation's February 12, 2024 filing of its Third Amended and Restated Interconnection Agreement under ER24-1234.",
+     "fileSize": 30352,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "PACIFICORP",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "OFFICE OF ENERGY MARKET REGULATION",
+     "lastName": "Poré",
+     "firstInitial": "A",
+     "middleInitial": "S"
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "NORTHWESTERN CORPORATION",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "IDAHO POWER COMPANY",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    },
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "AVISTA CORPORATION",
+     "lastName": "*",
+     "firstInitial": "*",
+     "middleInitial": ""
+    }
+   ]
+  },
+  {
+   "reference": "{1A477064-B607-C92D-8780-8D9E49400000}-{97F2191A-6AE0-C971-91E8-8D9E49500000}",
+   "documentId": "1A477064-B607-C92D-8780-8D9E49400000",
+   "description": "NorthWestern Corporation submits tariff filing per 35.13(a)(2)(iii: RS 27 - Third Amended and Restated AMPS Agreement to be effective 1/12/2024 under ER24-1234. Filing Type : 10",
+   "summary": null,
+   "category": "Submittal",
+   "acesssionNumber": "20240212-5063",
+   "issuedDate": "02/12/2024",
+   "filedDate": "02/12/2024",
+   "postedDate": "02/12/2024",
+   "classTypes": [
+    {
+     "documentClass": "Application/Petition/Request",
+     "documentType": "Tariff Filing"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "Electric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "ER24-1234-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "44CF14EE-AA5E-C420-9E2F-8D9E49400000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "TransmittalLetter_AMPS_Agreement_Final.pdf",
+     "fileDesc": "Transmittal Letter",
+     "fileSize": 146102,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "F03DDF0D-E6BB-C112-A7D5-8D9E49400000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "RS27_Marked.pdf",
+     "fileDesc": "Marked Tariff",
+     "fileSize": 401040,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "2459945D-701B-C960-8AE1-8D9E49500000",
+     "fileType": "PDF",
+     "fileFormat": "Standard",
+     "fileName": "RS27_Executed.pdf",
+     "fileDesc": "Clean Tariff",
+     "fileSize": 981304,
+     "transmittalFk": null
+    },
+    {
+     "fileId": "97F2191A-6AE0-C971-91E8-8D9E49500000",
+     "fileType": "RTF",
+     "fileFormat": "Standard",
+     "fileName": "FERC GENERATED TARIFF FILING.rtf",
+     "fileDesc": "FERC GENERATED TARIFF FILING",
+     "fileSize": 62266,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "RECIPIENT",
+     "affiliation": "Office of the Secretary, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "NorthWestern Corporation",
+     "lastName": "Tabaracci",
+     "firstInitial": "J",
+     "middleInitial": "K"
+    },
+    {
+     "afType": "AGENT",
+     "affiliation": "NorthWestern Corporation",
+     "lastName": "Tabaracci",
+     "firstInitial": "J",
+     "middleInitial": "K"
+    }
+   ]
+  },
+  {
+   "reference": "{614C1A56-2F44-CD38-86A6-8D9F2F900000}-{413D40C8-6594-C95E-91FB-8D9F2F900000}",
+   "documentId": "614C1A56-2F44-CD38-86A6-8D9F2F900000",
+   "description": "Combined Notice of Filings #1, February 12, 2024: This notice contains information concerning multiple filings received by FERC.",
+   "summary": null,
+   "category": "Issuance",
+   "acesssionNumber": "20240212-3029",
+   "issuedDate": "02/12/2024",
+   "filedDate": "02/12/2024",
+   "postedDate": "02/12/2024",
+   "classTypes": [
+    {
+     "documentClass": "Notice",
+     "documentType": "Formal Notice"
+    }
+   ],
+   "availCode": "P",
+   "familyValue": "None",
+   "libraries": [
+    "Electric"
+   ],
+   "score": 85.35,
+   "docketNumbers": [
+    "ER24-1236-000",
+    "EC24-50-000",
+    "ER22-2185-001",
+    "ER24-1230-000",
+    "ER24-1231-000",
+    "ER24-1232-000",
+    "ER24-1233-000",
+    "ER24-1235-000",
+    "ER10-1818-029",
+    "ER24-1239-000",
+    "ER24-1191-001",
+    "ER24-1231-001",
+    "ER24-1234-000",
+    "ER24-1237-000",
+    "ER24-1238-000"
+   ],
+   "transmittals": [
+    {
+     "fileId": "413D40C8-6594-C95E-91FB-8D9F2F900000",
+     "fileType": "DOCX",
+     "fileFormat": "Standard",
+     "fileName": "CNF021224.docx",
+     "fileDesc": "COMBINED NOTICE OF FILINGS #1",
+     "fileSize": 30916,
+     "transmittalFk": null
+    }
+   ],
+   "affiliations": [
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Reese",
+     "firstInitial": "D",
+     "middleInitial": "A"
+    },
+    {
+     "afType": "AUTHOR",
+     "affiliation": "SECRETARY OF THE COMMISSION, FERC",
+     "lastName": "Bose",
+     "firstInitial": "K",
+     "middleInitial": "D"
+    }
+   ]
+  }
+ ],
+ "totalHits": 3,
+ "numHits": 3,
+ "success": true,
+ "errorMessage": null,
+ "searchResultId": null
+}

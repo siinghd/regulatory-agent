@@ -166,7 +166,7 @@ def test_quote_two_pages_away_is_dropped():
         (_draft(APPROVAL, 9), DropReason.PAGE_OUT_OF_RANGE),
         (_draft(APPROVAL, 0), DropReason.QUOTE_NOT_FOUND),  # 0 -> neighbour 1 searched, not found
         (_draft("The Board approves", 2), DropReason.QUOTE_TOO_SHORT),
-        (_draft("word " * 100, 2), DropReason.QUOTE_TOO_LONG),
+        (_draft("word " * 300, 2), DropReason.QUOTE_TOO_LONG),
         (_draft(APPROVAL, 2, claim="  "), DropReason.EMPTY_CLAIM),
         (_draft("The Board rejected the application and fined Halifax Water", 2), DropReason.QUOTE_NOT_FOUND),
     ],
@@ -231,3 +231,118 @@ async def test_support_check_treats_missing_or_contradictory_verdicts_as_unsuppo
     kept, dropped = await check_support(claims)
     assert kept == [claims[0]]
     assert len(dropped) == 2
+
+
+# ---------------------------------------------------------------- quotes widened to their sentence
+
+
+@pytest.mark.parametrize(
+    ("quote", "sentence"),
+    [
+        ("for a total project cost of $59,143,000, inclusive of net HST",
+         ("The Board approves the application, as amended in the Decision and reflected in the\nupdated "
+          "Compliance Filing, for a total project cost of $59,143,000, inclusive of net HST,\nand orders that:")),
+        ("The Board is satisﬁed that the updated Compliance Filing reflects",
+         "The Board is satisﬁed that the updated Compliance Filing reflects\nthe Board’s Decision."),
+        ("semi-annual (every six months) reports",
+         ("Halifax Water is directed to continue to ﬁle semi-annual (every six months) reports includ-\ning "
+          "updated project costs, and an updated project timeline, until project completion.")),
+    ],
+)
+def test_a_grounded_quote_is_the_whole_sentence(quote, sentence):
+    (claim,) = verify_claims([_draft(quote, 2)], PAGES)[0]
+    assert claim.quote == sentence == PAGE_2[claim.char_start : claim.char_end]
+    assert not claim.whole_sentence
+
+
+def test_a_quote_that_already_is_the_sentence_is_marked_so():
+    sentence = "The Board is satisﬁed that the updated Compliance Filing reflects\nthe Board’s Decision."
+    (claim,) = verify_claims([_draft(sentence, 2)], PAGES)[0]
+    assert claim.quote == sentence and claim.whole_sentence
+
+
+def test_abbreviations_and_bullets_do_not_end_or_extend_a_sentence():
+    page = ("The OEB approved it on Nov. 12, 2024. Mr. Smith, of Enbridge Gas Inc., said rate No. 27 stands. "
+            "Next sentence.\nThe OEB orders:\n• Environmental Defence $151,718.65\n• FRPO $98,640.21")
+    assert page[slice(*ground.widen_to_sentence(page, *_span(page, "said rate No. 27 stands")))] == (
+        "Mr. Smith, of Enbridge Gas Inc., said rate No. 27 stands.")
+    assert page[slice(*ground.widen_to_sentence(page, *_span(page, "FRPO $98,640.21")))] == "FRPO $98,640.21"
+
+
+def test_a_sentence_too_long_to_quote_is_widened_only_as_far_as_it_fits():
+    page = "Preamble " + "word " * 120 + "and the Board approves the rate of $5 for new customers only. Next."
+    start, end = _span(page, "the Board approves the rate of $5")
+    s, e = ground.widen_to_sentence(page, start, end, max_chars=200)
+    assert (s, page[s:e]) == (start, "the Board approves the rate of $5 for new customers only.")
+
+
+def _span(page: str, quote: str) -> tuple[int, int]:
+    span = locate_quote(page, quote) if len(quote) >= 20 else None
+    if span is None:
+        at = page.index(quote)
+        return at, at + len(quote)
+    return span.start, span.end
+
+
+def test_fuzzy_grounding_rejects_an_inserted_negation():
+    page = "the Board does approve the capital cost of $4,500,000 for the substation upgrade work"
+    assert locate_quote(page, "the Board does not approve the capital cost of $4,500,000 for the substation") is None
+
+
+def test_fuzzy_grounding_rejects_approve_for_deny():
+    page = "the Board denies the request for a capital cost of $4,500,000 for the substation upgrade"
+    assert locate_quote(page, "the Board approves the request for a capital cost of $4,500,000 for the substation") is None
+
+
+async def test_support_check_sees_the_text_around_the_quote(monkeypatch):
+    claim = _grounded("The Board approved the application.")
+    calls = []
+
+    async def fake_structured(*, system, user, schema, **kw):
+        calls.append((user, kw))
+        return schema(verdicts=[{"item": 0, "supported": True}]), {"model": "fake", "purpose": kw.get("purpose")}
+
+    monkeypatch.setattr(ground, "structured", fake_structured)
+    kept, dropped, meta = await ground.verify_support([claim], PAGES)
+    assert kept == [claim] and dropped == [] and meta["purpose"] == "support_check"
+    user, _ = calls[0]
+    assert "<<<CONTEXT" in user and "The Board notes the updated Compliance Filing" in user
+    assert "leaves out a condition, qualifier or assumption" in ground._SUPPORT_SYSTEM
+
+
+def test_a_quote_over_the_cap_is_located_by_its_opening_and_never_counts_as_a_whole_sentence():
+    page = "The Board approves the rate " + "and the related schedule " * 20 + "for new customers only. Next."
+    (claim,) = verify_claims([_draft(page[:-6], 1, doc="x")], {"x": [page]})[0]
+    assert claim.quote.startswith("The Board approves the rate") and len(claim.quote) <= 400
+    assert not claim.whole_sentence
+
+
+# ---------------------------------------------------------------- quote context (quote-only citations)
+
+CONTEXT_PAGE = (
+    "ORDER ON REHEARING\n\nSeveral parties sought rehearing of the deposit rules. We sustain the cluster\n"
+    "study deposit requirement. The deposits are refundable as set out below. Mr. Smith dissents."
+)
+
+
+@pytest.mark.parametrize(
+    ("quote", "before", "after"),
+    [
+        ("We sustain the cluster\nstudy deposit requirement.", "Several parties sought rehearing of the deposit rules.",
+         "The deposits are refundable as set out below."),
+        ("Mr. Smith dissents.", "The deposits are refundable as set out below.", ""),
+        ("ORDER ON REHEARING", "", "Several parties sought rehearing of the deposit rules."),
+        ("study deposit requirement", "We sustain the cluster", "."),  # mid-sentence: the rest of it
+    ],
+)
+def test_quote_context_is_the_neighbouring_sentences(quote, before, after):
+    start = CONTEXT_PAGE.index(quote)
+    assert ground.quote_context(CONTEXT_PAGE, start, start + len(quote)) == (before, after)
+
+
+def test_quote_context_is_capped_away_from_the_quote():
+    page = "word " * 300 + "The quote itself. " + "tail " * 300
+    start = page.index("The quote itself.")
+    before, after = ground.quote_context(page, start, start + len("The quote itself."), max_chars=50)
+    assert before.startswith("…") and before.endswith("word") and len(before) <= 51
+    assert after.endswith("…") and after.startswith("tail") and len(after) <= 51

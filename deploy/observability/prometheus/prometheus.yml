@@ -1,0 +1,147 @@
+# Prometheus for the Regulatory Document Agent (docker-compose.yml service `prometheus`).
+#
+# Host networking, listening on 127.0.0.1:9090 only: the worker's metrics endpoint, the web
+# process and the egress tunnel are all on the host's loopback. Retention 30 d (and at most
+# 5 GB) is set on the command line in docker-compose.yml.
+# Reload after editing this file or rules/*.yml (promtool first; see deploy/observability/README.md):
+#   docker compose kill -s HUP prometheus
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+  evaluation_interval: 30s
+  external_labels:
+    project: regagent  # on every alert and every series that leaves this Prometheus
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["127.0.0.1:9093"]
+
+scrape_configs:
+  # ---------------------------------------------------------------- the stack itself
+  - job_name: regagent-prometheus
+    static_configs: [{targets: ["127.0.0.1:9090"]}]
+  - job_name: regagent-alertmanager
+    static_configs: [{targets: ["127.0.0.1:9093"]}]
+  - job_name: regagent-node
+    static_configs: [{targets: ["127.0.0.1:9100"]}]
+  - job_name: regagent-blackbox
+    static_configs: [{targets: ["127.0.0.1:9117"]}]
+
+  # ---------------------------------------------------------------- the app
+  # agent/metrics.py: requests, retries, llm cost, stage histogram, queue, breakers, limiter,
+  # budgets. Alerted on when down (RegagentWorkerMetricsDown).
+  - job_name: regagent-worker
+    static_configs: [{targets: ["127.0.0.1:9710"]}]
+  # Web process /metrics (METRICS_CONTRACT.md). Down until the app serves it: tolerated, no alert.
+  # Caddy answers 404 for /metrics on the public site, so this is reachable on loopback only.
+  - job_name: regagent-web
+    metrics_path: /metrics
+    static_configs: [{targets: ["127.0.0.1:8710"]}]
+  # Ingest process (pre-auth limiter decisions, auth verdicts; METRICS_CONTRACT.md). Down until
+  # the app exposes it: tolerated, no alert.
+  - job_name: regagent-ingest
+    static_configs: [{targets: ["127.0.0.1:9711"]}]
+
+  # ---------------------------------------------------------------- probes (blackbox exporter)
+  # `probe` is a stable short name for each target; dashboards and alerts use it.
+  - job_name: regagent-probe-http
+    metrics_path: /probe
+    params: {module: [http_health]}
+    static_configs:
+      - targets: ["https://uarb.hsingh.app/health"]
+        labels: {probe: uarb-health}
+      - targets: ["http://127.0.0.1:8710/health"]
+        labels: {probe: web-local-health}
+      - targets: ["https://drop.hsingh.app/health"]
+        labels: {probe: drop-health}
+    relabel_configs: &blackbox_relabel
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9117
+
+  # Mail probes every 2 minutes: each one is a line in the Postfix/Dovecot logs.
+  - job_name: regagent-probe-smtp
+    scrape_interval: 2m
+    metrics_path: /probe
+    params: {module: [smtp_starttls]}
+    static_configs:
+      - targets: ["mail.hsingh.app:587"]
+        labels: {probe: mail-submission}
+    relabel_configs: *blackbox_relabel
+
+  - job_name: regagent-probe-imaps
+    scrape_interval: 2m
+    metrics_path: /probe
+    params: {module: [imaps]}
+    static_configs:
+      - targets: ["mail.hsingh.app:993"]
+        labels: {probe: mail-imaps}
+    relabel_configs: *blackbox_relabel
+
+  # Local TCP: the SOCKS egress tunnel (uarb-egress-tunnel.service) and Postgres. Postgres is
+  # probed by TCP connect because postgres_exporter needs a monitoring role (cutover; see
+  # deploy/sql/monitor_role.sql).
+  - job_name: regagent-probe-tcp
+    metrics_path: /probe
+    params: {module: [tcp_connect]}
+    static_configs:
+      - targets: ["127.0.0.1:1080"]
+        labels: {probe: egress-tunnel}
+      - targets: ["127.0.0.1:5442"]
+        labels: {probe: postgres}
+    relabel_configs: *blackbox_relabel
+
+  # Redis: alive (PING answered at all), and refusing unauthenticated clients (NOAUTH).
+  - job_name: regagent-probe-redis
+    metrics_path: /probe
+    params: {module: [redis_alive]}
+    static_configs:
+      - targets: ["127.0.0.1:6392"]
+        labels: {probe: redis}
+    relabel_configs: *blackbox_relabel
+  - job_name: regagent-probe-redis-auth
+    metrics_path: /probe
+    params: {module: [redis_noauth]}
+    static_configs:
+      - targets: ["127.0.0.1:6392"]
+        labels: {probe: redis-auth}
+    relabel_configs: *blackbox_relabel
+
+  # Through the tunnel to a neutral endpoint (never a regulator portal: those visits count
+  # against the portal budgets). Every 3 minutes (under the 5-minute lookback, so `for:` never resets).
+  - job_name: regagent-probe-egress
+    scrape_interval: 3m
+    scrape_timeout: 30s
+    metrics_path: /probe
+    params: {module: [http_via_tunnel]}
+    static_configs:
+      - targets: ["https://www.cloudflare.com/cdn-cgi/trace"]
+        labels: {probe: egress-via-tunnel}
+    relabel_configs: *blackbox_relabel
+
+  # The origin certificate Caddy serves to Cloudflare (the public probes see Cloudflare's edge
+  # certificate instead). Every 3 minutes.
+  - job_name: regagent-probe-origin-tls
+    scrape_interval: 3m
+    metrics_path: /probe
+    params: {module: [origin_tls]}
+    static_configs:
+      - targets: ["127.0.0.1:443"]
+        labels: {probe: origin-cert}
+    relabel_configs: *blackbox_relabel
+
+  # ---------------------------------------------------------------- after the cutover
+  # Postgres and Redis exporters need a read-only monitoring login that does not exist yet
+  # (deploy/sql/monitor_role.sql, the `monitor` line in deploy/redis/users.acl.template).
+  # Uncomment together with the services in docker-compose.yml (profile db-exporters):
+  # - job_name: regagent-postgres
+  #   static_configs: [{targets: ["127.0.0.1:9187"]}]
+  # - job_name: regagent-redis
+  #   static_configs: [{targets: ["127.0.0.1:9121"]}]

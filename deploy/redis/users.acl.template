@@ -1,0 +1,42 @@
+# Redis ACL users. deploy/redis/entrypoint.sh drops these comment lines (the aclfile format has
+# no comments), substitutes the SHA-256 of each password and writes /run/redis/users.acl.
+#
+# default: disabled and passwordless, so nobody can authenticate as it and every
+# unauthenticated command gets NOAUTH. It keeps +@all ~* on purpose: Redis 7.4 replays
+# MULTI/EXEC blocks (arq enqueues, and every Lua script's effects) from the AOF as the default
+# user and checks ACLs at EXEC, so a `nocommands` default user silently drops those writes on
+# restart (measured: queued jobs lost). deploy/validate_redis_acl.py --persist-write/--persist-check
+# around a restart proves it.
+user default off resetpass ~* &* +@all
+#
+# agent: ingest + worker, and web (its rate limiter and /health/deep). Exactly the commands arq,
+# agent.limits, agent.breaker and agent.web.ratelimit issue
+# (measured with INFO commandstats while deploy/validate_redis_acl.py ran every code path),
+# plus EVAL / SCRIPT EXISTS / SETEX / INCR as the same calls' alternate spellings. No KEYS/SCAN,
+# no FLUSH*, CONFIG, DEBUG, MONITOR, CLIENT LIST/KILL, ACL, SAVE, REPLICAOF, MODULE, PUBLISH.
+#   connection   PING, CLIENT SETINFO (redis-py on connect), SELECT, QUIT
+#   arq          INFO, DBSIZE (create_pool logs them), WATCH/UNWATCH/MULTI/EXEC/DISCARD (enqueue,
+#                job start), sorted-set queue ops, job/result/in-progress/retry keys, abort set
+#   limits       EVALSHA + SCRIPT LOAD (rate-limit, lock renew and release Lua: ZREMRANGEBYSCORE,
+#                ZSCORE, ZCOUNT, ZCARD, ZADD, PEXPIRE, GET, DEL), SET NX PX/EX (locks, once-keys);
+#                daily budgets: GET, INCR, INCRBY, EXPIRE, and Lua (GET, SET EX, INCRBY, EXPIRE)
+#   web          token buckets: EVALSHA + SCRIPT LOAD, Lua over GET and SET PX
+#   breakers     HGET; HINCRBY/EXPIRE/HGET/HSET/DEL in the failure Lua; SET NX EX probe; DEL
+#   ingest       SET/GET ingest:heartbeat
+# A new Redis call in the code needs its command added here and a check in
+# deploy/validate_redis_acl.py; denials show up in `ACL LOG` (deploy/compliance_check.sh).
+user agent on #__AGENT_PASSWORD_SHA256__ resetkeys ~* resetchannels -@all +ping +client|setinfo +select +quit +info +dbsize +get +set +setex +psetex +del +exists +expire +pexpire +incr +incrby +watch +unwatch +multi +exec +discard +eval +evalsha +script|load +script|exists +zadd +zrem +zscore +zcard +zcount +zrange +zrangebyscore +zremrangebyscore +zincrby +hget +hset +hincrby
+#
+# monitor: redis_exporter (docker-compose.yml service redis-exporter, profile db-exporters).
+# INACTIVE: the line stays commented (the entrypoint drops comment lines) until
+# deploy/redis/entrypoint.sh also substitutes __MONITOR_PASSWORD_SHA256__ from a
+# REDIS_MONITOR_PASSWORD in .env; an unsubstituted hash would stop Redis from loading this file.
+# To enable: add that substitution, uncomment the line, restart Redis, and put the same
+# password in deploy/observability/exporters.env as REDIS_PASSWORD (README "After the cutover").
+# Read-only server facts only: no key patterns (resetkeys), no channels, no CLIENT LIST/KILL (the
+# exporter's --export-client-list stays off), no KEYS/SCAN.
+#user monitor on #__MONITOR_PASSWORD_SHA256__ resetkeys resetchannels -@all +ping +select +info +config|get +latency|latest +latency|histogram +slowlog|get +slowlog|len +memory|stats +cluster|info
+#
+# admin: break-glass only, never given to a service:
+#   docker compose exec -e REDISCLI_AUTH=<REDIS_ADMIN_PASSWORD> redis redis-cli --user admin
+user admin on #__ADMIN_PASSWORD_SHA256__ ~* &* +@all

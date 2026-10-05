@@ -2,7 +2,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from agent.mail.loops import classify_automation, thread_root
+from agent.mail.loops import classify_automation, in_thread_with_us, thread_root
+from agent.mail.mime import parse_raw
 from agent.models import InboundEmail
 
 OWN = "agent@hsingh.app"
@@ -59,6 +60,35 @@ def test_person_writing_to_us():
 )
 def test_automation_headers(headers):
     assert classify(email(headers=headers)) is not None
+
+
+@pytest.mark.parametrize(
+    "x_loop", ["agent@hsingh.app", "<Agent@HSINGH.app>", "lists@example.org, agent@hsingh.app"]
+)
+def test_x_loop_naming_us(x_loop):
+    assert "X-Loop" in classify(email(headers={"x-loop": x_loop}))
+
+
+def test_x_loop_naming_us_among_several_lines():
+    raw = (
+        b"From: jane@bank.example\r\nX-Loop: lists@example.org\r\nX-Loop: <agent@hsingh.app>\r\n"
+        b"X-Loop: responder@example.net\r\nSubject: Other Documents for M12205\r\n\r\nM12205\r\n"
+    )
+    assert "X-Loop" in classify(parse_raw(raw, datetime(2026, 10, 4, tzinfo=UTC)))
+
+
+@pytest.mark.parametrize(
+    "x_loop",
+    [
+        "lists@example.org",
+        "<responder@example.net>, lists@example.org",
+        "other-agent@hsingh.app",
+        "agent@hsingh.app.evil.example",
+        "xagent@hsingh.app",
+    ],
+)
+def test_unrelated_x_loop_is_not_a_signal(x_loop):
+    assert classify(email(headers={"x-loop": x_loop})) is None
 
 
 def test_suppress_values_for_other_reports_are_not_automation():
@@ -134,3 +164,18 @@ def test_thread_root():
     assert thread_root(email(references=("<a@x>", "<b@x>"), in_reply_to="<b@x>")) == "<a@x>"
     assert thread_root(email(in_reply_to="<b@x>")) == "<b@x>"
     assert thread_root(email()) == "<m1@bank.example>"
+
+
+@pytest.mark.parametrize(
+    ("in_reply_to", "references", "ours"),
+    [
+        ("<reply.0b6f3c1e-8d2a-4f7b-9c41-5e2d7a9b1c3f@hsingh.app>", (), True),
+        # a reply to the person's own copy, threaded under our reply further up
+        ("<m2@bank.example>", ("<m1@bank.example>", "<ack.0b6f3c1e-8d2a-4f7b-9c41-5e2d7a9b1c3f@HSINGH.APP>"), True),
+        ("<m2@bank.example>", ("<m1@bank.example>",), False),
+        (None, (), False),
+        ("<x@hsingh.app.evil.example>", (), False),
+    ],
+)
+def test_in_thread_with_us(in_reply_to, references, ours):
+    assert in_thread_with_us(email(in_reply_to=in_reply_to, references=references), own_address=OWN) is ours

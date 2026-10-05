@@ -12,3 +12,9 @@ PREP_PAGE.html
 CLAUDE.md
 PLAN.md
 logs/
+deploy/deploys.log
+
+# eval caches (re-creatable)
+evals/*/cache/
+evals/gate/jev_cache.jsonl
+evals/output/*cache*.json*

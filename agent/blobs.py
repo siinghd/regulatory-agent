@@ -6,6 +6,7 @@ reader never sees a partial file.
 
 import hashlib
 import os
+import shutil
 from pathlib import Path
 
 from agent.config import get_settings
@@ -46,6 +47,13 @@ def put_raw(raw: bytes) -> str:
         tmp.write_bytes(raw)
         os.replace(tmp, dest)
     return sha
+
+
+def disk_free() -> int:
+    """Free bytes on the filesystem holding the data directory."""
+    root = Path(get_settings().data_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    return shutil.disk_usage(root).free
 
 
 def read_raw(sha256: str) -> bytes:

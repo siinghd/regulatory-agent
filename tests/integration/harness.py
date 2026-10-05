@@ -8,6 +8,7 @@ they do in production.
 
 import asyncio
 import hashlib
+import html
 import io
 import json
 import os
@@ -35,6 +36,7 @@ from agent.config import get_settings
 from agent.delivery.drop import DropLink
 from agent.limits import Limits
 from agent.llm import LLMUnavailable
+from agent.mail.auth import to_ascii_domain
 from agent.mail.ingest import ingest_raw
 from agent.models import (
     AuthVerdict,
@@ -95,6 +97,37 @@ def make_pdf(external_id: str) -> bytes:
     return data
 
 
+_W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
+
+def make_docx(external_id: str) -> bytes:
+    """A Word file with the same lines as `make_pdf`, one paragraph each (FERC issues its orders as DOCX)."""
+    paragraphs = "".join(
+        f'<w:p><w:r><w:t xml:space="preserve">{html.escape(line)}</w:t></w:r></w:p>' for line in pdf_lines(external_id)
+    )
+    parts = {
+        "[Content_Types].xml": "<Types/>",
+        "_rels/.rels": (
+            '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/'
+            '2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+            'relationships/officeDocument" Target="word/document.xml"/></Relationships>'
+        ),
+        "word/document.xml": (
+            f'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="{_W_NS}">'
+            f"<w:body>{paragraphs}</w:body></w:document>"
+        ),
+    }
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        for name, text in parts.items():  # fixed timestamps: stable bytes, stable sha256
+            z.writestr(zipfile.ZipInfo(name, date_time=(2024, 8, 21, 0, 0, 0)), text)
+    return buf.getvalue()
+
+
+def make_spreadsheet(external_id: str) -> bytes:
+    return b"PK\x03\x04 not really a workbook: " + external_id.encode()
+
+
 # ---------------------------------------------------------------- portal
 
 
@@ -114,6 +147,7 @@ class _FakePortal:
         self.portal_down: Callable[[], BaseException] | None = None  # raised by every portal visit
         self.hang_next = 0  # portal visits that never return (a worker killed mid-fetch)
         self.download_fail: set[str] = set()  # external ids whose download fails
+        self.formats: dict[str, str] = {}  # external id -> ".docx" / ".xlsx" (default ".pdf")
         self._pdfs: dict[str, bytes] = {}
 
     def add_matter(self, matter: str, counts: Mapping[str, int], *, title: str | None = None) -> None:
@@ -153,9 +187,18 @@ class _FakePortal:
         return self.matters[matter][1][doc_type]
 
     def pdf(self, external_id: str) -> bytes:
+        """The file served for `external_id` (a PDF unless `serve_as` said otherwise)."""
         if external_id not in self._pdfs:  # stable bytes, so a re-download has the same sha256
-            self._pdfs[external_id] = make_pdf(external_id)
+            make = {".docx": make_docx, ".xlsx": make_spreadsheet}.get(self.formats.get(external_id, ".pdf"), make_pdf)
+            self._pdfs[external_id] = make(external_id)
         return self._pdfs[external_id]
+
+    def serve_as(self, doc_type: str, exts: Sequence[str], matter: str = MATTER) -> None:
+        """Serve the category's documents, in listing order, as these file types (".docx", ".xlsx", ".pdf")."""
+        refs = self.matters[matter][1][doc_type]
+        for i, ext in enumerate(exts):
+            self.formats[refs[i].external_id] = ext
+            refs[i] = refs[i].model_copy(update={"file_ext": ext})
 
     def visits(self) -> int:
         return sum(self.calls.values())
@@ -201,11 +244,12 @@ class _FakePortal:
                 failed.append(ref.external_id)
                 continue
             data = self.pdf(ref.external_id)
+            ext = self.formats.get(ref.external_id, ".pdf")
             sha = hashlib.sha256(data).hexdigest()
-            path = os.path.join(dest_dir, f"{sha}.pdf")
+            path = os.path.join(dest_dir, f"{sha}{ext}")
             await asyncio.to_thread(Path(path).write_bytes, data)
             self.downloaded.append(ref.external_id)
-            yield DownloadedFile(ref=ref, path=path, sha256=sha, size=len(data), filename=f"{ref.external_id}.pdf")
+            yield DownloadedFile(ref=ref, path=path, sha256=sha, size=len(data), filename=f"{ref.external_id}{ext}")
         if failed and len(failed) == len(refs):  # like UarbProvider: partial failures are only logged
             raise PortalUnavailable(f"every download failed: {failed}")
 
@@ -287,6 +331,9 @@ class FakeLLM:
             if self.summary_down:
                 raise LLMUnavailable("fake: every summary model is down")
             return schema.model_validate(self._summary(user)), dict(_META)
+        if name == "_Verdicts":  # the citation entailment check: every quote supports its claim
+            items = [int(n) for n in re.findall(r"^ITEM (\d+)$", user, re.MULTILINE)]
+            return schema.model_validate({"verdicts": [{"item": i, "supported": True} for i in items]}), dict(_META)
         raise LLMUnavailable(f"fake: unexpected schema {name}")
 
     @staticmethod
@@ -314,7 +361,8 @@ class FakeAuth:
 
     async def verify(self, raw: bytes, email: InboundEmail, *, trusted_mta: str, **_: Any) -> SenderAuth:
         self.calls += 1
-        domain = email.from_addr.rpartition("@")[2]
+        raw_domain = email.from_addr.rpartition("@")[2]
+        domain = to_ascii_domain(raw_domain) or raw_domain  # the A-label, as verify_sender reports it
         if self.verdict == "pass":
             return SenderAuth(verdict=AuthVerdict.PASS, from_domain=domain, spf="pass", spf_domain=domain,
                               aligned_via="spf", reason=f"SPF pass for {domain} aligned with {domain}")
@@ -443,6 +491,7 @@ def assert_threaded(msg: EmailMessage, *, to: str, in_reply_to: str, references:
     assert msg["Auto-Submitted"] == "auto-replied"
     assert msg["X-Auto-Response-Suppress"] == "All"
     assert msg["X-Regulatory-Agent"] == "1"
+    assert msg["X-Loop"] == AGENT_ADDRESS
     assert msg["Subject"].startswith("Re: ")
     assert not msg.get_all("Cc") and not msg.get_all("Bcc")
 
@@ -484,7 +533,8 @@ class Harness:
 
     @property
     def deps(self) -> Deps:
-        return Deps(settings=get_settings(), providers=dict(self.providers), limits=self.limits, drop=self.drop)
+        return Deps(settings=get_settings(), providers=dict(self.providers), limits=self.limits, drop=self.drop,
+                    queue=self.redis)
 
     def ctx(self, job_try: int = 1) -> dict[str, Any]:
         return {"redis": self.redis, "deps": self.deps, "job_try": job_try}
@@ -499,20 +549,49 @@ class Harness:
         """One arq job try, exactly as the worker runs it."""
         await worker.process_request(self.ctx(job_try), str(rid))
 
-    async def run_job(self, rid: UUID, *, first_try: int = 1) -> list[float]:
-        """Drive a job the way arq does: re-run on Retry until it returns. Returns the defers (s)."""
+    async def run_job(self, rid: UUID, *, first_try: int = 1, outbound_rounds: int = 5) -> list[float]:
+        """Drive a request the way the queue does, with no waiting: re-run its job on Retry until it
+        returns, then deliver its outbox (`send_outbound`, up to `outbound_rounds` tries per
+        message), and run the job again if delivery re-opened the request (a 552 re-render).
+        Stops when the job is parked (a breaker is open, or the request is locked): arq would run
+        it again later. Returns the defers (s) of the job's retries."""
         defers: list[float] = []
-        for job_try in range(first_try, worker.MAX_TRIES + 1):
+        job_try = first_try
+        for _ in range(4 * get_settings().max_attempts + 8):
             try:
                 await self.process(rid, job_try)
+            except worker.Park as r:
+                defers.append((r.defer_score or 0) / 1000)
                 return defers
             except Retry as r:
                 defers.append((r.defer_score or 0) / 1000)
-        raise AssertionError(f"request {rid} raised Retry on its final try")
+                job_try += 1
+                continue
+            await self.drain_outbound(rid, rounds=outbound_rounds)
+            row = await self.request(rid)
+            if row["state"] in store.SETTLED or await self.queued_outbound(rid):
+                return defers
+            job_try += 1  # re-opened by the outbox: its job was enqueued again
+        raise AssertionError(f"request {rid} is still retrying after {job_try} tries")
+
+    async def queued_outbound(self, rid: UUID) -> list[str]:
+        return [r["message_id"] for r in await store.outbound_rows(rid) if r["status"] == "queued"]
+
+    async def drain_outbound(self, rid: UUID, *, rounds: int = 5) -> None:
+        """Run `send_outbound` for this request's queued mail (as its queued jobs would)."""
+        for _ in range(rounds):
+            pending = await self.queued_outbound(rid)
+            if not pending:
+                return
+            for message_id in pending:
+                try:
+                    await worker.send_outbound(self.ctx(), message_id)
+                except Retry:
+                    pass
 
     async def queued_request_ids(self) -> list[str]:
-        jobs = await self.redis.queued_jobs()
-        assert all(j.function == "process_request" and j.job_id == f"req:{j.args[0]}" for j in jobs)
+        jobs = [j for j in await self.redis.queued_jobs() if j.function == "process_request"]
+        assert all(j.job_id == f"req:{j.args[0]}" for j in jobs)
         return [j.args[0] for j in jobs]
 
     async def request(self, rid: UUID):

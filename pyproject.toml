@@ -13,11 +13,13 @@ dependencies = [
   "httpx[socks]>=0.27",
   "pydantic>=2.8",
   "pydantic-settings>=2.4",
-  "playwright>=1.47",
+  "playwright==1.63.0",  # lockstep with the Dockerfile base image (mcr.microsoft.com/playwright/python:v1.63.0-noble)
   "pymupdf>=1.24",
   "dkimpy>=1.1",
   "pyspf>=2.0.14",
   "dnspython>=2.6",
+  "idna>=3.7",  # UTS #46 sender domains; 3.7 fixed CVE-2024-3651 (quadratic idna.encode)
+  "publicsuffixlist==1.0.2.20261003",  # the version is the bundled PSL snapshot date; bump to refresh
   "cryptography>=43",
   "rapidfuzz>=3.9",
   "aioimaplib>=1.1",
@@ -27,6 +29,7 @@ dependencies = [
   "beautifulsoup4>=4.12",
   "selectolax>=0.3",
   "python-multipart>=0.0.9",
+  "prometheus-client==0.26.0",  # the worker's /metrics on 127.0.0.1:9710
 ]
 
 [project.optional-dependencies]

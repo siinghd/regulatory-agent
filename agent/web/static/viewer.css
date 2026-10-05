@@ -94,6 +94,12 @@ blockquote.quote {
   overflow-wrap: anywhere;
 }
 
+/* Quote-only citations (Word files): the passage in its sentences, highlighted. */
+blockquote.quote.in-context { font-size: 1.02rem; line-height: 1.65; }
+.quote mark { background: var(--hl); color: inherit; border-radius: 2px; padding: 0 1px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.quote .context { color: var(--muted); }
+.note { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.85rem; }
+
 .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
 .button {
   display: inline-flex;
@@ -208,3 +214,31 @@ mark.cite-hl {
 .progress .fine { color: var(--muted); font-size: 0.85rem; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 4px rgb(10 104 112 / 0.18); } }
 @media (prefers-reduced-motion: reduce) { .progress .steps li.active .dot { animation: none; } .progress .bar span { transition: none; } }
+
+/* Privacy notice */
+.prose { max-width: 72ch; }
+.prose h2 { font-size: 1.1rem; margin: 1.6rem 0 0.4rem; }
+.prose ul { padding-left: 1.2rem; }
+.prose li { margin-bottom: 0.35rem; }
+.prose table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+.prose th, .prose td { text-align: left; vertical-align: top; padding: 0.45rem 0.75rem 0.45rem 0; border-bottom: 1px solid var(--border); }
+.prose th { color: var(--muted); font-weight: 600; }
+
+/* Service status */
+.status-page { max-width: 80ch; }
+.status-page .disclaimer {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--quote-bar);
+  border-radius: 8px;
+  background: var(--quote-bg);
+}
+.status-page .note { font-size: 0.88rem; }
+.status-page .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; padding: 0 0.55rem; border-radius: 999px; border: 1px solid var(--border); font-size: 0.85rem; white-space: nowrap; }
+.pill.ok { border-color: var(--accent); color: var(--accent); }
+.pill.down { border-color: var(--error); color: var(--error); }
+.pill.unknown { color: var(--muted); }
+@media (max-width: 520px) {
+  .status-page th, .status-page td { padding-right: 0.5rem; font-size: 0.88rem; }
+}

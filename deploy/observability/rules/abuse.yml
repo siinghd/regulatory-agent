@@ -1,0 +1,45 @@
+# Abuse signals: pre-auth limiter rejections and failed sender authentication against their own
+# 7-day hourly baseline. Pre-auth limiting and the auth verdict happen in the ingest process,
+# which must expose its own /metrics (METRICS_CONTRACT.md); until then these stay empty.
+groups:
+  - name: regagent-abuse-recording
+    rules:
+      # limiter_decisions_total{limiter} keyed by what the limiter counts: sender, domain,
+      # global, preauth, inbound, inflight, llm, portal, bytes, web.
+      - record: regagent:limiter_decisions:rate5m_by_key_type
+        expr: |
+          sum by (key_type, decision) (
+            label_replace(rate(limiter_decisions_total[5m]), "key_type", "$1", "limiter", "([a-z]+)[_:].*")
+          )
+      - record: regagent:preauth_limited:increase1h
+        expr: sum(increase(limiter_decisions_total{limiter=~"preauth_.*", decision="limited"}[1h]))
+      - record: regagent:preauth_limited:avg_hourly_7d
+        expr: avg_over_time(regagent:preauth_limited:increase1h[7d])
+      - record: regagent:auth_not_pass:increase1h
+        expr: sum(increase(auth_verdicts_total{verdict!="pass"}[1h]))
+      - record: regagent:auth_not_pass:avg_hourly_7d
+        expr: avg_over_time(regagent:auth_not_pass:increase1h[7d])
+
+  - name: regagent-abuse
+    rules:
+      - alert: RegagentPreauthRejectionSpike
+        expr: |
+          regagent:preauth_limited:increase1h > 3 * regagent:preauth_limited:avg_hourly_7d
+          and regagent:preauth_limited:increase1h >= 10
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $value | humanize }} pre-auth rejections in the last hour (> 3x the 7-day hourly average)"
+          description: A surge of mail from IPs/domains over their pre-auth limits; possibly a spoofing or flooding wave.
+          runbook_url: docs/runbooks/spoofing-wave.md
+
+      - alert: RegagentUnauthenticatedSpike
+        expr: |
+          regagent:auth_not_pass:increase1h > 3 * regagent:auth_not_pass:avg_hourly_7d
+          and regagent:auth_not_pass:increase1h >= 10
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $value | humanize }} unauthenticated senders in the last hour (> 3x the 7-day hourly average)"
+          description: DMARC-style sender verdicts other than pass are well above baseline.
+          runbook_url: docs/runbooks/spoofing-wave.md

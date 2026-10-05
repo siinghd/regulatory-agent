@@ -1,0 +1,14 @@
+{
+ "started_at": "2026-10-04T23:04:13+0000",
+ "variant": "llm",
+ "dataset": "heldout",
+ "concurrency": 6,
+ "cases": 40,
+ "llm_models": [
+  "deepseek/deepseek-v4.1-flash",
+  "qwen/qwen3.8-27b"
+ ],
+ "repeats": 2,
+ "wall_s": 13.6,
+ "runs": 78
+}

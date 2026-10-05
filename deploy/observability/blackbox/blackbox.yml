@@ -1,0 +1,100 @@
+# Blackbox exporter modules (docker-compose.yml service `blackbox-exporter`, 127.0.0.1:9117).
+# Targets and their `probe` names live in prometheus/prometheus.yml.
+modules:
+  # /health endpoints: 2xx, and the web process must report its database as up.
+  http_health:
+    prober: http
+    timeout: 10s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      preferred_ip_protocol: ip4
+      fail_if_body_not_matches_regexp:
+        - '"(ok|status)"\s*:\s*(true|"ok")'
+      headers:
+        User-Agent: regagent-blackbox
+
+  # Mail submission: banner, EHLO, STARTTLS, then the certificate (probe_ssl_earliest_cert_expiry).
+  smtp_starttls:
+    prober: tcp
+    timeout: 15s
+    tcp:
+      preferred_ip_protocol: ip4
+      query_response:
+        - expect: "^220"
+        - send: "EHLO regagent-probe.invalid\r"
+        - expect: "^250[- ]STARTTLS"
+        - send: "STARTTLS\r"
+        - expect: "^220"
+        - starttls: true
+        - send: "QUIT\r"
+      tls_config:
+        server_name: mail.hsingh.app
+
+  # IMAP over implicit TLS: handshake, certificate, then the server greeting.
+  imaps:
+    prober: tcp
+    timeout: 10s
+    tcp:
+      preferred_ip_protocol: ip4
+      tls: true
+      tls_config:
+        server_name: mail.hsingh.app
+      query_response:
+        - expect: "^\\* OK"
+        - send: "a1 LOGOUT\r"
+
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+
+  # Redis alive: an unauthenticated PING gets PONG (no ACL yet) or NOAUTH (ACL, default user off).
+  redis_alive:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+      query_response:
+        - send: "PING\r"
+        - expect: "^(\\+PONG|-NOAUTH)"
+        - send: "QUIT\r"
+
+  # Redis refuses unauthenticated clients: PING must get NOAUTH (default user off after
+  # deploy/redis-cutover.sh). Fails while the ACL is not in force.
+  redis_noauth:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+      query_response:
+        - send: "PING\r"
+        - expect: "^-NOAUTH"
+        - send: "QUIT\r"
+
+  # Egress through the SOCKS tunnel to a neutral endpoint.
+  http_via_tunnel:
+    prober: http
+    timeout: 25s
+    http:
+      method: GET
+      valid_status_codes: [200]
+      proxy_url: socks5://127.0.0.1:1080
+      preferred_ip_protocol: ip4  # the tunnel's far end has no IPv6
+      ip_protocol_fallback: false
+      fail_if_body_not_matches_regexp: ["(?m)^ip="]
+      headers:
+        User-Agent: regagent-blackbox
+
+  # Caddy's origin certificate (Cloudflare origin CA: not publicly trusted, so the chain is not
+  # verified; only the handshake and the expiry date matter here).
+  origin_tls:
+    prober: tcp
+    timeout: 5s
+    tcp:
+      preferred_ip_protocol: ip4
+      tls: true
+      tls_config:
+        server_name: uarb.hsingh.app
+        insecure_skip_verify: true

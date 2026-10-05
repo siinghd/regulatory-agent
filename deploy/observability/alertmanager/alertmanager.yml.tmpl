@@ -1,0 +1,67 @@
+# Alertmanager for the Regulatory Document Agent. Rendered at container start by entrypoint.sh:
+# every ${ALERT_*} is replaced with that variable from deploy/observability/.env (defaults in
+# entrypoint.sh), and the result goes to /tmp/alertmanager.yml (tmpfs).
+#
+# Default: everything goes to `blackhole` (nothing leaves the host) until the owner sets
+# ALERT_RECEIVER=email or webhook (deploy/observability/README.md, "Turning alerts on").
+# Alerting is deliberately independent of the agent's own mailbox and SMTP account: if the agent
+# or its mail account is the thing that broke, the alert must still get out.
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: '${ALERT_RECEIVER}'
+  group_by: [alertname, severity]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Always firing; an external dead man's switch expects it every few minutes.
+    - matchers: ['alertname="RegagentWatchdog"']
+      receiver: '${ALERT_WATCHDOG_RECEIVER}'
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 5m
+    - matchers: ['severity="page"']
+      receiver: '${ALERT_RECEIVER}'
+      repeat_interval: 1h
+
+inhibit_rules:
+  # The critical variant of an alert silences its warning variant.
+  - source_matchers: ['alertname="RegagentDiskSpaceCritical"']
+    target_matchers: ['alertname="RegagentDiskSpaceLow"']
+    equal: [mountpoint]
+  - source_matchers: ['alertname="RegagentTLSCertExpiryCritical"']
+    target_matchers: ['alertname="RegagentTLSCertExpiringSoon"']
+    equal: [instance]
+  # Probes that cannot work while the tunnel is closed.
+  - source_matchers: ['alertname="RegagentEgressTunnelDown"']
+    target_matchers: ['alertname="RegagentEgressViaTunnelFailing"']
+
+receivers:
+  - name: blackhole
+
+  - name: email
+    email_configs:
+      - to: '${ALERT_EMAIL_TO}'
+        from: '${ALERT_EMAIL_FROM}'
+        smarthost: '${ALERT_SMTP_SMARTHOST}'
+        auth_username: '${ALERT_SMTP_USERNAME}'
+        auth_password: '${ALERT_SMTP_PASSWORD}'
+        require_tls: ${ALERT_SMTP_REQUIRE_TLS}
+        hello: regagent-alertmanager
+        send_resolved: true
+        headers:
+          Subject: '[regagent {{ .Status }}] {{ .CommonLabels.alertname }} ({{ .CommonLabels.severity }})'
+
+  # Any webhook: ntfy (https://ntfy.sh/<secret topic> or a self-hosted server), a chat bridge, ...
+  - name: webhook
+    webhook_configs:
+      - url: '${ALERT_WEBHOOK_URL}'
+        send_resolved: true
+
+  # Dead man's switch (e.g. a healthchecks.io ping URL): alerts when the heartbeat stops.
+  - name: watchdog
+    webhook_configs:
+      - url: '${ALERT_WATCHDOG_URL}'
+        send_resolved: false

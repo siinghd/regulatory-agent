@@ -8,6 +8,7 @@ other exception type.
 import codecs
 import hashlib
 import re
+from collections import Counter
 from collections.abc import Iterator
 from datetime import datetime
 from email import policy
@@ -23,6 +24,11 @@ from agent.models import InboundEmail
 MAX_TEXT_CHARS = 20_000
 MAX_SUBJECT_CHARS = 998  # RFC 5322 line limit; anything longer is abuse, not a subject
 MAX_REFERENCES = 100
+# RFC 5322 §3.6 allows each of these at most once. A second copy is ambiguous (a verifier, a
+# DKIM signature and a reader may each see a different one), so the message is rejected.
+_SINGLETON_HEADERS = frozenset(
+    {"from", "sender", "reply-to", "to", "cc", "subject", "date", "message-id", "in-reply-to", "references"}
+)
 
 # Every header is parsed as unstructured text. CPython 3.12's structured parsers (addresses,
 # Message-ID, Content-Type parameters) raise IndexError/AttributeError on hostile values, and
@@ -51,6 +57,11 @@ def parse_raw(raw: bytes, received_at: datetime) -> InboundEmail:
         # The stdlib parser recurses per multipart level; ~1000 levels fit in 60 KB.
         raise MalformedEmail("MIME structure nested too deeply") from e
 
+    counts = Counter(name.lower() for name, _ in msg.raw_items())
+    repeated = sorted(name for name in _SINGLETON_HEADERS if counts[name] > 1)
+    if repeated:
+        raise MalformedEmail(f"header(s) allowed once appear more than once: {', '.join(repeated)}")
+
     from_name, from_addr = _single_from(msg)
     raw_sha256 = hashlib.sha256(raw).hexdigest()
     reply_to = _addresses(msg, "reply-to")
@@ -68,9 +79,21 @@ def parse_raw(raw: bytes, received_at: datetime) -> InboundEmail:
         in_reply_to=in_reply_to[0] if in_reply_to else None,
         references=tuple(_msg_ids(msg.get("references"))[:MAX_REFERENCES]),
         received_at=received_at,
-        headers={name.lower(): _clean(str(value)) for name, value in msg.items()},
+        headers=_header_view(msg),
         raw_sha256=raw_sha256,
     )
+
+
+def _header_view(msg: Message) -> dict[str, str]:
+    """Lowercase name -> value; a repeated header keeps its last value, except X-Loop.
+
+    Every list or responder a message passes through adds its own X-Loop line, so all of them
+    are kept (joined with ", ") for loop detection to find ours among them.
+    """
+    headers = {name.lower(): _clean(str(value)) for name, value in msg.items()}
+    if loops := msg.get_all("x-loop"):
+        headers["x-loop"] = ", ".join(_clean(str(value)) for value in loops)
+    return headers
 
 
 def parse_headers(raw: bytes) -> Message:
@@ -118,7 +141,9 @@ def _single_from(msg: Message) -> tuple[str, str]:
         raise MalformedEmail(f"expected exactly one From address, found {len(addresses)}")
     display_name, address = addresses[0]
     local, _, domain = address.rpartition("@")
-    if not local or not domain:
+    # "example.com." names the same host as "example.com" but compares unequal wherever the
+    # address is a key (rate limits, allowlist, threads); no mail client writes it.
+    if not local or not domain or domain.endswith("."):
         raise MalformedEmail(f"From address {address!r} is not local@domain")
     return _clean(str(_HEADER_REGISTRY("x-display-name", display_name))), address.lower()
 

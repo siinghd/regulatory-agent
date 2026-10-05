@@ -1,0 +1,65 @@
+# SLO: 95 % of requests get their reply within 180 s of the email arriving
+# (request_e2e_seconds, METRICS_CONTRACT.md; bucket le=180 is required). Error budget: 5 %.
+#
+# Multi-window, multi-burn-rate alerts (Google SRE workbook, ch. 5), plus a direct check of the
+# objective over the last hour. Volume floors stop one slow request at 3 a.m. from paging.
+# Until the app exports the histogram every ratio here is empty and nothing fires.
+groups:
+  - name: regagent-slo-recording
+    rules:
+      # Fraction of requests slower than 180 s, per window (the "error" ratio).
+      - record: regagent:request_e2e_slow:ratio_rate5m
+        expr: 1 - sum(rate(request_e2e_seconds_bucket{le=~"180(\\.0)?"}[5m])) / sum(rate(request_e2e_seconds_count[5m]))
+      - record: regagent:request_e2e_slow:ratio_rate30m
+        expr: 1 - sum(rate(request_e2e_seconds_bucket{le=~"180(\\.0)?"}[30m])) / sum(rate(request_e2e_seconds_count[30m]))
+      - record: regagent:request_e2e_slow:ratio_rate1h
+        expr: 1 - sum(rate(request_e2e_seconds_bucket{le=~"180(\\.0)?"}[1h])) / sum(rate(request_e2e_seconds_count[1h]))
+      - record: regagent:request_e2e_slow:ratio_rate6h
+        expr: 1 - sum(rate(request_e2e_seconds_bucket{le=~"180(\\.0)?"}[6h])) / sum(rate(request_e2e_seconds_count[6h]))
+      - record: regagent:request_e2e:count1h
+        expr: sum(increase(request_e2e_seconds_count[1h]))
+      - record: regagent:request_e2e:count6h
+        expr: sum(increase(request_e2e_seconds_count[6h]))
+      - record: regagent:request_e2e:p50_1h
+        expr: histogram_quantile(0.50, sum by (le) (rate(request_e2e_seconds_bucket[1h])))
+      - record: regagent:request_e2e:p95_1h
+        expr: histogram_quantile(0.95, sum by (le) (rate(request_e2e_seconds_bucket[1h])))
+
+  - name: regagent-slo
+    rules:
+      # Burn rate 14.4 over 1 h (and still burning over 5 m): 2 % of a 30-day budget in an hour.
+      - alert: RegagentLatencySLOFastBurn
+        expr: |
+          regagent:request_e2e_slow:ratio_rate1h > 14.4 * 0.05
+          and regagent:request_e2e_slow:ratio_rate5m > 14.4 * 0.05
+          and regagent:request_e2e:count1h >= 3
+        for: 2m
+        labels: {severity: page}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of replies over the last hour took longer than 180 s"
+          description: Fast burn of the reply-latency error budget (SLO 95 % within 180 s).
+          runbook_url: docs/runbooks/latency-slo.md
+
+      # Burn rate 6 over 6 h (and still burning over 30 m).
+      - alert: RegagentLatencySLOSlowBurn
+        expr: |
+          regagent:request_e2e_slow:ratio_rate6h > 6 * 0.05
+          and regagent:request_e2e_slow:ratio_rate30m > 6 * 0.05
+          and regagent:request_e2e:count6h >= 5
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of replies over the last 6 hours took longer than 180 s"
+          description: Slow burn of the reply-latency error budget (SLO 95 % within 180 s).
+          runbook_url: docs/runbooks/latency-slo.md
+
+      # The objective itself, over the last hour.
+      - alert: RegagentLatencySLOBreached
+        expr: |
+          regagent:request_e2e_slow:ratio_rate1h > 0.05
+          and regagent:request_e2e:count1h >= 5
+        for: 5m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $value | humanizePercentage }} of replies in the last hour took longer than 180 s (objective: at most 5 %)"
+          runbook_url: docs/runbooks/latency-slo.md

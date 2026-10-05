@@ -1,0 +1,42 @@
+# Weekly dependency updates (docs/policies/vulnerability-management.md). Security advisories
+# arrive as separate Dependabot security PRs whenever they are published, not weekly.
+version: 2
+updates:
+  # Python: Dependabot raises pyproject.toml ranges; run `make lock` on its PR to refresh the hashed
+  # requirements*.lock files (CI's lockfile check fails until then, so a bump can't merge half-done).
+  - package-ecosystem: pip
+    directory: /
+    schedule: {interval: weekly, day: monday, time: "05:00", timezone: Etc/UTC}
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # playwright moves in lockstep with the Dockerfile base image tag: bump both in one PR.
+      - dependency-name: playwright
+    labels: [dependencies, python]
+
+  # Base images: Dockerfile (Playwright, pinned by digest) and docker-compose.yml (Postgres, Redis).
+  - package-ecosystem: docker
+    directory: /
+    schedule: {interval: weekly, day: monday, time: "05:00", timezone: Etc/UTC}
+    labels: [dependencies, docker]
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule: {interval: weekly, day: monday, time: "05:00", timezone: Etc/UTC}
+    ignore:
+      # major versions of the data stores need a planned migration (pg_upgrade, Redis 8 ACL review)
+      - dependency-name: postgres
+        update-types: [version-update:semver-major]
+      - dependency-name: redis
+        update-types: [version-update:semver-major]
+    labels: [dependencies, docker]
+
+  # Workflow actions are pinned to commit SHAs; Dependabot rewrites the SHA and the tag comment.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly, day: monday, time: "05:00", timezone: Etc/UTC}
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: [dependencies, ci]

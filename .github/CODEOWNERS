@@ -1,0 +1,19 @@
+# Every change needs the owner's review. Security-sensitive paths are listed separately so that a
+# second reviewer can be added to them alone once there is one (docs/policies/change-management.md).
+*                         @siinghd
+
+# Authentication, mail security, outbound mail, delivery crypto
+/agent/mail/              @siinghd
+/agent/gate/              @siinghd
+/agent/delivery/          @siinghd
+/agent/crypto.py          @siinghd
+# Schema, roles, deploy and CI: the controls themselves
+/migrations/              @siinghd
+/deploy/                  @siinghd
+/docker-compose.yml       @siinghd
+/Dockerfile               @siinghd
+/requirements*.lock       @siinghd
+/.github/                 @siinghd
+/docs/policies/           @siinghd
+/docs/soc2/               @siinghd
+/SECURITY.md              @siinghd

@@ -1,31 +1,43 @@
 {% extends "base.html" %}
 {% block title %}{{ c.matter }} · {{ c.doc_title }} · page {{ c.page }}{% endblock %}
 {% block head %}
+{% if c.is_pdf %}
 <script defer src="{{ cdn.markjs.url }}" integrity="{{ cdn.markjs.sri }}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="module" src="{{ cdn.pdfjs.url }}" integrity="{{ cdn.pdfjs.sri }}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="module" src="{{ static_url('viewer.js') }}"></script>
+{% endif %}
 {% endblock %}
 {% block main %}
 <p class="eyebrow">
-  <a href="/m/{{ c.provider|urlencode }}/{{ c.matter|urlencode }}">{{ c.matter }}</a>
-  · {{ c.doc_type }}{% if c.filed_on %} · filed {{ c.filed_on|human_date }}{% endif %}
+  {{ c.matter }} · {{ c.doc_type }}{% if c.filed_on %} · filed {{ c.filed_on|human_date }}{% endif %}
 </p>
 <h1>{{ c.matter_title or c.doc_title }}</h1>
 
 <section class="card">
   <h2 class="label">Claim</h2>
   <p class="claim-text">{{ c.claim }}</p>
+{% if c.is_pdf %}
   <h2 class="label">Source: {{ c.doc_title }}, page {{ c.page }}{% if c.page_count %} of {{ c.page_count }}{% endif %}</h2>
   <blockquote class="quote">{{ c.quote }}</blockquote>
   <nav class="actions" aria-label="Document links">
-    <a class="button primary" href="/files/{{ c.document_id }}.pdf#page={{ c.page }}">Open full PDF</a>
-    <a class="button" href="/files/{{ c.document_id }}.pdf" download="{{ download_name }}">Download PDF</a>
+    <a class="button primary" href="{{ c.pdf_url }}#page={{ c.page }}">Open full PDF</a>
+    <a class="button" href="{{ c.pdf_url }}" download="{{ download_name }}">Download PDF</a>
     {% if portal_url %}<a class="button" href="{{ portal_url }}" rel="noopener noreferrer" target="_blank">Regulator portal</a>{% endif %}
   </nav>
+{% else %}
+  <h2 class="label">Source: {{ c.doc_title }}{% if c.filed_on %} ({{ c.filed_on|human_date }}){% endif %}, page {{ c.page }}{% if c.page_count %} of {{ c.page_count }}{% endif %}</h2>
+  <blockquote class="quote in-context">{% if c.context_before %}<span class="context">{{ c.context_before }}</span> {% endif %}<mark>{{ c.quote }}</mark>{% if c.context_after %} <span class="context">{{ c.context_after }}</span>{% endif %}</blockquote>
+  <p class="note">The highlighted passage is quoted from the text of this {{ c.file_label }}, with the sentences around it.{% if c.file_label == "Word file" %} Page numbers follow Word's own page breaks, so they can differ slightly from a printed copy.{% endif %}</p>
+  <nav class="actions" aria-label="Document links">
+    <a class="button primary" href="{{ c.file_url }}" download="{{ download_name }}">Download {{ c.file_label }}</a>
+    {% if portal_url %}<a class="button" href="{{ portal_url }}" rel="noopener noreferrer" target="_blank">Regulator portal</a>{% endif %}
+  </nav>
+{% endif %}
 </section>
+{% if c.is_pdf %}
 
 <section id="viewer" class="viewer"
-  data-pdf-url="/files/{{ c.document_id }}.pdf"
+  data-pdf-url="{{ c.pdf_url }}"
   data-page="{{ c.page }}"
   data-quote="{{ c.quote }}"
   data-worker-src="{{ cdn.pdfjs_worker.url }}"
@@ -34,4 +46,5 @@
   <noscript><p class="status">Turn on JavaScript to see the page with the passage highlighted, or open the PDF above.</p></noscript>
   <div class="page-wrap"><div id="pdf-page" class="pdf-page"></div></div>
 </section>
+{% endif %}
 {% endblock %}

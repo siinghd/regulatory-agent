@@ -1,0 +1,183 @@
+# CI: lint, unit, integration (real Postgres + Redis), dependency audit, secret scan,
+# Trivy (filesystem + image, HIGH/CRITICAL with a fix available fail the build), image build.
+#
+# Supply chain: every action is pinned to a full commit SHA (tag in the comment), every image
+# by digest; Dependabot (.github/dependabot.yml) proposes the bumps. The workflow token is
+# read-only. Nothing here deploys: deploy/deploy.sh runs on the host (docs/policies/change-management.md).
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"  # weekly: new CVEs in unchanged dependencies still fail loudly
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PG_IMAGE: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+  REDIS_IMAGE: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+  TRIVY_IMAGE: aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+  GITLEAKS_IMAGE: zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: {python-version: "${{ env.PYTHON_VERSION }}"}
+      - name: ruff (version and hashes from the dev lock)
+        run: |
+          awk '/^ruff==/{p=1} p{print} p && !/\\$/{exit}' requirements-dev.lock > "$RUNNER_TEMP/ruff.txt"
+          pip install --require-hashes --no-deps -r "$RUNNER_TEMP/ruff.txt"
+          ruff check agent tests deploy
+
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: {python-version: "${{ env.PYTHON_VERSION }}", cache: pip, cache-dependency-path: "requirements*.lock"}
+      - name: install (hash-checked)
+        run: |
+          pip install --require-hashes --no-deps -r requirements-build.lock
+          pip install --require-hashes --no-deps --no-build-isolation -r requirements-dev.lock
+          pip install --no-deps --no-build-isolation -e .
+          pip check
+      - name: chromium (UARB dialog tests drive a fake portal in a real browser)
+        run: python -m playwright install --with-deps chromium
+      - name: unit + adversarial
+        run: python -m pytest -q -p no:cacheprovider
+
+  integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+        env: {POSTGRES_USER: agent, POSTGRES_PASSWORD: ci-only, POSTGRES_DB: agent}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U agent" --health-interval 2s --health-timeout 2s --health-retries 30
+      redis:
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 2s --health-timeout 2s --health-retries 30
+    env:
+      # The suite creates (and drops) its own agent_test_<random> database and uses Redis db 15.
+      DATABASE_URL: postgresql://agent:ci-only@127.0.0.1:5432/agent
+      REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: {python-version: "${{ env.PYTHON_VERSION }}", cache: pip, cache-dependency-path: "requirements*.lock"}
+      - name: install (hash-checked)
+        run: |
+          pip install --require-hashes --no-deps -r requirements-build.lock
+          pip install --require-hashes --no-deps --no-build-isolation -r requirements-dev.lock
+          pip install --no-deps --no-build-isolation -e .
+      - name: role model (deploy/sql) on a real server
+        run: |
+          # roles.sql + grants.sql as the superuser, migrations as agent_migrator, then every
+          # role's allowed/denied checks: the same files the production cutover runs.
+          export PGHOST=127.0.0.1 PGPORT=5432 PGDATABASE=agent
+          for r in migrator app web retention backup; do
+            pw=$(python -c 'import secrets; print(secrets.token_hex(16))')
+            echo "${r}_pw=$pw" >> "$RUNNER_TEMP/pw"
+            echo "\\set ${r}_password '$(printf %s "$pw" | python deploy/lib/envtool.py scram)'" >> "$RUNNER_TEMP/vars.sql"
+          done
+          cat "$RUNNER_TEMP/vars.sql" deploy/sql/roles.sql deploy/sql/grants.sql \
+            | PGUSER=agent PGPASSWORD=ci-only psql -X -q -v ON_ERROR_STOP=1
+          . "$RUNNER_TEMP/pw"
+          for f in migrations/*.sql; do PGUSER=agent_migrator PGPASSWORD=$migrator_pw psql -X -q -v ON_ERROR_STOP=1 -f "$f"; done
+          PGUSER=agent_migrator PGPASSWORD=$migrator_pw psql -X -q -v ON_ERROR_STOP=1 -f deploy/sql/grants.sql
+          for r in app web migrator retention backup; do
+            pwvar=${r}_pw; PGUSER=agent_$r PGPASSWORD=${!pwvar} psql -X -q -v ON_ERROR_STOP=1 -f deploy/sql/verify_grants.sql
+          done
+      - name: integration (pipeline against real Postgres/Redis, fake portal/LLM/SMTP)
+        run: python -m pytest -m integration -q -p no:cacheprovider
+
+  dependency-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with: {python-version: "${{ env.PYTHON_VERSION }}"}
+      - name: pip-audit (locked versions, no install)
+        run: |
+          pip install pip-audit==2.9.0
+          for lock in requirements.lock requirements-dev.lock requirements-build.lock; do
+            echo "::group::$lock"; pip-audit -r "$lock" --require-hashes --disable-pip --strict; echo "::endgroup::"
+          done
+      - name: lockfiles match pyproject.toml
+        run: |
+          pip install uv==0.11.31
+          # recompile onto a copy: uv keeps the copy's pins unless pyproject.toml no longer allows them
+          cp requirements.lock "$RUNNER_TEMP/requirements.lock"
+          uv pip compile pyproject.toml --universal --python-version 3.12 --generate-hashes \
+            --custom-compile-command "make lock" -o "$RUNNER_TEMP/requirements.lock" --quiet
+          diff <(grep -v '^#' requirements.lock) <(grep -v '^#' "$RUNNER_TEMP/requirements.lock") \
+            || { echo "::error::requirements.lock is stale: run 'make lock'"; exit 1; }
+
+  secrets-scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: gitleaks (full history)
+        run: docker run --rm -v "$PWD:/repo:ro" "$GITLEAKS_IMAGE" git /repo --redact --no-banner --exit-code 1
+
+  trivy-fs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+      - name: trivy fs (vulnerabilities, secrets, Dockerfile/compose misconfig)
+        run: |
+          docker run --rm -v "$PWD:/repo:ro" "$TRIVY_IMAGE" fs --quiet --exit-code 1 \
+            --scanners vuln,secret,misconfig --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile /repo/.trivyignore /repo
+
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    needs: [lint, unit]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with: {persist-credentials: false}
+      - name: build (release + test targets, GIT_SHA baked in)
+        run: |
+          args=(--build-arg GIT_SHA=${{ github.sha }} --build-arg BUILD_DATE=$(date -u +%FT%TZ)
+                --build-arg SOURCE_URL=${{ github.server_url }}/${{ github.repository }})
+          docker build "${args[@]}" --target release -t regulatory-agent:ci .
+          docker build "${args[@]}" --target test -t regulatory-agent:ci-test .
+          docker image inspect regulatory-agent:ci --format '{{json .Config.Labels}}'
+      - name: unit tests inside the image (no network, read-only, no capabilities)
+        run: |
+          docker run --rm --network none --read-only --tmpfs /tmp --cap-drop ALL \
+            --security-opt no-new-privileges:true -e HOME=/tmp regulatory-agent:ci-test
+      - name: trivy image (HIGH/CRITICAL with a fix available)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD:/repo:ro" "$TRIVY_IMAGE" \
+            image --quiet --exit-code 1 --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed \
+            --ignorefile /repo/.trivyignore regulatory-agent:ci

@@ -6,6 +6,7 @@ add a canary matter.
 """
 
 import re
+import unicodedata
 from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
@@ -28,7 +29,13 @@ class Provider(Protocol):
 
     A provider may also define `normalise(raw: str) -> str | None`, turning a matter number as
     a person writes it ("m 12205") into the canonical form ("M12205"). Without one, a mention
-    is accepted when its upper-case form fully matches `matter_pattern`.
+    is accepted when its upper-case form fully matches `matter_pattern`. Either way the input is
+    NFKC-normalised first ("M１２２０５" is M12205), and patterns are ASCII-only (re.ASCII), so a
+    non-ASCII digit can never end up in a canonical matter number.
+
+    It may also define `narrow(matter: str, following: str) -> str`: the canonical matter as the
+    text right after its mention scopes it (FERC: "ER24-1234 (the -000 sub-docket only)" is
+    ER24-1234-000).
     """
 
     name: str  # stable id, e.g. "uarb"
@@ -83,12 +90,17 @@ def provider_for_matter(matter: str) -> Provider | None:
     return hits[0] if hits else None
 
 
+def nfkc(raw: str) -> str:
+    """Compatibility-normalised and stripped: full-width digits and letters become ASCII."""
+    return unicodedata.normalize("NFKC", raw).strip()
+
+
 def normalise_with(provider: Provider, raw: str) -> str | None:
     """`raw` in `provider`'s canonical matter format, or None if it isn't one of its matters."""
     custom: Callable[[str], str | None] | None = getattr(provider, "normalise", None)
     if custom is not None:
-        return custom(raw.strip())
-    candidate = raw.strip().upper()
+        return custom(nfkc(raw))
+    candidate = nfkc(raw).upper()
     return candidate if provider.matter_pattern.fullmatch(candidate) else None
 
 

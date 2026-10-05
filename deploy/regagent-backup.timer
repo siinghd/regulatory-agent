@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly regulatory agent backup
+
+[Timer]
+OnCalendar=*-*-* 02:40:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

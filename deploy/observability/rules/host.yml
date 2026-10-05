@@ -1,0 +1,64 @@
+# Host: disk, backup freshness (textfile collector, deploy/observability/backup_metrics.sh),
+# and the monitoring stack's own targets.
+groups:
+  - name: regagent-host
+    rules:
+      - record: regagent:filesystem_avail:ratio
+        expr: |
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs|fuse.*", mountpoint!~"/boot.*"}
+          / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|nsfs|ramfs|fuse.*", mountpoint!~"/boot.*"}
+
+      - alert: RegagentDiskSpaceLow
+        expr: regagent:filesystem_avail:ratio < 0.20
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.mountpoint }} has {{ $value | humanizePercentage }} free"
+          runbook_url: docs/runbooks/disk-full.md
+
+      - alert: RegagentDiskSpaceCritical
+        expr: regagent:filesystem_avail:ratio < 0.10
+        for: 5m
+        labels: {severity: page}
+        annotations:
+          summary: "{{ $labels.mountpoint }} has {{ $value | humanizePercentage }} free"
+          runbook_url: docs/runbooks/disk-full.md
+
+      - alert: RegagentBackupStale
+        expr: time() - max(regagent_backup_last_success_timestamp_seconds) > 26 * 3600
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Last restore-tested backup is {{ $value | humanizeDuration }} old (limit 26 h)"
+          runbook_url: docs/runbooks/backup-stale.md
+
+      - alert: RegagentBackupMetricsMissing
+        expr: |
+          absent(regagent_backup_last_success_timestamp_seconds)
+          or time() - max(node_textfile_mtime_seconds{file=~".*regagent_backup\\.prom"}) > 2 * 3600
+        for: 30m
+        labels: {severity: warning}
+        annotations:
+          summary: Backup freshness is not being reported (regagent-backup-metrics.timer)
+          description: Without it RegagentBackupStale cannot fire.
+          runbook_url: docs/runbooks/backup-stale.md
+
+  - name: regagent-meta
+    rules:
+      # Always firing. Route it to an external dead man's switch (ALERT_WATCHDOG_URL) so that a
+      # dead Prometheus, Alertmanager or host is noticed by its silence.
+      - alert: RegagentWatchdog
+        expr: vector(1)
+        labels: {severity: none}
+        annotations:
+          summary: Alerting pipeline heartbeat (always firing)
+          runbook_url: docs/runbooks/observability.md
+
+      - alert: RegagentMonitoringTargetDown
+        expr: up{job=~"regagent-(node|blackbox|alertmanager)"} == 0
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "Monitoring target {{ $labels.job }} is down"
+          description: Alerts that depend on it (host, probes, delivery of alerts) are blind meanwhile.
+          runbook_url: docs/runbooks/observability.md

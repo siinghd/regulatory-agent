@@ -1,0 +1,166 @@
+# promtool unit tests for the alert rules (make metrics-check runs them):
+#   promtool test rules /etc/prometheus/rules/tests/rules_test.yml
+rule_files:
+  - ../app.yml
+  - ../abuse.yml
+  - ../availability.yml
+  - ../host.yml
+  - ../slo.yml
+
+evaluation_interval: 30s
+
+tests:
+  # A failed request fires for the following hour, then clears.
+  - interval: 1m
+    input_series:
+      - series: 'requests_total{final_state="failed", job="regagent-worker"}'
+        values: '0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1'
+    alert_rule_test:
+      - eval_time: 0m
+        alertname: RegagentRequestsFailed
+        exp_alerts: []
+      - eval_time: 10m
+        alertname: RegagentRequestsFailed
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: "1 request(s) ended in `failed` in the last hour"
+              description: "Requests reached the final state `failed` (the requester got an apology). Look at the failed rows and their errors before the next one arrives."
+              runbook_url: docs/runbooks/requests-failed.md
+      - eval_time: 75m
+        alertname: RegagentRequestsFailed
+        exp_alerts: []
+
+  # Queue over 20 for 10 minutes pages; a short spike does not.
+  - interval: 1m
+    input_series:
+      - series: 'queue_depth{job="regagent-worker"}'
+        values: '25x5 0x5 25x15'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: RegagentQueueStuck
+        exp_alerts: []
+      - eval_time: 22m
+        alertname: RegagentQueueStuck
+        exp_alerts:
+          - exp_labels: {severity: page}
+            exp_annotations:
+              summary: "25 jobs waiting in the arq queue for 10 minutes"
+              description: The worker is not draining the queue (stalled, paused, or a backlog it cannot keep up with).
+              runbook_url: docs/runbooks/queue-stuck.md
+
+  # Budget at 85 % warns; at 100 % pages.
+  - interval: 1m
+    input_series:
+      - series: 'budget_used{budget="llm_usd", job="regagent-worker"}'
+        values: '8.5x10 10x10'
+      - series: 'budget_limit{budget="llm_usd", job="regagent-worker"}'
+        values: '10x20'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: RegagentBudgetHigh
+        exp_alerts:
+          - exp_labels: {severity: warning, budget: llm_usd}
+            exp_annotations:
+              summary: "Daily budget llm_usd is 85% used"
+              description: "The budget resets at midnight UTC. At 100 % the agent stops spending (LLM calls or portal visits) until then."
+              runbook_url: docs/runbooks/budget.md
+      - eval_time: 12m
+        alertname: RegagentBudgetExhausted
+        exp_alerts:
+          - exp_labels: {severity: page, budget: llm_usd}
+            exp_annotations:
+              summary: "Daily budget llm_usd exhausted"
+              description: Work that needs this budget is deferred until midnight UTC.
+              runbook_url: docs/runbooks/budget.md
+
+  # Pre-auth rejections: a quiet baseline then a burst of 60 in an hour.
+  - interval: 5m
+    input_series:
+      - series: 'limiter_decisions_total{limiter="preauth_ip", decision="limited", job="regagent-ingest"}'
+        values: '0+0x300 0+5x24'
+    alert_rule_test:
+      - eval_time: 1500m
+        alertname: RegagentPreauthRejectionSpike
+        exp_alerts: []
+      - eval_time: 1620m
+        alertname: RegagentPreauthRejectionSpike
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: "60 pre-auth rejections in the last hour (> 3x the 7-day hourly average)"
+              description: A surge of mail from IPs/domains over their pre-auth limits; possibly a spoofing or flooding wave.
+              runbook_url: docs/runbooks/spoofing-wave.md
+
+  # Every reply slower than 180 s for an hour: fast burn pages, the objective is breached.
+  - interval: 1m
+    input_series:
+      - series: 'request_e2e_seconds_bucket{le="180.0", job="regagent-worker"}'
+        values: '0x90'
+      - series: 'request_e2e_seconds_bucket{le="+Inf", job="regagent-worker"}'
+        values: '0+1x90'
+      - series: 'request_e2e_seconds_count{job="regagent-worker"}'
+        values: '0+1x90'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: RegagentLatencySLOFastBurn
+        exp_alerts:
+          - exp_labels: {severity: page}
+            exp_annotations:
+              summary: "100% of replies over the last hour took longer than 180 s"
+              description: Fast burn of the reply-latency error budget (SLO 95 % within 180 s).
+              runbook_url: docs/runbooks/latency-slo.md
+
+  # No traffic at all: no SLO alert (0/0 is not a breach).
+  - interval: 1m
+    input_series:
+      - series: 'request_e2e_seconds_count{job="regagent-worker"}'
+        values: '0x90'
+      - series: 'request_e2e_seconds_bucket{le="180.0", job="regagent-worker"}'
+        values: '0x90'
+    alert_rule_test:
+      - eval_time: 80m
+        alertname: RegagentLatencySLOBreached
+        exp_alerts: []
+      - eval_time: 80m
+        alertname: RegagentLatencySLOFastBurn
+        exp_alerts: []
+
+  # Backups: 27 h old fires; the textfile disappearing fires the "missing" alert instead.
+  - interval: 5m
+    input_series:
+      - series: 'regagent_backup_last_success_timestamp_seconds{job="regagent-node"}'
+        values: '-97200x20'
+      - series: 'node_textfile_mtime_seconds{file="/textfile/regagent_backup.prom", job="regagent-node"}'
+        values: '0+300x20'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: RegagentBackupStale
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: "Last restore-tested backup is 1d 3h 30m 0s old (limit 26 h)"
+              runbook_url: docs/runbooks/backup-stale.md
+      - eval_time: 30m
+        alertname: RegagentBackupMetricsMissing
+        exp_alerts: []
+
+  # Redis alive but answering unauthenticated clients.
+  - interval: 1m
+    input_series:
+      - series: 'probe_success{probe="redis", job="regagent-probe-redis"}'
+        values: '1x20'
+      - series: 'probe_success{probe="redis-auth", job="regagent-probe-redis-auth"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: RegagentRedisUnauthenticatedAccess
+        exp_alerts:
+          - exp_labels: {severity: warning}
+            exp_annotations:
+              summary: Redis answers unauthenticated clients (the ACL with the default user off is not in force)
+              description: "An unauthenticated PING on 127.0.0.1:6392 was not refused with NOAUTH. Expected until deploy/redis-cutover.sh has run; a regression after it."
+              runbook_url: docs/runbooks/cutover-least-privilege.md
+      - eval_time: 15m
+        alertname: RegagentRedisDown
+        exp_alerts: []

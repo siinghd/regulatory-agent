@@ -78,6 +78,50 @@ class TestParseRaw:
             parse_raw(raw_email(f"{from_headers}\nTo: agent@hsingh.app\nSubject: hi".lstrip("\n")), NOW)
 
     @pytest.mark.parametrize(
+        "address", ["jane@example.com.", "Jane <jane@example.com.>", "jane@.", "<jane@>"]
+    )
+    def test_from_domain_must_not_be_empty_or_end_with_a_dot(self, address):
+        with pytest.raises(MalformedEmail):
+            parse_raw(raw_email(f"From: {address}\nTo: agent@hsingh.app"), NOW)
+
+    @pytest.mark.parametrize(
+        "repeated",
+        [
+            "From: jane@example.com",
+            "from: Jane <jane@example.com>",  # the same address twice is still two headers
+            "Sender: ops@example.com",
+            "Reply-To: other@example.net",
+            "To: agent@hsingh.app",
+            "Cc: ops@example.com",
+            "Subject: Exhibits for M99999",
+            "SUBJECT: Documents for M12205",
+            "Date: Sat, 4 Oct 2026 14:00:00 +0000",
+            "Message-ID: <other@mail.example.com>",
+            "In-Reply-To: <req-2@hsingh.app>",
+            "References: <root@example.com>",
+        ],
+    )
+    def test_headers_allowed_once_must_not_repeat(self, repeated):
+        headers = (
+            "From: jane@example.com\nSender: ops@example.com\nReply-To: other@example.net\n"
+            "To: agent@hsingh.app\nCc: ops@example.com\nSubject: Documents for M12205\n"
+            "Date: Sat, 4 Oct 2026 14:00:00 +0000\nMessage-ID: <abc@mail.example.com>\n"
+            "In-Reply-To: <req-1@hsingh.app>\nReferences: <req-1@hsingh.app>"
+        )
+        assert parse_raw(raw_email(headers), NOW).from_addr == "jane@example.com"
+        with pytest.raises(MalformedEmail, match="more than once"):
+            parse_raw(raw_email(f"{headers}\n{repeated}"), NOW)
+
+    def test_repeated_x_loop_values_are_all_kept(self):
+        raw = raw_email(
+            "From: jane@example.com\nX-Loop: lists@example.org\nX-Loop: <Agent@hsingh.app>\n"
+            "X-Loop: responder@example.net"
+        )
+        assert parse_raw(raw, NOW).headers["x-loop"] == (
+            "lists@example.org, <Agent@hsingh.app>, responder@example.net"
+        )
+
+    @pytest.mark.parametrize(
         "hostile_header",
         [
             "Message-ID: <a@",  # IndexError in CPython's msg-id parser

@@ -1,0 +1,15 @@
+{
+ "started_at": "2026-10-05T00:08:55+0000",
+ "variant": "jev",
+ "dataset": "heldout",
+ "concurrency": 6,
+ "cases": 40,
+ "model": "jev-1.13.0",
+ "requests": 76,
+ "repeats": 2,
+ "served": [
+  "jev-1.13.0"
+ ],
+ "wall_s": 3.5,
+ "runs": 78
+}
