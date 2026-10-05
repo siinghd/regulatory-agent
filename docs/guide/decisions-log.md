@@ -197,3 +197,11 @@ Status values: **Accepted** (in the code), **Accepted, done** (a change that is 
 - **Decision:** Run Prometheus, Alertmanager, Grafana and exporters on the loopback. Show Grafana read-only at `/grafana/` with a disclaimer. Add a public `/status` page with aggregate numbers only.
 - **Alternatives:** A hosted monitor service.
 - **Consequences:** [Observability](observability.md) describes the stack. The app exports all metrics that the rules use (`deploy/observability/METRICS_CONTRACT.md`). Alerts reach a person only after the operator sets a receiver.
+
+### ADR-025: Split an email with more than 1 matter into requests
+
+- **Date:** 2026-10-05. **Status:** Accepted, done.
+- **Context:** A requester asked for 2 matters in 1 email. The agent fetched the first matter and asked the requester to send the second matter again.
+- **Decision:** Make each further matter a request of its own, up to 3 matters in 1 email. Code pairs each matter with its category from the words next to the matter. The models do not pair them. Each split request counts against the rate limits.
+- **Alternatives:** 1 request that fetches many matters into 1 ZIP and 1 reply. Ask the model to pair the matters and the categories.
+- **Consequences:** The state machine, the retries, the single-flight locks and the outbox do not change, because each split request is a normal request. The requester gets 1 reply for each matter. When the pairing needs judgement, the agent does not guess: the reply names the matter.

@@ -31,7 +31,8 @@ The layers are in the order that a message meets them.
 | 9 | Each sender | Gate, after authentication | Normalised sender | 6 each hour, 20 each day | Rejected. At most 1 "slow down" reply each hour (each day for the daily cap), and at most 3 each day. |
 | 10 | Each domain | Gate | Organizational domain | 30 each hour, 100 each day | The same as layer 9 |
 | 11 | Global | Gate | All senders | 300 each hour, 1000 each day | Rejected. No reply. |
-| 12 | Each thread | Gate | Thread and sender | 5 requests | Rejected. No reply. |
+| 12 | Each thread | Gate | Thread and sender | 5 requests (split requests do not count) | Rejected. No reply. |
+| 12a | Matters in 1 email | Gate | Email | 3 matters (`MAX_MATTERS_PER_EMAIL`). Each split request also counts against layers 9, 10 and 11. | The reply names the matters that the agent did not fetch |
 | 13 | In flight | Before the fetch | Normalised sender | 2 requests in `fetching` or `packaging` | The request waits (no attempt used) until its 2 h deadline, then 1 apology |
 | 14 | LLM budget | Gate and summaries | UTC day | USD 2.00 | Triage uses only the rules. No new summaries. Documents and cached summaries still go out. 1 ERROR log line each day. |
 | 15 | Portal visits | Each matter lookup, list or download batch | Provider and UTC day | UARB 400, OEB 2000, FERC 2000 | The request waits. The worker examines the budget again every 10 min. 1 "delayed" email for each request. 1 apology at the deadline. |

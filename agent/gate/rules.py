@@ -155,10 +155,9 @@ def normalise_text(text: str) -> str:
     return _NOT_A_MATTER_RE.sub(lambda m: " " * len(m.group(0)), text)
 
 
-def find_matters(text: str) -> tuple[str, ...]:
-    """Canonical matter numbers of every registered regulator, in first-mention order."""
-    text = normalise_text(text)
-    hits: list[tuple[int, str]] = []
+def _mentions(text: str) -> list[tuple[int, int, str]]:
+    """(start, end, canonical matter) of every matter mention in `text` (already normalised), in order."""
+    hits: list[tuple[int, int, str]] = []
     for provider in all_providers():
         narrow = getattr(provider, "narrow", None)  # "ER24-1234 (the -000 sub-docket only)"
         for m in provider.mention_pattern.finditer(text):
@@ -166,8 +165,48 @@ def find_matters(text: str) -> tuple[str, ...]:
             if matter and narrow is not None:
                 matter = narrow(matter, text[m.end() : m.end() + _SCOPE_CHARS])
             if matter:
-                hits.append((m.start(), matter))
-    return tuple(dict.fromkeys(matter for _, matter in sorted(hits)))  # dedupe, keep first-mention order
+                hits.append((m.start(), m.end(), matter))
+    return sorted(hits)
+
+
+def find_matters(text: str) -> tuple[str, ...]:
+    """Canonical matter numbers of every registered regulator, in first-mention order."""
+    return tuple(dict.fromkeys(matter for _, _, matter in _mentions(normalise_text(text))))
+
+
+def category_for(text: str, matter: str, shared: str | None) -> tuple[str, int | None] | None:
+    """The one category (and count, if stated) that `text` asks for `matter`, when it names several
+    matters; None when that takes judgement.
+
+    Each matter owns the words between it and its neighbours: the words since the previous matter
+    when the email names a category before its first matter ("the decisions in EB-2024-0111 and
+    the Other Documents for M12205"), else the words up to the next matter ("M12205: exhibits;
+    M12383: key documents"). Failing that, the one category of the matter's regulator the whole
+    email names, if it is `shared` with the first matter ("the Exhibits for M12205 and M12383").
+    Negation, or two categories in the matter's words, is None.
+    """
+    provider = provider_for_matter(matter)
+    text = normalise_text(text)
+    if provider is None or _NEGATION_RE.search(text):
+        return None
+    mentions = [(start, end) for start, end, m in _mentions(text) if m == matter]
+    if not mentions:
+        return None
+    start, end = mentions[0]
+    others = [(s, e) for s, e, m in _mentions(text) if m != matter]
+    if find_doc_types(text[: min(start, *(s for s, _ in others))], categories_for(None)):
+        words = text[max((e for _, e in others if e <= start), default=0) : end]  # category, then matter
+    else:
+        words = text[end : min((s for s, _ in others if s >= end), default=len(text))]  # matter, then category
+    names = find_doc_types(words, provider.categories)
+    if len(names) == 1:
+        return names[0], explicit_count(words, provider.categories)
+    if names:
+        return None
+    names = find_doc_types(text, provider.categories)
+    if len(names) == 1 and names[0] == shared:
+        return names[0], None
+    return None
 
 
 def categories_for(matter: str | None) -> tuple[Category, ...]:

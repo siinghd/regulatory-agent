@@ -443,3 +443,28 @@ def test_a_bare_yes_or_ok_is_left_to_the_classifier(body):
 ])
 def test_an_accession_number_is_a_document_request_only_when_named_as_one(text, document):
     assert rules.specific_document(text) == document
+
+
+@pytest.mark.parametrize(
+    ("text", "matter", "shared", "expected"),
+    [
+        ("Please send the decisions in EB-2024-0111 and the Other Documents for M12205.", "M12205",
+         "Decisions and Orders", ("Other Documents", None)),
+        ("Send the Exhibits for M12205 and M12383", "M12383", "Exhibits", ("Exhibits", None)),
+        ("Exhibits for M12205 and Key Documents for M12383", "M12383", "Exhibits", ("Key Documents", None)),
+        ("Other Documents for M12205 and transcripts for EB-2024-0111", "EB-2024-0111", "Other Documents",
+         ("Transcripts", None)),
+        ("M12205: exhibits; M12383: key documents", "M12383", "Exhibits", ("Key Documents", None)),
+        ("Can you send M12205 exhibits and M12383 key docs please", "M12383", "Exhibits", ("Key Documents", None)),
+        ("Send me the 3 latest Exhibits for M12205 and the 2 latest Key Documents for M12383", "M12383",
+         "Exhibits", ("Key Documents", 2)),
+        # judgement calls stay with the requester: two categories, negation, nothing named, unknown matter
+        ("Exhibits and Key Documents for M12205 and M12383", "M12383", "Exhibits", None),
+        ("Everything except recordings for M12205 and M12383", "M12383", None, None),
+        ("Send the Other Documents for M12205 and something for EB-2024-0111", "EB-2024-0111", "Other Documents",
+         None),
+        ("Exhibits for M12205", "M12383", "Exhibits", None),
+    ],
+)
+def test_category_for_pairs_each_matter_with_its_own_words(text, matter, shared, expected):
+    assert rules.category_for(text, matter, shared) == expected

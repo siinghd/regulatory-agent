@@ -30,7 +30,7 @@ import structlog
 from arq.connections import ArqRedis
 from redis.exceptions import RedisError
 
-from agent import admin, audit, blobs, breaker, db, metrics, outbox, store
+from agent import admin, audit, blobs, breaker, db, metrics, outbox, queue, store
 from agent.breaker import Breakers
 from agent.citations.claims import summarize_with_citations
 from agent.citations.extract import extract_pages_async, is_docx, needs_ocr
@@ -361,6 +361,8 @@ async def _gate(deps: Deps, row, raw: bytes, email: InboundEmail, *, final_attem
         await _answer_without_documents(deps, row, email, parsed, provider, common)
         return None
 
+    parsed = await _split(deps, row, email, parsed, auth_json)
+    common["parsed"] = parsed.model_dump(mode="json")
     # The acknowledgement is queued with the decision; a failure to send it never holds up the fetch.
     accepted = await _queue(
         deps, row, email, _ack_draft(deps, row, email, parsed, provider), from_states={"received"},
@@ -369,12 +371,56 @@ async def _gate(deps: Deps, row, raw: bytes, email: InboundEmail, *, final_attem
     return parsed if accepted else None  # not accepted: another job already took it past the gate
 
 
+async def _split(deps: Deps, row, email: InboundEmail, parsed: ParsedRequest, auth_json: dict) -> ParsedRequest:
+    """Each further matter of the email, with the one category the rules pair it with, becomes a
+    request of its own (fetched in parallel, answered in its own reply in the thread), up to
+    max_matters_per_email in all. The model only proposes the matters; a matter the rules can't
+    pair, over that cap or over the sender's limits stays in `extra_matters`, offered in the reply.
+
+    Created before this request is accepted, once per (email, matter): a retry of the gate finds
+    them and creates nothing twice. Queued now; the sweeper picks up any the queue missed.
+    """
+    s = deps.settings
+    split: list[tuple[str, str]] = []
+    offered: list[str] = []
+    for matter in dict.fromkeys(m for m in parsed.extra_matters if m != parsed.matter):
+        target = provider_for_matter(matter)
+        text = email.text if matter in rules.find_matters(email.text) else f"{email.subject}\n{email.text}"
+        pair = rules.category_for(text, matter, parsed.doc_type) if target else None
+        if (pair is None or len(split) + 1 >= s.max_matters_per_email
+                or not await _split_within_limits(deps, email, store.split_message_id(row["message_id"], matter))):
+            offered.append(matter)
+            continue
+        doc_type, count = pair
+        max_docs = min(count, s.max_docs_per_request) if count else (
+            parsed.max_docs if doc_type == parsed.doc_type else s.max_docs_per_request)
+        child = ParsedRequest(intent=Intent.DOCUMENT_REQUEST, matter=matter, doc_type=doc_type, max_docs=max_docs,
+                              source="split", confidence=parsed.confidence)
+        child_id = await store.create_split(row, matter=matter, doc_type=doc_type, provider=target.name,
+                                            parsed=child.model_dump(mode="json"), auth=auth_json)
+        if child_id is not None and deps.queue is not None:
+            await queue.enqueue_request(deps.queue, child_id)
+        split.append((matter, doc_type))
+    if split:
+        log.info("gate.split", request_id=str(row["id"]), matters=1 + len(split), offered=len(offered))
+    return parsed.model_copy(update={"extra_matters": tuple(offered), "split": tuple(split)})
+
+
+async def _split_within_limits(deps: Deps, email: InboundEmail, member: str) -> bool:
+    """A split request counts against the sender's, the domain's and the global limits like an
+    email of its own (no "slow down" notice: the email's own request is answered anyway)."""
+    for who, window, key, limit in _rate_checks(deps.settings, email):
+        if not await deps.limits.decide(f"{who}_{window}", key, limit=limit, window_s=_WINDOW_S[window], member=member):
+            return False
+    return True
+
+
 def _ack_draft(
     deps: Deps, row, email: InboundEmail, parsed: ParsedRequest, provider: Provider
 ) -> outbound.Draft:
     return outbound.ack(
         name=_display_name(email), subject=email.subject, matter=parsed.matter,
-        doc_type=parsed.doc_type, provider=provider, track_url=_track_url(deps, row),
+        doc_type=parsed.doc_type, provider=provider, track_url=_track_url(deps, row), split=parsed.split,
     )
 
 
@@ -424,16 +470,8 @@ async def _within_limits(deps: Deps, row, email: InboundEmail, auth_json: dict) 
     """Sliding-window caps per normalised sender, per organizational domain and globally, each
     per hour and per day. Keys are HMACs (agent.limits): no address is ever in Redis."""
     s, rid = deps.settings, row["id"]
-    sender, domain = sender_key(email.from_addr), domain_key(email.from_addr)
-    checks = [
-        ("sender", "hour", f"sender:{sender}", s.rate_per_sender_hour),
-        ("sender", "day", f"sender_day:{sender}", s.rate_per_sender_day),
-        ("domain", "hour", f"domain:{domain}", s.rate_per_domain_hour),
-        ("domain", "day", f"domain_day:{domain}", s.rate_per_domain_day),
-        ("global", "hour", "global", s.rate_global_hour),
-        ("global", "day", "global_day", s.rate_global_day),
-    ]
-    for who, window, key, limit in checks:
+    sender = sender_key(email.from_addr)
+    for who, window, key, limit in _rate_checks(s, email):
         if await deps.limits.decide(f"{who}_{window}", key, limit=limit, window_s=_WINDOW_S[window], member=str(rid)):
             continue
         reason = f"rate_limited:{who}" + ("_day" if window == "day" else "")
@@ -451,6 +489,19 @@ async def _within_limits(deps: Deps, row, email: InboundEmail, auth_json: dict) 
         await store.transition(rid, {"received"}, "rejected", reject_reason="thread_cap", auth=auth_json)
         return False
     return True
+
+
+def _rate_checks(s: Settings, email: InboundEmail) -> list[tuple[str, str, str, int]]:
+    """(who, window, Redis key, limit) of every sliding-window cap an email counts against."""
+    sender, domain = sender_key(email.from_addr), domain_key(email.from_addr)
+    return [
+        ("sender", "hour", f"sender:{sender}", s.rate_per_sender_hour),
+        ("sender", "day", f"sender_day:{sender}", s.rate_per_sender_day),
+        ("domain", "hour", f"domain:{domain}", s.rate_per_domain_hour),
+        ("domain", "day", f"domain_day:{domain}", s.rate_per_domain_day),
+        ("global", "hour", "global", s.rate_global_hour),
+        ("global", "day", "global_day", s.rate_global_day),
+    ]
 
 
 async def _may_slow_down(deps: Deps, sender: str, window: str) -> bool:
@@ -624,7 +675,7 @@ async def _fulfil(deps: Deps, row, email: InboundEmail) -> None:
             download_expires=delivery.link.expires_at if delivery.link else None,
             download_size=delivery.size, attachment_path=delivery.path,
             track_url=_track_url(deps, row), extra_doc_types=parsed.extra_doc_types,
-            extra_matters=parsed.extra_matters, failed_titles=fetched.failed, confidential=fetched.confidential,
+            extra_matters=parsed.extra_matters, split=parsed.split, failed_titles=fetched.failed, confidential=fetched.confidential,
             order=order, skipped_titles=fetched.skipped,
             size_budget=fetched.daily_allowance or deps.settings.max_request_bytes,
             summary_basis=basis, daily_allowance=fetched.daily_allowance is not None,

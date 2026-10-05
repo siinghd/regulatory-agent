@@ -29,7 +29,7 @@ For each valid request, the agent does these tasks:
 NOTE: The agent replies only to a sender that passes DMARC alignment with SPF or DKIM. Mail from a domain without SPF or DKIM gets no reply. Mail through a mailing list that breaks both SPF and DKIM also gets no reply.
 
 1. Send an email from your own mailbox to **agent@hsingh.app**.
-2. In the email, write 1 matter number and 1 document category.
+2. In the email, write a matter number and a document category. You can ask for up to 3 matters in 1 email. Each matter gets its own reply.
 3. Wait for the acknowledgement.
 4. Open the progress link in the acknowledgement.
 5. Wait for the reply with the documents.
@@ -42,6 +42,7 @@ Example sentences:
 | UARB | "Send me up to 5 Key Documents for M12383." |
 | OEB | "Can you send me the procedural orders in EB-2025-0064?" |
 | OEB | "Send the 2 most recent decisions in EB-2023-0195." |
+| UARB and OEB | "Please send the decisions in EB-2024-0111 and the Other Documents for M12205." |
 | FERC | "Send the orders issued in docket ER24-1234-000." |
 | FERC | "Can you send me the notices for RM22-14?" |
 
@@ -338,11 +339,11 @@ For a deploy to the live host, use `make deploy CHANGE="<PR or commit reference>
 
 | Command | Suites | Tests collected |
 |---|---|---|
-| `.venv/bin/pytest -q` | Unit (1302), adversarial (39) and review (17). No network. | 1358 |
-| `make integration` | Integration (116), reliability (60) and review (7). Real Postgres and Redis, with a fake portal, a fake LLM and a fake SMTP server. | 183 |
+| `.venv/bin/pytest -q` | Unit (1314), adversarial (39) and review (17). No network. | 1370 |
+| `make integration` | Integration (125), reliability (60) and review (7). Real Postgres and Redis, with a fake portal, a fake LLM and a fake SMTP server. | 192 |
 | `.venv/bin/pytest -m live -q` | The real UARB, OEB and FERC portals. UARB needs the egress tunnel. | 4 |
 
-NOTE: On 2026-10-05, inside the release candidate image, 1358 default tests and 181 integration tests passed (2 browser tests skip). The integration suite needs `TEST_DATABASE_URL` and `TEST_REDIS_URL`. `make integration` starts temporary containers and sets them. The tests never read `.env`.
+NOTE: On 2026-10-05, 1370 default tests and 192 integration tests passed in the local virtual environment. The deploy runs them again inside the release candidate image. The integration suite needs `TEST_DATABASE_URL` and `TEST_REDIS_URL`. `make integration` starts temporary containers and sets them. The tests never read `.env`.
 
 The adversarial corpus has 29 hostile or unusual emails in `tests/adversarial/emails/`. `scripts/load_limits.py` sends bursts at each abuse limit with fakes, and sends no mail.
 

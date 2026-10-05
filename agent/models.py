@@ -68,7 +68,9 @@ class ParsedRequest(Frozen):
     source: str = "rules"  # rules | llm
     confidence: float = 1.0
     needs_clarification: str | None = None  # user-facing question when ambiguous
-    extra_matters: tuple[str, ...] = ()  # additional matters mentioned (offered, not fetched)
+    extra_matters: tuple[str, ...] = ()  # additional matters mentioned and not fetched (offered)
+    # further (matter, category) pairs of the same email, each fetched as a request of its own
+    split: tuple[tuple[str, str], ...] = ()
     extra_doc_types: tuple[str, ...] = ()  # additional categories mentioned (offered as a follow-up)
 
 

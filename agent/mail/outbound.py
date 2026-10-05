@@ -230,18 +230,36 @@ def matter_sentence(info: MatterInfo, provider: Provider) -> str:
     return " ".join(bits)
 
 
-def ack(*, name: str, subject: str, matter: str, doc_type: str, provider: Provider, track_url: str) -> Draft:
+def split_sentence(split: Sequence[tuple[str, str]]) -> str:
+    """'I'm also collecting the Other Documents for M12205; they come in a separate email.'"""
+    parts = [f"the {doc_type} for {matter}" for matter, doc_type in split]
+    listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1]
+    return f"I'm also collecting {listed}; " + (
+        "it comes in a separate email." if len(parts) == 1 else "they come in separate emails.")
+
+
+def extra_matters_sentence(extra_matters: Sequence[str]) -> str:
+    return (f"You also mentioned {', '.join(extra_matters)}, but I didn't fetch "
+            f"{'it' if len(extra_matters) == 1 else 'them'}. Please send a new email with the matter number "
+            f"and the type of documents you want.")
+
+
+def ack(
+    *, name: str, subject: str, matter: str, doc_type: str, provider: Provider, track_url: str,
+    split: Sequence[tuple[str, str]] = (),
+) -> Draft:
+    also = f" {split_sentence(split)}" if split else ""
     text = (
         f"{_greeting(name)}\n\n"
         f"Got it. I'm collecting the {doc_type} for {matter} from the {provider.display_name} database now. "
-        f"You'll get a second email with the documents and a summary, usually within a couple of minutes.\n\n"
+        f"You'll get a second email with the documents and a summary, usually within a couple of minutes.{also}\n\n"
         f"Track progress: {track_url}\n"
     )
     body = (
         f"<p>{html.escape(_greeting(name))}</p>"
         f"<p>Got it. I'm collecting the <b>{html.escape(doc_type)}</b> for <b>{html.escape(matter)}</b> "
         f"from the {html.escape(provider.display_name)} database now. You'll get a second email with the "
-        f"documents and a summary, usually within a couple of minutes.</p>"
+        f"documents and a summary, usually within a couple of minutes.{html.escape(also)}</p>"
         f'<p><a href="{html.escape(track_url)}" style="display:inline-block;padding:9px 14px;border-radius:6px;'
         f'background:#1f5f8b;color:#fff;text-decoration:none">Track progress</a></p>'
     )
@@ -345,6 +363,7 @@ def documents_reply(
     track_url: str,
     extra_doc_types: Sequence[str] = (),
     extra_matters: Sequence[str] = (),
+    split: Sequence[tuple[str, str]] = (),  # further matters of the email, each answered in its own reply
     failed_titles: Sequence[str] = (),
     newest_first: bool = True,
     confidential: int = 0,
@@ -397,9 +416,10 @@ def documents_reply(
     if extra_doc_types:
         t += ["", "You also mentioned " + ", ".join(extra_doc_types)
               + ". Reply to this email with the type you want next and I'll send it."]
+    if split:
+        t += ["", split_sentence(split)]
     if extra_matters:
-        t += ["", "You also mentioned " + ", ".join(extra_matters)
-              + ". I handle one matter per email, so please send a separate request for it."]
+        t += ["", extra_matters_sentence(extra_matters)]
     t += ["", f"Request details: {track_url}"]
 
     h = [f"<p>{html.escape(_greeting(name))}</p>", f"<p>{html.escape(matter_sentence(info, provider))}</p>",
@@ -434,9 +454,10 @@ def documents_reply(
     if extra_doc_types:
         h.append("<p>You also mentioned " + html.escape(", ".join(extra_doc_types))
                  + ". Reply to this email with the type you want next and I'll send it.</p>")
+    if split:
+        h.append(f"<p>{html.escape(split_sentence(split))}</p>")
     if extra_matters:
-        h.append("<p>You also mentioned " + html.escape(", ".join(extra_matters))
-                 + ". I handle one matter per email, so please send a separate request for it.</p>")
+        h.append(f"<p>{html.escape(extra_matters_sentence(extra_matters))}</p>")
     h.append(f'<p style="font-size:13px"><a href="{html.escape(track_url)}">Request details</a></p>')
     return Draft("reply", reply_subject(subject), _with_footer("\n".join(t)), _wrap("".join(h), provider),
                  attachments=(attachment_path,) if attachment_path else ())

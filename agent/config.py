@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     rate_notices_per_day: int = 3  # "slow down" replies per sender: at most one an hour, this many a day
     max_inflight_per_sender: int = 2  # requests fetching/packaging at once; more wait their turn
     max_requests_per_thread: int = 5
+    max_matters_per_email: int = 3  # an email naming more gets the rest offered, not fetched
     max_inbound_bytes: int = 5_000_000
     # Pre-authentication (ingest, before raw MIME is stored or DNS is asked): per connecting
     # client IP (IPv6 per /64) and per claimed From organizational domain. Over either: headers

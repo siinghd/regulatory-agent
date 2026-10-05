@@ -107,7 +107,19 @@ If DNS does not answer during sender authentication, the gate raises a temporary
 3. If the rules cannot decide, 1 Jev request asks typed questions (`agent/gate/jev.py`).
 4. If a Jev confidence gate fires, or Jev does not answer, the LLM classifier decides (`agent/gate/classify.py`).
 5. If the LLM does not answer, Jev's question goes out. If Jev was also down, the cautious answer of the rules goes out.
-6. A follow-up in a thread from the same sender, without a matter number, uses the matter of the earlier request.
+6. A follow-up in a thread from the same sender, without a matter number, uses the matter of the earlier request. If the earlier email named more than 1 matter, the agent asks which matter.
+7. An email can name more than 1 matter. The models only find the further matters. Code (`rules.category_for`) pairs each further matter with the 1 category that the words next to it name. Each pair becomes a request of its own, created in state `accepted` (refer to 5.3).
+
+### 5.3 Emails with more than 1 matter
+
+The first matter is the request of the email. Each further matter that code can pair with 1 category becomes a split request:
+
+- It has the same sender, raw MIME, thread and receipt time as the email. Its `message_id` is `split:<matter>:<message id of the email>`, so a retry of the gate creates no second split.
+- It does not go through the gate again. It counts against the sender, domain and global limits as 1 more request. It does not count against the thread cap.
+- It gets no acknowledgement. The acknowledgement of the email names it. It gets its own reply in the thread.
+- The count of documents comes from the words next to the matter. If those words have no count, a split request with the category of the first matter uses the count of the first matter. Other split requests use the maximum (10).
+
+The agent does not fetch a further matter, and the reply names it, in these conditions: the words next to the matter name 0 or 2 or more categories, the email has a negation ("except"), the email names more than 3 matters (`MAX_MATTERS_PER_EMAIL`), or the sender is over a limit.
 
 [Models](models.md) describes Jev and the LLM classifier. The models only select values. Code writes all text that the requester sees.
 
@@ -124,6 +136,7 @@ If DNS does not answer during sender authentication, the gate raises a temporary
 | A question, or no category, or the models are not sure | `clarify` or `done` | Matter data (if known) and a question that code writes |
 | The matter does not exist | `done` | A "not found" message |
 | A valid request | `accepted` | The acknowledgement with the progress link |
+| A valid request that names further matters | `accepted`, and 1 split request in `accepted` for each further matter | 1 acknowledgement that names each matter. 1 reply for each matter. |
 
 ## 6. Phase D: fetch
 

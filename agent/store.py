@@ -74,6 +74,48 @@ async def create_request(
     return row["id"] if row else None
 
 
+SPLIT_PREFIX = "split:"  # message_id of a request split off another email's: split:<matter>:<its message_id>
+
+
+def split_message_id(parent_message_id: str, matter: str) -> str:
+    return f"{SPLIT_PREFIX}{matter}:{parent_message_id}"
+
+
+async def create_split(parent, *, matter: str, doc_type: str, provider: str, parsed: dict, auth: dict) -> UUID | None:
+    """A further matter of `parent`'s email as a request of its own, created `accepted` (it
+    shares the parent's verified sender, raw MIME and receipt time; it never sees the gate).
+    Once per (email, matter): returns None if it exists already."""
+    row = await db.fetchrow(
+        """
+        INSERT INTO requests (message_id, track_token, raw_sha256, from_addr, from_h, subject, thread_root,
+                              sender_h, received_at, state, auth, parsed, provider, matter, doc_type)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'accepted', $10, $11, $12, $13, $14)
+        ON CONFLICT (message_id) DO NOTHING
+        RETURNING id
+        """,
+        split_message_id(parent["message_id"], matter),
+        secrets.token_urlsafe(12),
+        parent["raw_sha256"],
+        parent["from_addr"],
+        parent["from_h"],
+        parent["subject"],
+        parent["thread_root"],
+        parent["sender_h"],
+        parent["received_at"],
+        auth,
+        parsed,
+        provider,
+        matter,
+        doc_type,
+    )
+    if row:
+        await event(row["id"], "received", {"from_h": parent["from_h"], "split_from": str(parent["id"])})
+        await event(row["id"], "state:accepted", {"split_from": str(parent["id"]), "matter": matter,
+                                                  "doc_type": doc_type})
+        metrics.observe_transition(None, "accepted", None, final=False, provider=provider)
+    return row["id"] if row else None
+
+
 async def get(request_id: UUID) -> asyncpg.Record | None:
     return await db.fetchrow("SELECT * FROM requests WHERE id = $1", request_id)
 
@@ -310,23 +352,31 @@ async def previous_in_thread(thread_root: str, exclude_id: UUID, from_addr: str)
     """Most recent earlier request *by the same sender* in this thread that resolved a matter.
 
     Scoped to the sender: Message-IDs are not secrets, and a stranger replying into someone
-    else's thread must not inherit (or exhaust) that conversation's context.
+    else's thread must not inherit (or exhaust) that conversation's context. An email split into
+    several matters leaves no one matter to inherit: None.
     """
-    return await db.fetchrow(
+    rows = await db.fetch(
         """
-        SELECT matter, doc_type, provider, state FROM requests
+        SELECT matter, doc_type, provider, state FROM requests r
         WHERE thread_root = $1 AND id <> $2 AND from_addr = $3 AND matter IS NOT NULL
-        ORDER BY received_at DESC LIMIT 1
+          AND received_at = (SELECT max(received_at) FROM requests
+                             WHERE thread_root = $1 AND id <> $2 AND from_addr = $3 AND matter IS NOT NULL)
+        ORDER BY (message_id LIKE $4) LIMIT 2
         """,
         thread_root,
         exclude_id,
         from_addr,
+        SPLIT_PREFIX + "%",
     )
+    if len({r["matter"] for r in rows}) > 1:
+        return None
+    return rows[0] if rows else None
 
 
 async def thread_size(thread_root: str, from_addr: str) -> int:
     row = await db.fetchrow(
-        "SELECT count(*) AS n FROM requests WHERE thread_root = $1 AND from_addr = $2", thread_root, from_addr
+        "SELECT count(*) AS n FROM requests WHERE thread_root = $1 AND from_addr = $2 AND message_id NOT LIKE $3",
+        thread_root, from_addr, SPLIT_PREFIX + "%",
     )
     return row["n"]
 

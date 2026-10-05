@@ -296,12 +296,13 @@ def llm_parse(
     clarification: str | None = None,
     max_docs: int = 10,
     confidence: float = 0.9,
+    other_matters: Sequence[str] = (),
 ) -> dict[str, Any]:
     """A classifier answer in the shape of agent.gate.classify._LLMParse."""
     return {
         "intent": intent,
         "matter": matter,
-        "other_matters": [],
+        "other_matters": list(other_matters),
         "doc_type": doc_type,
         "other_doc_types": [],
         "max_docs": max_docs,
