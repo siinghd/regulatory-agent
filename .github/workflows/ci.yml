@@ -111,7 +111,7 @@ jobs:
             pwvar=${r}_pw; PGUSER=agent_$r PGPASSWORD=${!pwvar} psql -X -q -v ON_ERROR_STOP=1 -f deploy/sql/verify_grants.sql
           done
       - name: integration (pipeline against real Postgres/Redis, fake portal/LLM/SMTP)
-        run: python -m pytest -m integration -q -p no:cacheprovider
+        run: python -m playwright install --with-deps chromium && python -m pytest -m integration -q -p no:cacheprovider
 
   dependency-audit:
     runs-on: ubuntu-24.04

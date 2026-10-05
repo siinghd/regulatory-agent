@@ -545,3 +545,12 @@ async def test_when_every_file_fails_a_retryable_error_wins(portal, provider, tm
 
     with pytest.raises(PortalUnavailable):
         await collect(small_provider(provider._client, max_bytes=100), [ref("D25-1"), ref("D25-2")], tmp_path)
+
+
+async def test_canary_is_checked_on_a_freshly_booted_host(portal, provider, monkeypatch):
+    # monotonic time starts near 0 after boot; the guard must still run its first check
+    monkeypatch.setattr("agent.providers.oeb.time.monotonic", lambda: 5.0)
+    portal.get("Record").mock(side_effect=lambda r: _by_case(r, canary_has_records=False))
+
+    with pytest.raises(ScrapeError):
+        await provider.fetch_matter("EB-2099-9999")

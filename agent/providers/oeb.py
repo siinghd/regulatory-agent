@@ -356,7 +356,9 @@ class OebProvider:
         self._client = client
         # Politeness cap per worker, shared by searches and downloads.
         self._sem = asyncio.Semaphore(max_concurrency)
-        self._search_verified_at = 0.0
+        # None, not 0.0: monotonic time starts near 0 at boot, so 0.0 would read as
+        # "verified moments ago" on a freshly booted host and skip the canary check.
+        self._search_verified_at: float | None = None
         self._file_policy = file_policy
         self._download_timeout_s = download_timeout_s
         # record number -> RecordDocumentSize, from recent listings (a cached listing has none).
@@ -445,7 +447,7 @@ class OebProvider:
         """Zero results is also what WebDrawer returns for a query it doesn't understand (e.g. if
         the CaseNumber field were renamed). Before telling anyone their case doesn't exist, check
         that a known case still returns records. Cached briefly so not-founds stay cheap."""
-        if time.monotonic() - self._search_verified_at < 900:
+        if self._search_verified_at is not None and time.monotonic() - self._search_verified_at < 900:
             return
         if (await self._search(CANARY_MATTER, start=1)).total == 0:
             raise ScrapeError(f"search returned nothing for canary {CANARY_MATTER}: query format changed?")

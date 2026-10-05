@@ -560,7 +560,9 @@ class FercProvider:
         self._client = client
         # Politeness cap per worker, shared by searches and downloads.
         self._sem = asyncio.Semaphore(max_concurrency)
-        self._search_verified_at = 0.0
+        # None, not 0.0: monotonic time starts near 0 at boot, so 0.0 would read as
+        # "verified moments ago" on a freshly booted host and skip the canary check.
+        self._search_verified_at: float | None = None
         self._classes_checked = False
         self._file_policy = file_policy
         self._download_timeout_s = download_timeout_s
@@ -664,7 +666,7 @@ class FercProvider:
         already does for one without a date range), and an unknown docket's description is what a
         broken description lookup would look like. Before telling anyone their docket doesn't
         exist, check a known one still has both. Cached briefly so not-founds stay cheap."""
-        if time.monotonic() - self._search_verified_at < 900:
+        if self._search_verified_at is not None and time.monotonic() - self._search_verified_at < 900:
             return
         base, sub = split_matter(CANARY_MATTER)
         docket, page = await asyncio.gather(
