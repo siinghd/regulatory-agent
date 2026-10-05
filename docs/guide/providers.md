@@ -1,7 +1,5 @@
 # Providers
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 A provider is the adapter for 1 regulator portal. The agent has 3 providers: Nova Scotia UARB, the Ontario Energy Board (OEB) and the US Federal Energy Regulatory Commission (FERC). The rest of the pipeline does not know which provider it uses.
 
 NOTE: Regulator portals can change without notice. The FERC eLibrary API is an internal API without public documentation. A change on a portal can stop its provider until a developer changes the code.

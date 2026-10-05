@@ -1,7 +1,5 @@
 # Runbook: LLM provider incident
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 No alert links here. The signals are in each section. Parent document: [Incident response](../policies/incident-response.md). Policy: [AI use](../policies/ai-use.md).
 
 This runbook covers 2 vendors:

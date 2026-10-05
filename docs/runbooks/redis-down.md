@@ -1,7 +1,5 @@
 # Runbook: Redis down or memory high
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentRedisDown` | `page` | For 2 min, 127.0.0.1:6392 does not answer a PING, or `redis_up` is 0. |

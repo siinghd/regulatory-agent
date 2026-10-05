@@ -1,7 +1,5 @@
 # Encryption & Key Management Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05.
 
 SOC 2: CC6.1, CC6.7, C1.1. Review this policy 1 time each year.

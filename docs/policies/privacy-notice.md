@@ -1,7 +1,5 @@
 # Privacy notice: the regulatory document agent
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 *Last updated 5 October 2026.* The page https://uarb.hsingh.app/privacy shows the same notice. The page takes its retention periods from the configuration of the agent.
 
 This notice tells what happens to your information when you send an email to **agent@hsingh.app**. It also tells what happens when you open a link from the agent. The operator of the service, H. Singh ("we"), runs it. Send questions or requests to **privacy@hsingh.app**.

@@ -1,7 +1,5 @@
 # Abuse protection
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document gives each layer of abuse protection, its default value and the result when a sender is over the limit. Each layer is a parameter in `agent/config.py`, except the Postfix limits.
 
 ## 1. Keys and privacy

@@ -1,7 +1,5 @@
 # Decisions log
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This log has 1 short record for each design decision, in the form of an architecture decision record (ADR). The dates are UTC. They come from the commit times and the file times in the repository. [DESIGN.md](../../DESIGN.md) gives the decisions as 1 table.
 
 Status values: **Accepted** (in the code), **Accepted, done** (a change that is complete), **Accepted, not done** (agreed, work open), **Proposed** (not agreed or not started).

@@ -1,7 +1,5 @@
 # Runbook: disk full
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentDiskSpaceLow` | `warning` | For 10 min, a file system has less than 20% free space. |

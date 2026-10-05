@@ -1,7 +1,5 @@
 # Runbook: reply latency SLO
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 The objective: 95% of requests get their reply within 180 s after the email arrives. The metric is `request_e2e_seconds`. This is an evaluation target for the MVP. It is not a contractual SLA.
 
 | Alert | Alert severity | Condition |

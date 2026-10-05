@@ -1,7 +1,5 @@
 # Runbook: TLS certificate expiry
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentTLSCertExpiringSoon` | `warning` | For 1 h, a probed certificate expires in less than 14 days. |

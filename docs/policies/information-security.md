@@ -1,7 +1,5 @@
 # Information Security Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05.
 
 ## 1. Scope

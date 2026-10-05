@@ -1,7 +1,5 @@
 # Runbook: portal sends wrong documents
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 No alert links here. Start this runbook when the UARB portal (FileMaker WebDirect) gives a file under the wrong id.
 
 Known cause: GO GET IT serves the active record of FileMaker. The portal shares the prepared file across guest sessions from 1 client IP. On the live portal, session A asked for 102674 and got the files that sessions B and C had requested.

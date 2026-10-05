@@ -1,7 +1,5 @@
 # Runbook: queue stuck
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentQueueStuck` | `page` | For 10 min, more than 20 jobs wait in the arq queue (`queue_depth`). |

@@ -1,7 +1,5 @@
 # Operations
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document gives the procedures for the operator: deploy, cutover, backup, restore, purge, DSAR, kill switch, health checks and metrics. The incident runbooks are in `docs/runbooks/`. The policies are in `docs/policies/`.
 
 NOTE: The agent is an MVP for evaluation. It has no service level agreement. 1 operator does all roles.

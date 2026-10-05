@@ -1,7 +1,5 @@
 # Incident Response Plan
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05. SOC 2: CC7.3–CC7.5, CC2.3, P6.
 
 Review this plan each year and after each SEV1 or SEV2 incident.

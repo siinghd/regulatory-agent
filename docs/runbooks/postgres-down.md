@@ -1,7 +1,5 @@
 # Runbook: Postgres down
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentPostgresDown` | `page` | For 2 min, the TCP connection to 127.0.0.1:5442 fails, or `pg_up` is 0. |

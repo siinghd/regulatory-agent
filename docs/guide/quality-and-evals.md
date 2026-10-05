@@ -1,7 +1,5 @@
 # Quality and evals
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document describes the 2 evals of the agent, their method, their results and their limits. It also gives the procedures to run them. The datasets, runners and reports are in `evals/`.
 
 | Eval | Question that it answers | Reports |

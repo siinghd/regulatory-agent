@@ -1,7 +1,5 @@
 # Logging and Monitoring Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05. SOC 2: CC7.2, CC7.3, CC4.1, A1.1.
 
 [Observability](../guide/observability.md) gives the technical details and the procedures for the logs, the metrics, the alerts and the dashboards.

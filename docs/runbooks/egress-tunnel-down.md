@@ -1,7 +1,5 @@
 # Runbook: egress tunnel down
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentEgressTunnelDown` | `page` | For 5 min, no process listens on 127.0.0.1:1080. |

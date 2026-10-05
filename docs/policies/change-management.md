@@ -1,7 +1,5 @@
 # Change Management Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05. SOC 2: CC8.1, CC3.4, CC5.3.
 
 ## 1. Changes in scope

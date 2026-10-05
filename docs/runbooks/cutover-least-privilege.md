@@ -1,7 +1,5 @@
 # Runbook: 1-time cutover to least-privilege roles, Redis ACL and hardened containers
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentRedisUnauthenticatedAccess` | `warning` | For 10 min, Redis answers an unauthenticated PING on 127.0.0.1:6392 and does not refuse it with `NOAUTH`. |

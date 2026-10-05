@@ -1,7 +1,5 @@
 # Data Retention & Disposal Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05.
 
 SOC 2: C1.2, P4.2, P4.3. Review this policy 1 time each year.

@@ -1,7 +1,5 @@
 # Documentation map
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This guide is for 2 groups of readers:
 
 - Senpilot engineers who review this MVP.

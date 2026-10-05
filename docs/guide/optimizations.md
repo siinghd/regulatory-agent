@@ -1,7 +1,5 @@
 # Optimizations
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document gives each optimization of the agent and its measured effect. If no measurement exists, the table says "Not measured separately". The goal of each optimization is goal 3 of [DESIGN.md](../../DESIGN.md): use the portals and the models only when it is necessary.
 
 NOTE: The measurements come from single runs on 1 host. They are not benchmarks. A portal can be slower or faster on a different day.

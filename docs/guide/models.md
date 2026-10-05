@@ -1,7 +1,5 @@
 # Models
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document tells which model does which job, why, what the evals measured, and what data each model vendor receives.
 
 ## 1. Summary

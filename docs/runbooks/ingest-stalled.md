@@ -1,7 +1,5 @@
 # Runbook: ingest stalled
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentIngestStalled` | `page` | For 5 min, `ingest_heartbeat_age_seconds` is more than 600 s. |

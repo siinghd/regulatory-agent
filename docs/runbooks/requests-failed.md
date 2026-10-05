@@ -1,7 +1,5 @@
 # Runbook: requests failed
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentRequestsFailed` | `warning` | At least 1 request reached the final state `failed` in the last 1 h. |

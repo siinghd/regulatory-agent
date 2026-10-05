@@ -1,7 +1,5 @@
 # Runbook: worker metrics down
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentWorkerMetricsDown` | `page` | For 5 min, Prometheus cannot scrape the worker on 127.0.0.1:9710 (`METRICS_PORT`). |

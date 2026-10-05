@@ -1,7 +1,5 @@
 # Runbook: viewer (web) or drop health fails
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentWebHealthDown` | `page` | For 5 min, the probe `uarb-health` (https://uarb.hsingh.app/health through Cloudflare and Caddy) or `web-local-health` (http://127.0.0.1:8710/health on the host) fails. |

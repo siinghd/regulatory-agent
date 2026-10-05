@@ -1,7 +1,5 @@
 # SOC 2 control matrix
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (@siinghd). Version 1.1. Last reviewed 2026-10-05.
 
 This matrix maps each 2017 Trust Services Criterion to the control in the system, its evidence and the open items. It uses the 2022 points of focus. The [system description](system-description.md) gives the scope and the boundaries.

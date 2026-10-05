@@ -1,7 +1,5 @@
 # Runbook: backup stale
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentBackupStale` | `warning` | For 10 min, the newest restore-tested backup in `/home/deploy/backups/regulatory-agent/backup.log` is older than 26 h. |

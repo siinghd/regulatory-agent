@@ -1,7 +1,5 @@
 # Acceptable Use Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05. SOC 2: CC1.1, CC2.2, CC2.3, CC6.1.
 
 ## Part A: persons who operate or develop the system

@@ -1,7 +1,5 @@
 # Vendor Management Policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05.
 
 SOC 2: CC9.2, CC3.2, P6.1, C1.1. Register: [vendor-register.md](vendor-register.md). Review this policy 1 time each year.

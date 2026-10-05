@@ -1,7 +1,5 @@
 # Architecture
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document describes the processes, the data stores, the external services and the data flow of the agent. [DESIGN.md](../../DESIGN.md) tells why the architecture has this form.
 
 ## 1. Overview

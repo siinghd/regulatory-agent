@@ -1,7 +1,5 @@
 # Runbook: daily budget high or exhausted
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentBudgetHigh` | `warning` | For 5 min, a daily budget is more than 80% used. |

@@ -1,7 +1,5 @@
 # Security and privacy policies
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Last reviewed 2026-10-05.
 
 These policies apply to the Regulatory Document Agent. The scope is the email agent at `agent@hsingh.app`, the viewer at `uarb.hsingh.app`, the host and the services that the agent uses. Each policy tells what the operator does now and where the evidence is. Each policy also tells which controls are open.

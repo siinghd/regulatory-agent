@@ -1,7 +1,5 @@
 # Regulatory Document Agent
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 The Regulatory Document Agent is an email agent for public utility regulator filings. You send it an email that names a matter and a document category. The agent gets the documents from the portal of the regulator. It replies with the documents, a short summary and key points. Each key point links to the exact passage in its source document.
 
 NOTE: The agent is an MVP for evaluation. It is not a production service, and it has no service level agreement (SLA). Read [Disclaimers](#10-disclaimers) before you use a reply or a number from this document.

@@ -1,7 +1,5 @@
 # Runbook: circuit breaker open
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentBreakerOpen` | `warning` | For 10 min, `breaker_open{dependency}` is 1 for a dependency. |

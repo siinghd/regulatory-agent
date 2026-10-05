@@ -1,7 +1,5 @@
 # Runbook: credential leak
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 No alert links here. Start this runbook when a secret is in a location where it must not be. Examples are a commit, a log, a paste, a screenshot, a secret that gitleaks or Trivy found, or a notice from a vendor. Also start it when a person with access leaves.
 
 Incident severity: SEV2. SEV1 if there is evidence that a person used the credential. Parent document: [Incident response](../policies/incident-response.md).

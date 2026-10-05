@@ -1,7 +1,5 @@
 # Limitations and disclaimers
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Read this document before you use the agent, its numbers or its documents for a decision.
 
 ## 1. Status of the system

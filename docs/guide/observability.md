@@ -1,7 +1,5 @@
 # Observability
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document describes the logs, the audit trail, the metrics, the dashboards and the alerts of the agent.
 
 NOTE: The observability stack (Prometheus, Alertmanager, Grafana and exporters) and the public `/status` page (`agent/web/status.py`) were new on 2026-10-05. The configuration is in `docker-compose.yml`, `deploy/observability/` and `deploy/caddy/uarb.caddy`. Run `make metrics-status` to see what runs on the host now.

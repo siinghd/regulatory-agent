@@ -1,7 +1,5 @@
 # Runbook: mail endpoint down
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentMailEndpointDown` | `page` | For 5 min, the probe `mail-imaps` (mail.hsingh.app:993, TLS and the first IMAP line) or `mail-submission` (mail.hsingh.app:587, EHLO and STARTTLS) fails. |

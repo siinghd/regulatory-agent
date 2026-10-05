@@ -1,7 +1,5 @@
 # Security policy
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 ## Report a vulnerability
 
 Send an email to **security@hsingh.app**. Include this information:

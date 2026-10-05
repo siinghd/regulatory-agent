@@ -1,7 +1,5 @@
 # Runbook: observability stack
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentWatchdog` | `none` | Always fires. This is the design. |

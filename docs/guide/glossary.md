@@ -1,7 +1,5 @@
 # Glossary
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This glossary gives the terms and abbreviations of this guide, in alphabetical order.
 
 | Term | Definition |

@@ -1,7 +1,5 @@
 # Security
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document gives the threat model of the agent and the controls against each threat. [Abuse protection](abuse-protection.md) gives the rate limits and budgets. [Operations](operations.md) gives the incident procedures.
 
 NOTE: The technical controls in this document are implemented. The organisational SOC 2 controls are open: no auditor, no second reviewer, no signed data processing agreements (DPAs) and no background checks. The agent shares its host with other services of the operator. This is a SOC 2 gap. Refer to [Limitations and disclaimers](limitations-and-disclaimers.md).

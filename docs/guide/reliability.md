@@ -1,7 +1,5 @@
 # Reliability
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document tells how the agent continues after failures: retries, backoff, circuit breakers, timeouts, locks, the outbox and idempotency. The code is in `agent/worker.py`, `agent/pipeline.py`, `agent/breaker.py`, `agent/limits.py` and `agent/outbox.py`.
 
 NOTE: The agent is an MVP on 1 host. It has no service level agreement. Postgres, Redis, the mail server and the UARB egress tunnel are single points of failure.

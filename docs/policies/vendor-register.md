@@ -1,7 +1,5 @@
 # Vendor Register
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (`@siinghd`). Version 1.1. Effective 2026-10-04. Reviewed 2026-10-05. The [Vendor Management Policy](vendor-management.md) controls this register.
 
 "DPA" means a data processing agreement that is signed or accepted for our account. "Open" means that the work is not done.

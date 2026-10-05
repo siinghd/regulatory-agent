@@ -1,7 +1,5 @@
 # System description: Regulatory Document Agent
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 Owner: the system operator (@siinghd). Version 1.1. Last reviewed 2026-10-05.
 
 This description uses the structure of the AICPA description criteria (DC 200). It is the start point for a SOC 2 readiness assessment. It describes the system on 2026-10-05.

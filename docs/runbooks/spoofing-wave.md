@@ -1,7 +1,5 @@
 # Runbook: spoofing wave
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 | Alert | Alert severity | Condition |
 |---|---|---|
 | `RegagentPreauthRejectionSpike` | `warning` | For 15 min, the pre-authentication rejections are more than 3 times the 7-day hourly average. The count is for the last 1 h, and it is at least 10. |

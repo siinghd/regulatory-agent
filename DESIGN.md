@@ -1,7 +1,5 @@
 # Design: Regulatory Document Agent
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 NOTE: This system is an MVP for evaluation. It is not a production service, and it has no service level agreement (SLA). Read [Limitations and disclaimers](docs/guide/limitations-and-disclaimers.md) before you use any number in this document.
 
 The [README](README.md) tells what the agent does. This document tells why the agent has this design. It gives the goals, the architecture, the request lifecycle, the decisions, the failure classes and the path to scale. The [documentation map](docs/guide/index.md) shows where to find more detail.

@@ -1,7 +1,5 @@
 # Request flow
 
-This document is written in ASD-STE100 Simplified Technical English.
-
 This document gives each step from the inbound email to the reply. The code is in `agent/mail/ingest.py`, `agent/worker.py`, `agent/pipeline.py` and `agent/outbox.py`.
 
 ## 1. Summary
