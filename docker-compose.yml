@@ -218,9 +218,9 @@ services:
       db-grants: {condition: service_completed_successfully}
 
   # Retention purge (raw MIME 30 d, rejected 7 d, pseudonymise at 90 d, delete at 400 d, ...)
-  # under its own SELECT/UPDATE/DELETE role. Off by default (profile "ops"); run from a timer:
-  #   docker compose --profile ops run --rm retention
-  # Requires `ragent purge`, which the image does not have yet.
+  # under its own SELECT/UPDATE/DELETE role. Off by default (profile "ops"); deploy/regagent-retention.timer
+  # runs it daily at 03:30 UTC:
+  #   docker compose --profile ops run --rm retention purge
   retention:
     <<: *app
     profiles: ["ops"]

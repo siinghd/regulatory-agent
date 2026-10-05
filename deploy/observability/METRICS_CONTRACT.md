@@ -1,103 +1,119 @@
 # Metrics contract: what the app exports
 
-The dashboards (`grafana/build_dashboards.py`) and alert rules (`rules/*.yml`) are written against
-the exact names and labels below. Change a name or label here first, then in both places.
-Everything in "To add" is already wired into panels and rules: they show "No data" / stay silent
-until the app exports the metric.
+The dashboards (`grafana/build_dashboards.py`) and the alert rules (`rules/*.yml`) use the exact
+names and labels below. To change a name or a label, change it here first, then in
+`agent/metrics.py`, the dashboards and the rules.
 
-## 1. Privacy rules (apply to every metric; enforced by a unit test)
+All metrics in section 3 are in `agent/metrics.py` and the code emits them. Section 4 lists label
+values that the contract defines but the code does not emit today.
 
-The dashboards are **public** (anonymous, read-only, https://uarb.hsingh.app/grafana/), and any
-anonymous viewer can query every series in Prometheus. So metrics are aggregate counts and
-durations only.
+## 1. Privacy rules (for every metric; a test checks them)
+
+The dashboards are **public** (anonymous, read-only, https://uarb.hsingh.app/grafana/). An
+anonymous viewer can query every series in Prometheus. For this reason, metrics are aggregate
+counts and durations only.
 
 **Allowed label names (complete list):**
 
 | Label | Values |
 |---|---|
 | `provider` | provider `name` (`uarb`, `oeb`, `ferc`, ...) or `none` |
-| `outcome` | per-metric enum below |
+| `outcome` | per-metric enum (section 3) |
 | `stage` | request state names (`agent/store.py`) |
 | `model` | a model id from `LLM_MODELS` or the Jev model name (configuration, bounded) |
 | `classifier` | `rules`, `jev`, `llm` |
 | `escalated` | `true`, `false` |
 | `verdict` | `pass`, `fail`, `none` (`AuthVerdict`) |
 | `key_type` | `sender`, `domain`, `global`, `preauth`, `inbound`, `inflight`, `llm`, `portal`, `bytes`, `web` |
-| `kind` | per-metric enum below |
+| `kind` | per-metric enum (section 3) |
 | `state` | `done`, `failed`, `rejected`, `clarify` |
-| `reason` | a fixed enum defined in code (never an error message) |
-| `cause` | a fixed enum defined in code (never an error message) |
+| `reason` | a fixed enum in code (never an error message) |
+| `cause` | a fixed enum in code (never an error message) |
 
-Already shipped in `agent/metrics.py` and also allowed, because their values are fixed sets:
-`final_state` (states), `dependency` (provider names, `drop`, `smtp`, `openrouter:<model id>`),
-`limiter` (limiter names incl. `portal_budget:<provider>`, `web_<route class>`), `decision`
+These labels are also allowed, because their values are fixed sets:
+`final_state` (final states), `dependency` (provider names, `drop`, `smtp`, `openrouter:<model id>`),
+`limiter` (limiter names, with `portal_budget:<provider>` and `web_<route class>`), `decision`
 (`allowed`, `limited`, `deferred`, `unavailable`), `budget` (`llm_usd`, `portal:<provider>`).
-`le` and `quantile` are added by the client library.
+The client library adds `le` and `quantile`.
 
 **Never a label value:** email addresses or local parts, sender domains, subjects, matter
-numbers, document titles or file names, IP addresses or networks, request ids / UUIDs / message
-ids / tokens / drop keys, URLs, free-text error or exception messages.
+numbers, document titles or file names, IP addresses or networks, request ids, UUIDs, message
+ids, tokens, drop keys, URLs, free-text error or exception messages.
 
-**Fix needed in shipped code:** `retries_total{cause}` takes `cause` from the error text
-(`error.split(":", 1)[0][:40]` in `agent/metrics.py::_cause`). It must map to a fixed enum (the
-dependency name, or an exception class from a known list, else `other`).
+`retries_total{cause}` uses the fixed set `RETRY_CAUSES` in `agent/metrics.py`:
+`portal_unavailable`, `scrape_error`, `timeout`, `llm_unavailable`, `smtp_temp`, `drop_unavailable`,
+`db`, `redis`, `lock_contention`, `breaker_open`, `budget`, `disk_low`, `auth_temperror`, `internal`.
+`agent.pipeline.retry_cause` maps each exception to 1 of them. A value outside the set becomes
+`internal`.
 
-**Unit test (instrumentation worker):** collect `prometheus_client.REGISTRY` after exercising the
-code paths and assert (a) every label name is in the allowlist above, (b) every label value of the
-enum labels is in its declared set, (c) no label value matches an email, IPv4/IPv6 or UUID pattern.
+**Test:** `tests/metrics_privacy.py` holds the rules (allowed label names, the enum values in
+section 3, and patterns for email addresses, IP addresses, matter numbers and UUIDs).
+`tests/unit/test_metrics.py` runs it after it exercises the instrumentation, and
+`tests/conftest.py` runs it at the end of each test session over every recorded value.
 
 ## 2. Endpoints (all on 127.0.0.1, never public)
 
-| Process | Address | Prometheus job | Status |
+| Process | Address | Prometheus job | Notes |
 |---|---|---|---|
-| worker | `127.0.0.1:9710/metrics` (`METRICS_PORT`) | `regagent-worker` | exists in code; **not listening on the host today** (alert `RegagentWorkerMetricsDown` fires) |
-| web | `127.0.0.1:8710/metrics` | `regagent-web` | **to add**. Caddy answers 404 for `/metrics` on the public site; the app should also refuse it unless the peer is loopback and no `X-Forwarded-For`/`X-Real-IP` is present |
-| ingest | `127.0.0.1:9711/metrics` (e.g. `INGEST_METRICS_PORT`) | `regagent-ingest` | **to add**: pre-auth limiter decisions and auth verdicts are counted in ingest, which exposes nothing today |
+| worker | `127.0.0.1:9710/metrics` (`METRICS_PORT`) | `regagent-worker` | All metrics. `queue_depth` and `ingest_heartbeat_age_seconds` come only from the worker. |
+| ingest | `127.0.0.1:9711/metrics` (`METRICS_INGEST_PORT`) | `regagent-ingest` | Pre-auth limiter decisions (`preauth_ip`, `preauth_domain`, `inbound_minute`) and rows that ingest creates already rejected |
+| web | `127.0.0.1:8710/metrics` | `regagent-web` | Web rate limits. The app answers only a loopback peer without `X-Forwarded-For`, `X-Real-IP` or `Forwarded`, else 404. Caddy also answers 404 for `/metrics` on the public site. |
 
-Counters live per process; each process exports what it counts, and queries `sum()` across jobs.
-Count each event in exactly one process.
+A port value of 0 turns the endpoint off. If the port is taken, the process runs without metrics
+and logs `metrics.unavailable`.
 
-## 3. Already exported (`agent/metrics.py`, worker)
+Counters live in each process. Each process exports what it counts, and queries use `sum()`
+across jobs. Each event is counted in exactly 1 process.
 
-`prometheus_client` appends `_total` to counters: `Counter("requests")` is exported as `requests_total`.
+NOTE: On 2026-10-05 the running worker and ingest containers were older than this code, and
+nothing listened on 9710 or 9711. The table describes the code.
 
-| Exported name | Type | Labels | Used by |
-|---|---|---|---|
-| `requests_total` | counter | `final_state` | Overview, Home, `RegagentRequestsFailed` |
-| `retries_total` | counter | `cause` (see fix above) | Overview |
-| `llm_cost_usd_total` | counter | none | Models |
-| `stage_duration_seconds` | histogram | `stage` | Overview |
-| `queue_depth` | gauge | none | Overview, Home, `RegagentQueueStuck` |
-| `breaker_open` | gauge | `dependency` | Overview, Portals, Models, Delivery, `RegagentBreakerOpen` |
-| `limiter_decisions_total` | counter | `limiter`, `decision` | Abuse, `RegagentPreauthRejectionSpike` (needs the ingest endpoint) |
-| `budget_used`, `budget_limit` | gauge | `budget` | Overview, Portals, Models, `RegagentBudgetHigh` |
-| `budget_exhausted_total` | counter | `budget` | `RegagentBudgetExhausted` |
+## 3. Exported metrics
 
-## 4. To add
+`prometheus_client` adds `_total` to counters: `Counter("requests")` is exported as
+`requests_total`.
 
-Names below are the **exported** names. Buckets are required where given (rules depend on them).
+| Exported name | Type | Labels (values) | Process | When / value | Used by |
+|---|---|---|---|---|---|
+| `requests_total` | counter | `final_state` | worker, ingest | 1 time for each request, at its final state | Overview, Home, `RegagentRequestsFailed` |
+| `provider_requests_total` | counter | `provider`, `state` | worker, ingest | With `requests_total`, by the regulator of the request (`none` if it never got one) | Overview "Requests by regulator" |
+| `retries_total` | counter | `cause` (section 1) | worker | Each failed attempt that the worker retries | Overview |
+| `llm_cost_usd_total` | counter | none | worker | LLM spend in USD, as OpenRouter reports it | Models |
+| `stage_duration_seconds` | histogram | `stage` | worker | Time in each state before the next state. Buckets: `0.5, 1, 2.5, 5, 10, 30, 60, 120, 300, 600, 1800, 3600, 7200`. | Overview |
+| `request_e2e_seconds` | histogram | `outcome` (`done`, `failed`, `clarify`) | worker | 1 time for each request, when SMTP accepts its reply. Value: SMTP acceptance time minus the receipt time of the email. Buckets: `5, 10, 20, 30, 60, 90, 120, 180, 240, 300, 600, 1200, 1800, 3600` (the SLO rules need `180`). | SLO rules (`RegagentLatencySLOFastBurn`, `RegagentLatencySLOSlowBurn`, `RegagentLatencySLOBreached`), Overview, Home |
+| `queue_depth` | gauge | none | worker only | Jobs in the arq queue. The `refresh` cron sets it every minute. | Overview, Home, `RegagentQueueStuck` |
+| `ingest_heartbeat_age_seconds` | gauge | none | worker only | Seconds since ingest wrote `ingest:heartbeat` in Redis; `+Inf` if the key is missing. The `refresh` cron sets it every minute. | `RegagentIngestStalled` (> 600 s) |
+| `breaker_open` | gauge | `dependency` | worker | 1 while the breaker is open. The `refresh` cron sets it for each provider, `drop`, `smtp` and `openrouter:<model>`. The `typesafe` breaker exists, but the cron does not export it, so `RegagentBreakerOpen` cannot fire for TypeSafe. | Overview, Portals, Models, Delivery, `RegagentBreakerOpen` |
+| `limiter_decisions_total` | counter | `limiter`, `decision` | worker, ingest, web | Each rate-limit or budget decision | Abuse, `RegagentPreauthRejectionSpike` |
+| `budget_used`, `budget_limit` | gauge | `budget` | worker | Use and limit of each daily budget. The `refresh` cron sets them. | Overview, Portals, Models, `RegagentBudgetHigh`, `RegagentBudgetExhausted` |
+| `budget_exhausted_total` | counter | `budget` | worker | 1 time for each budget and UTC day, when the budget runs out | `RegagentBudgetExhausted` |
+| `provider_fetch_seconds` | histogram | `provider`, `outcome` (`ok`, `not_found`, `error`, `timeout`, `blocked`) | worker | Each call to a portal: a matter lookup, a listing or 1 downloaded file. Buckets: `0.5, 1, 2, 5, 10, 20, 30, 60, 120, 300, 600`. | Regulator portals |
+| `provider_visits_total` | counter | `provider` | worker | Each visit counted against the daily portal budget | Regulator portals |
+| `model_calls_total` | counter | `kind` (`jev`, `llm`), `model`, `outcome` (`ok`, `error`, `timeout`, `refused`) | worker | Jev: 1 time for each call (its short internal retries are inside it). LLM: 1 time for each attempt, for each model tried. | Models |
+| `model_call_seconds` | histogram | `kind`, `model` | worker | Duration of each call. Buckets: `0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 60, 120`. | Models |
+| `gate_decisions_total` | counter | `classifier` (`rules`, `jev`, `llm`), `escalated` (`true`, `false`), `outcome` (`accept`, `reject`, `clarify`) | worker | 1 time for each email that a classifier read. `classifier` is the one whose answer the gate used. `escalated` is `true` when Jev gave the email to the LLM. | Models "escalation rate" |
+| `auth_verdicts_total` | counter | `verdict` (`pass`, `fail`, `none`) | worker | 1 time for each message, after the sender authentication check. The check runs in the worker (`agent/pipeline.py`), not in ingest. | Delivery and mail, `RegagentUnauthenticatedSpike` |
+| `outbound_messages_total` | counter | `kind` (`ack`, `reply`, `notice`), `outcome` (`sent`, `undeliverable`, `deferred`, `suppressed`) | worker | 1 time for each result of an outbound email attempt | Delivery and mail |
+| `deliveries_total` | counter | `kind` (`attachment`, `drop`), `outcome` (`ok`, `error`) | worker | 1 time for each document delivery | Delivery and mail "drop against attachment" |
+| `citations_total` | counter | `outcome` (`kept`, `dropped`, `support_failed`) | worker | Claims that a new summary proposed: kept, dropped (grounding, figures, limits), or dropped by the support check | No panel or rule yet. The `/status` page reads the citation counts from Postgres, not from this metric. |
+| `web_rate_limited_total` | counter | `kind` (`progress`, `progress_json`, `files`, `citation`, `default`) | web | Each 429 from `agent/web/ratelimit.py` | Abuse "Web 429s" |
 
-| Exported name | Type | Labels (values) | Process | When / value |
-|---|---|---|---|---|
-| `request_e2e_seconds` | histogram | `outcome` (`done`, `failed`, `clarify`) | worker | Once per request, when its first reply (documents, apology or clarification) is accepted by SMTP. Value: SMTP acceptance time minus the time the email was received (ingest's received timestamp). Buckets **must include 180**: `5, 10, 20, 30, 60, 90, 120, 180, 240, 300, 600, 1800, 3600`. Used by the SLO rules (`rules/slo.yml`), Overview, Home. |
-| `ingest_heartbeat_age_seconds` | gauge | none | worker | Set by the minute `refresh` cron from Redis `ingest:heartbeat` (`agent.health.ingest_heartbeat_age`); `+Inf` when the key is missing. `RegagentIngestStalled` (> 600 s). |
-| `provider_requests_total` | counter | `provider`, `state` | worker | With `requests_total`, at the final state, once per provider the request targeted (`none` if it never got one). Overview "Requests by regulator". |
-| `provider_fetch_seconds` | histogram | `provider`, `outcome` (`ok`, `not_found`, `error`, `timeout`, `blocked`, `deferred`) | worker | Once per portal fetch operation (search or document download). Buckets: `0.5, 1, 2, 5, 10, 20, 30, 60, 120, 300, 600`. Regulator portals. |
-| `provider_visits_total` | counter | `provider` | worker | Each visit counted against the portal budget (`Budgets.count_portal_visit`). Regulator portals. |
-| `model_calls_total` | counter | `kind` (`jev`, `llm`), `model`, `outcome` (`ok`, `error`, `timeout`, `refused`, `budget`) | worker | Once per call to TypeSafe Jev or OpenRouter, including retries. Models. |
-| `model_call_seconds` | histogram | `kind`, `model` | worker | Duration of each call. Buckets: `0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 60, 120`. Models. |
-| `gate_decisions_total` | counter | `classifier` (`rules`, `jev`, `llm`), `escalated` (`true`, `false`), `outcome` (`accept`, `reject`, `clarify`) | worker | Once per gate decision; `classifier` is the one that decided, `escalated` whether a cheaper one passed it on. Models "escalation rate". |
-| `outbound_messages_total` | counter | `kind` (`ack`, `reply`, `notice`: the kinds in `agent/mail/outbound.py`), `outcome` (`sent`, `undeliverable`, `deferred`, `suppressed`) | worker | Once per outbound email attempt result. Delivery & mail. |
-| `deliveries_total` | counter | `kind` (`attachment`, `drop`), `outcome` (`ok`, `error`) | worker | Once per document delivery. Delivery & mail "drop vs attachment". |
-| `auth_verdicts_total` | counter | `verdict` (`pass`, `fail`, `none`) | ingest | Once per inbound message after the sender-authentication check. Delivery & mail, `RegagentUnauthenticatedSpike`. |
-| `web_rate_limited_total` | counter | `kind` (route class: `progress`, `progress_json`, `files`, `citation`, `default`) | web | Each 429 answered by `agent/web/ratelimit.py`. Abuse "Web 429s". |
+The client library also exports `process_*` metrics. `agent/metrics.py` removes `python_info` and
+`python_gc_*`, because their labels are not in the allowed list.
 
-The ingest endpoint also makes the existing `limiter_decisions_total{limiter=~"preauth_.*|inbound_minute"}`
-visible (they are counted in ingest today but never exported).
+## 4. Values defined but not emitted
 
-## 5. Recording rules the dashboards use (Prometheus side, nothing for the app to do)
+The contract and `tests/metrics_privacy.py` allow these values, but no code path emits them today.
+A panel or a rule that filters on them shows no data.
+
+| Metric | Label value | Note |
+|---|---|---|
+| `provider_fetch_seconds` | `outcome="deferred"` | `agent.metrics.fetch_outcome` returns only `ok`, `not_found`, `blocked`, `timeout` or `error`. A wait for the portal budget shows as `limiter_decisions_total{limiter="portal_budget:<provider>",decision="deferred"}`. |
+| `model_calls_total` | `outcome="budget"` | When the LLM budget is spent, the agent makes no call, so nothing is counted here. The refusal shows as `limiter_decisions_total{limiter="llm_budget",decision="limited"}`. |
+
+## 5. Recording rules that the dashboards use (Prometheus side, nothing for the app to do)
 
 `regagent:request_e2e_slow:ratio_rate{5m,30m,1h,6h}`, `regagent:request_e2e:{p50,p95}_1h`,
 `regagent:request_e2e:count{1h,6h}`, `regagent:preauth_limited:{increase1h,avg_hourly_7d}`,
 `regagent:auth_not_pass:{increase1h,avg_hourly_7d}`, `regagent:limiter_decisions:rate5m_by_key_type`,
-`regagent:filesystem_avail:ratio`. Host-side: `regagent_backup_*` (textfile collector, `backup_metrics.sh`).
+`regagent:filesystem_avail:ratio`. Host side: `regagent_backup_*` (textfile collector, `backup_metrics.sh`).

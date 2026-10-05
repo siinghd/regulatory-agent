@@ -1,6 +1,6 @@
 # Abuse signals: pre-auth limiter rejections and failed sender authentication against their own
-# 7-day hourly baseline. Pre-auth limiting and the auth verdict happen in the ingest process,
-# which must expose its own /metrics (METRICS_CONTRACT.md); until then these stay empty.
+# 7-day hourly baseline. Pre-auth limiting happens in ingest (127.0.0.1:9711/metrics); the sender
+# authentication verdict is counted by the worker (agent/pipeline.py). See METRICS_CONTRACT.md.
 groups:
   - name: regagent-abuse-recording
     rules:
