@@ -2,7 +2,7 @@
 
 The Regulatory Document Agent is an email agent for public utility regulator filings. You send it an email that names a matter and a document category. The agent gets the documents from the portal of the regulator. It replies with the documents, a short summary and key points. Each key point links to the exact passage in its source document.
 
-NOTE: The agent is an MVP for evaluation. It is not a production service, and it has no service level agreement (SLA). Read [Disclaimers](#10-disclaimers) before you use a reply or a number from this document.
+NOTE: The agent is almost ready for production. The code, the tests, the security controls and the operations tools are complete. The open items are in the environment, not in the software. We made the agent as an MVP for evaluation, on personal infrastructure, so it runs on 1 shared server with 1 egress for UARB, and it has no service level agreement (SLA). [Path to production](docs/guide/limitations-and-disclaimers.md#path-to-production) lists each open item and its fix. Read [Disclaimers](#10-disclaimers) before you use a reply or a number from this document.
 
 ## 1. What the agent does
 
@@ -350,7 +350,7 @@ The adversarial corpus has 29 hostile or unusual emails in `tests/adversarial/em
 
 WARNING: Summaries and key points are machine-written. Code makes sure that each quote is on its cited page, but a claim can still say more or less than its quote. Examine the cited source before you use a summary for a decision. A summary is not legal advice.
 
-- **MVP:** The agent is an MVP for evaluation. It has no SLA, no support hours and no guaranteed availability.
+- **MVP:** The agent is almost ready for production, but we made it as an MVP for evaluation. It has no SLA, no support hours and no guaranteed availability. The open items are in [Path to production](docs/guide/limitations-and-disclaimers.md#path-to-production).
 - **Single egress for UARB:** All UARB traffic uses 1 SSH SOCKS tunnel to 1 Azure VM in Canada. No fallback egress exists. If the tunnel stops, UARB requests fail after their retries. The upgrade path is an egress pool ([ADR-022](docs/guide/decisions-log.md#adr-022-egress-pool-for-uarb)).
 - **Shared host:** The agent runs on 1 VM that also runs other services of the operator. Postgres, Redis and the mail server are single points of failure.
 - **Files without a summary:** The agent delivers scanned PDFs without a text layer, spreadsheets and recordings, but it does not summarise or cite them.

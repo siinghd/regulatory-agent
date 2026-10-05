@@ -4,7 +4,7 @@ Read this document before you use the agent, its numbers or its documents for a 
 
 ## 1. Status of the system
 
-WARNING: The Regulatory Document Agent is an MVP for evaluation. It is not a production service. It has no service level agreement (SLA), no support hours and no guaranteed availability.
+WARNING: The Regulatory Document Agent is almost ready for production, but we made it as an MVP for evaluation. It has no service level agreement (SLA), no support hours and no guaranteed availability. The open items are in the environment, not in the software. [Path to production](#path-to-production) lists them.
 
 - 1 operator builds and runs the system. No second person reviews the changes.
 - The system runs on 1 VM. Postgres, Redis, the mail server and the UARB egress tunnel are single points of failure.
@@ -86,3 +86,25 @@ Open technical items:
 - The output eval changed its judge model from Opus (baseline) to Sonnet (later runs). The before and after numbers are not strictly comparable.
 - Each output eval case had 1 generator run. Run-to-run variance is not measured.
 - The judge is 1 model. It is a reference, not the ground truth.
+
+## Path to production
+
+The code, the tests, the security controls, the monitoring and the runbooks are complete. These items are open because we made the agent as an MVP on personal infrastructure. Most items are configuration or infrastructure changes. Some items need a company.
+
+| Area | Open item | Fix |
+|---|---|---|
+| Host | The agent shares 1 server with other services. | Move the stack to a dedicated VM or account. |
+| Availability | Postgres and Redis have no failover. The stack runs in 1 region. | Use managed Postgres and Redis with failover, and a second node. |
+| UARB egress | 1 Canadian egress IP. | Add an egress pool with 1 download lock for each IP ([ADR-022](decisions-log.md#adr-022-egress-pool-for-uarb)). |
+| Backups | No off-site copy yet. No full rebuild test. | Set `BACKUP_REMOTE`. Do a restore-from-zero test each quarter. |
+| Alerts | Alerts have no receiver. | Set the Alertmanager receiver. |
+| Budget | The LLM key has a low spend limit. | Increase the limit and keep the daily budget. |
+| Release | No staging stack. Images are built on the production host. | Add a staging stack and signed images from a registry. |
+| Sandbox | PDF parsing and Chromium use no gVisor sandbox. | Use the `runsc` runtime for the worker. |
+| Mail domain | `hsingh.app` has DMARC `p=none` and SPF `~all`. | Use a company domain with DMARC `p=reject` and SPF `-all`. |
+| Canary | No scheduled end-to-end request for each regulator. | Add a canary job for each regulator. |
+| Privacy | TypeSafe is not zero-data-retention on our plan. | Get a ZDR agreement, or set `GATE_CLASSIFIER=llm` and `CITATION_CHECK=llm`. |
+| Quality | The evals are small (230 emails, 12 summary cases). | Grow the eval sets from real traffic. Add a "report a wrong claim" link. |
+| SOC 2 | Organisational controls are open: auditor, second reviewer, DPAs, background checks, penetration test. | A company must own these items. |
+| Legal | No terms of service. No agreements with the regulators about portal use. | A company must own these items. |
+
