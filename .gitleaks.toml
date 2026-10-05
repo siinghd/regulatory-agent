@@ -1,0 +1,10 @@
+# Default gitleaks rules, plus one narrow allowlist: Prometheus recording-rule names
+# (regagent:<metric>:<window>, e.g. regagent:preauth_limited:increase1h) match the generic
+# API-key pattern but are not secrets.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Prometheus recording-rule names"
+regexTarget = "line"
+regexes = ['''regagent:[a-z0-9_]+:[a-z0-9_]+''']
