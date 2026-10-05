@@ -15,6 +15,7 @@ data
 logs
 artifacts
 deploy
+!deploy/sql
 docs
 evals
 scripts

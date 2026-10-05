@@ -70,6 +70,8 @@ USER root
 COPY requirements-dev.lock ./
 RUN pip install --require-hashes --no-deps --no-build-isolation -r requirements-dev.lock && pip check
 COPY tests ./tests
+# grant tests read the SQL the cutover applies; test image only, never the release image
+COPY deploy/sql ./deploy/sql
 USER agent
 ENTRYPOINT ["python", "-m", "pytest"]
 CMD ["-q", "-p", "no:cacheprovider"]
