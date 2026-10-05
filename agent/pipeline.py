@@ -35,7 +35,7 @@ from agent.breaker import Breakers
 from agent.citations.claims import summarize_with_citations
 from agent.citations.extract import extract_pages_async, is_docx, needs_ocr
 from agent.citations.ground import DropReason, new_citation_id, quote_context
-from agent.config import Settings
+from agent.config import Settings, get_settings
 from agent.delivery.choose import Delivery, DeliveryDeferred, deliver
 from agent.delivery.drop import DropClient, DropError, DropLink
 from agent.delivery.package import build_zip
@@ -284,7 +284,10 @@ async def _gate(deps: Deps, row, raw: bytes, email: InboundEmail, *, final_attem
 
     # The daily budget covers every model call, TypeSafe's (input tokens x list price) and OpenRouter's.
     llm_meta: dict | None = None
-    if await deps.budgets.llm_exhausted():  # today's budget is spent: the rules alone decide
+    follow_up = await _thread_follow_up(row, email, s.max_docs_per_request)
+    if follow_up is not None:  # "Key Documents" answering our question: no model needed
+        parsed, llm_meta = follow_up, None
+    elif await deps.budgets.llm_exhausted():  # today's budget is spent: the rules alone decide
         parsed = _classify_rules_only(email, s.max_docs_per_request)
         if parsed.source != "rules":
             await _event_soft(rid, "rate_limited", {"key": "llm_budget", "action": "degraded"})
@@ -314,6 +317,15 @@ async def _gate(deps: Deps, row, raw: bytes, email: InboundEmail, *, final_attem
         return None
     if parsed.intent is Intent.UNRELATED:
         if loops.in_thread_with_us(email, own_address=s.agent_mail_address):
+            prev = await store.previous_in_thread(row["thread_root"], rid, row["from_addr"])
+            if prev is not None and prev["state"] == "clarify":
+                # We asked a question and this reply didn't answer it in a way we understood.
+                # Silence here would strand the sender, so ask once more (thread caps bound it).
+                await _reply_and_close(deps, row, email, "clarify", common=common, paragraphs=[
+                    "Sorry, I didn't catch which documents you want.",
+                    clarification_for(prev["matter"], None),
+                ])
+                return None
             # "Thanks, that's all" in a thread with us: the conversation is over, nothing to answer
             await store.transition(rid, {"received"}, "rejected", reject_reason="unrelated_in_thread", **common)
             return None
@@ -381,7 +393,7 @@ def _allowlisted(addr: str, allowlist: list[str]) -> bool:
     return any(a.lower() in {addr, domain} for a in allowlist)
 
 
-_CLASSIFIERS = {"rules": "rules", "rules_degraded": "rules", "jev": "jev", "llm": "llm"}  # ParsedRequest.source
+_CLASSIFIERS = {"rules": "rules", "rules_degraded": "rules", "thread": "rules", "jev": "jev", "llm": "llm"}  # ParsedRequest.source
 
 
 def _gate_outcome(parsed: ParsedRequest, provider: Provider | None) -> str:
@@ -448,6 +460,42 @@ async def _may_slow_down(deps: Deps, sender: str, window: str) -> bool:
         return False
     return await deps.limits.decide("slow_down_notice", f"notices:{sender}", limit=deps.settings.rate_notices_per_day,
                                     window_s=DAY_S)
+
+
+async def _thread_follow_up(row, email: InboundEmail, max_docs: int) -> ParsedRequest | None:
+    """A reply in our thread that names one category of the thread's matter ("Key Documents",
+    "Exhibits please") is a request for that matter.
+
+    Decided before any model: a classifier sees two words without the conversation and can't
+    tell they answer the question we asked (live: Jev read "Key Documents" as unrelated). Only
+    for the same verified sender (previous_in_thread), only when the body names no other matter,
+    exactly one category of that regulator and no negation; anything else takes the normal path.
+    """
+    if not loops.in_thread_with_us(email, own_address=get_settings().agent_mail_address):
+        return None
+    body = email.text or ""
+    if not body.strip() or len(body) > 1_000:
+        return None
+    prev = await store.previous_in_thread(row["thread_root"], row["id"], row["from_addr"])
+    if prev is None:
+        return None
+    matter = prev["matter"]
+    provider = provider_for_matter(matter)
+    if provider is None:
+        return None
+    if any(m != matter for m in rules.find_matters(body)) or rules.negated(body):
+        return None
+    doc_types = rules.find_doc_types(body, provider.categories)
+    if len(doc_types) != 1:
+        return None
+    return ParsedRequest(
+        intent=Intent.DOCUMENT_REQUEST,
+        matter=matter,
+        doc_type=doc_types[0],
+        max_docs=rules.find_count(body, max_docs, provider.categories),
+        source="thread",
+        confidence=1.0,
+    )
 
 
 async def _inherit_from_thread(row, parsed: ParsedRequest) -> ParsedRequest:

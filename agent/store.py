@@ -314,7 +314,7 @@ async def previous_in_thread(thread_root: str, exclude_id: UUID, from_addr: str)
     """
     return await db.fetchrow(
         """
-        SELECT matter, doc_type, provider FROM requests
+        SELECT matter, doc_type, provider, state FROM requests
         WHERE thread_root = $1 AND id <> $2 AND from_addr = $3 AND matter IS NOT NULL
         ORDER BY received_at DESC LIMIT 1
         """,

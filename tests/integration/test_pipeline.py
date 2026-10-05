@@ -539,9 +539,10 @@ async def test_follow_up_in_the_thread_inherits_the_matter(h):
     assert row["state"] == "done"
     assert (row["provider"], row["matter"], row["doc_type"]) == ("uarb", MATTER, "Exhibits")
     assert row["parsed"]["needs_clarification"] is None
-    # the classifier saw only the new text, not the quoted history
-    (classified,) = [u for u in h.llm.users if u.startswith("<<<EMAIL")]
-    assert "Exhibits please" in classified and "Other Documents" not in classified
+    # answered by the thread fast path: no model call, and the quoted history ("Other
+    # Documents") didn't leak into the parse
+    assert row["parsed"]["source"] == "thread"
+    assert not [u for u in h.llm.users if u.startswith("<<<EMAIL")]
 
     references = f"{first_id} {our_reply} {follow_id}"
     for msg in (*h.acks(r2), h.reply(r2)):
@@ -825,3 +826,64 @@ async def test_a_follow_up_must_name_a_category_of_the_threads_regulator(h):
     assert "I found 2 Rulings and 1 Filing." in text
     assert "Which document type would you like for FK-1234: Rulings, Filings?" in text
     assert other.calls["list"] == 1  # only the first request fetched documents
+
+
+async def test_two_word_answer_to_our_question_fetches_the_documents(h):
+    """Live regression: after our "which document type?" question, the sender replied just
+    "Key Documents" and the classifier read it as unrelated, so the agent went silent."""
+    h.llm.parse = llm_parse(matter=MATTER, clarification="Which document type would you like for M12205?")
+    first = make_email("i need M12205", subject="M12205")
+    first_id = message_id_of(first)
+    r1 = await h.ingest(first)
+    await h.run_job(r1)
+    assert (await h.request(r1))["state"] == "clarify"
+    our_question = outbound_id(r1, "reply")
+
+    h.llm.parse = llm_parse("unrelated")  # what the model said live: two words, no context
+    answer = make_email(
+        "Key Documents\n\nOn Sun, Oct 5, 2026 Regulatory Document Agent <agent@hsingh.app> wrote:\n> Which document type?\n",
+        subject="Re: M12205",
+        in_reply_to=our_question,
+        references=[first_id, our_question],
+    )
+    r2 = await h.ingest(answer)
+    await h.run_job(r2)
+
+    row = await h.request(r2)
+    assert row["state"] == "done"
+    assert (row["matter"], row["doc_type"]) == (MATTER, "Key Documents")
+    assert row["parsed"]["source"] == "thread"
+
+
+async def test_unclear_answer_to_our_question_is_asked_again_not_ignored(h):
+    h.llm.parse = llm_parse(matter=MATTER, clarification="Which document type would you like for M12205?")
+    first = make_email("i need M12205", subject="M12205")
+    first_id = message_id_of(first)
+    r1 = await h.ingest(first)
+    await h.run_job(r1)
+    our_question = outbound_id(r1, "reply")
+
+    h.llm.parse = llm_parse("unrelated")
+    unclear = make_email("hmm not sure, whatever you think", subject="Re: M12205",
+                         in_reply_to=our_question, references=[first_id, our_question])
+    r2 = await h.ingest(unclear)
+    await h.run_job(r2)
+
+    assert (await h.request(r2))["state"] == "clarify"
+    assert "Which document type would you like for M12205" in body_text(h.reply(r2))
+
+
+async def test_thanks_after_documents_still_gets_no_reply(h):
+    first = make_email("Can you send me the Other Documents for M12205?", subject="Document request")
+    first_id = message_id_of(first)
+    r1 = await h.ingest(first)
+    await h.run_job(r1)
+    our_reply = outbound_id(r1, "reply")
+
+    h.llm.parse = llm_parse("unrelated")
+    thanks = make_email("Thanks, that's all!", subject="Re: Document request",
+                        in_reply_to=our_reply, references=[first_id, our_reply])
+    r2 = await h.ingest(thanks)
+    await h.run_job(r2)
+
+    assert (await h.request(r2))["reject_reason"] == "unrelated_in_thread"
