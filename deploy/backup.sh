@@ -27,7 +27,9 @@ dc psql -U agent -qc "DROP DATABASE agent_restorecheck"
 [ "$restored" -ge 1 ] && [ "$((live - restored))" -le 50 ] || { echo "restore check failed: live=$live restored=$restored" >&2; exit 1; }
 
 age -r "$BACKUP_AGE_RECIPIENT" -o "$DIR/pg-$stamp.dump.age" "$plain"
-tar -C data -cf - raw blobs audit 2>/dev/null | age -r "$BACKUP_AGE_RECIPIENT" -o "$DIR/files-$stamp.tar.age"
+# Only folders that exist: data/audit appears after the first audit export.
+dirs=(); for d in raw blobs audit; do [ -d "data/$d" ] && dirs+=("$d"); done
+tar -C data -cf - "${dirs[@]}" | age -r "$BACKUP_AGE_RECIPIENT" -o "$DIR/files-$stamp.tar.age"
 chmod 600 "$DIR"/*.age
 
 if [ -n "${BACKUP_REMOTE:-}" ]; then
