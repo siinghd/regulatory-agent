@@ -19,7 +19,7 @@ dependencies = [
   "pyspf>=2.0.14",
   "dnspython>=2.6",
   "idna>=3.7",  # UTS #46 sender domains; 3.7 fixed CVE-2024-3651 (quadratic idna.encode)
-  "publicsuffixlist==1.0.2.20261003",  # the version is the bundled PSL snapshot date; bump to refresh
+  "publicsuffixlist==1.1.0.20261010",  # the version is the bundled PSL snapshot date; bump to refresh
   "cryptography>=43",
   "rapidfuzz>=3.9",
   "aioimaplib>=1.1",
