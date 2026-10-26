@@ -484,7 +484,7 @@ services:
 
   redis-exporter:
     profiles: ["db-exporters"]
-    image: oliver006/redis_exporter:v1.93.0@sha256:6ca518a72f30f7f576ef92963de1b91d3c3f5fd3aeac949f878bfda183587820
+    image: oliver006/redis_exporter:v1.95.0@sha256:afb21407aba3df1b4010899f155fc6b1ba2026c97b725d72aca4019d772e7b6b
     container_name: regagent-redis-exporter
     network_mode: host
     restart: unless-stopped
