@@ -35,7 +35,7 @@ x-app: &app
 
 services:
   postgres:
-    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
     restart: unless-stopped
     environment:
       POSTGRES_USER: agent  # bootstrap superuser: break-glass only, refused over TCP (pg_hba.conf)
@@ -129,7 +129,7 @@ services:
   # One-shot: re-assert table privileges after migrations (new tables, events append-only,
   # the viewer's column list). Same role; psql from the pinned Postgres image.
   db-grants:
-    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    image: postgres:16-alpine@sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab
     network_mode: host
     user: "70:70"
     entrypoint: ["psql", "-X", "-q", "-v", "ON_ERROR_STOP=1", "-f", "/sql/grants.sql"]
